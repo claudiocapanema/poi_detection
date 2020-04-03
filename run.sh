@@ -1,6 +1,7 @@
 # !/bin/bash
 
 # points_of_interest_job
+# This job is applied to detect users' pois
 #CONFIG='{
 #          "job": "points_of_interest_job",
 #          "users_steps_csv": "/home/claudio/Documentos/users_steps_datasets/194_users_data.csv",
@@ -9,6 +10,7 @@
 #          }'
 
 # points_of_interest_validation_job
+# This job is applied to validate the pois found by the points_of_interest_job
 CONFIG='{
           "job": "points_of_interest_validation_job",
           "users_steps_csv": "/home/claudio/Documentos/users_steps_datasets/194_users_data.csv",
