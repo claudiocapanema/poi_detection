@@ -25,7 +25,7 @@ class ConfusionMatrix:
 
     def classification_report(self):
         precision = self.tp/(self.tp + self.fp)
-        recall = self.tp/self.total_samples_of_poi_type
+        recall = self.tp/(self.tp + self.fn)
         fscore = 2*(precision*recall)/(precision+recall)
         print("---------")
         print("Poi type: ", self.poi_type)
@@ -33,11 +33,11 @@ class ConfusionMatrix:
         print("Recall: ", recall)
         print("F1-score: ", fscore)
         if self.total_users_inverted_routine_tp > 0:
-            print("Acertos com usuarios de rotina invertiva")
+            print("Hits from users that have inverted routine")
             print("Quantidade: ", self.total_users_inverted_routine_tp)
 
     def set_total_samples_of_poi_type(self, total):
-        self.total_samples_of_poi_type = total
+        self.total_samples_of_poi_type += total
 
     def add_total_users_inverted_routine_tp(self):
         self.total_users_inverted_routine_tp+=1

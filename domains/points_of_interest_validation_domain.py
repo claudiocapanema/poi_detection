@@ -4,6 +4,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import haversine_distances
 
 from models.confusion_matrix import ConfusionMatrix
+from configurations.points_of_interest_validation_configuration import PointsOfInterestValidationConfiguration
 
 class PointOfInterestValidationDomain:
 
@@ -14,7 +15,6 @@ class PointOfInterestValidationDomain:
         self.other_confusion_matrix = ConfusionMatrix('other')
 
     def detected_pois_validation(self, detected_pois, ground_truth):
-        RADIUS = 0.1 / 6371
         ids = ground_truth['id'].unique().tolist()
         ids_users_with_inverted_routine = []
 
@@ -47,8 +47,13 @@ class PointOfInterestValidationDomain:
             for j in range(len(indexes)):
                 poi_type = gt['poi_type'].iloc[j]
                 found_poi_flag = False
+
+                """
+                    Sorting nearest points by distance
+                """
                 result = [(dis, ind) for dis, ind in zip(distances[j], indexes[j])]
                 result = sorted(result, key=lambda e:e[0])
+
                 validated_indexes = []
                 for k in range(len(result)):  # indexes
                     # if distances[i][j] > RADIUS or distances[i][j] * 6371 > 0.1:
@@ -56,8 +61,12 @@ class PointOfInterestValidationDomain:
                     if dp['poi_type'].iloc[result[k][1]] == poi_type:
                         row = dp.iloc[result[k][1]]
 
+                        """
+                            it gets the users that have inverted routine, that is, 
+                            the users that have night work
+                        """
                         if row['inverted_routine_flag']:
-                            print("flag: ", row['inverted_routine_flag'], row['id'])
+                            #print("flag: ", row['inverted_routine_flag'], row['id'])
                             if str(row['id']) not in ids_users_with_inverted_routine and poi_type != "other":
                                 ids_users_with_inverted_routine.append(row['id'])
                             if poi_type == "home":
@@ -70,7 +79,7 @@ class PointOfInterestValidationDomain:
                         found_poi_flag = True
                         break
                 if not found_poi_flag:
-                    self._add_fp(poi_type)
+                    self._add_fn(poi_type)
 
             new_dp_indexes = []
             for j in dp_indexes:
@@ -84,7 +93,7 @@ class PointOfInterestValidationDomain:
         self._classification_report(number_users_inverted_routine_tp)
 
     def _classification_report(self, number_users_inverted_routine_tp):
-        print("Usuarios com rotina invertida tp: ", number_users_inverted_routine_tp)
+        print("Users that have inverted routine tp: ", number_users_inverted_routine_tp)
         self.home_confusion_matrix.classification_report()
         self.work_confusion_matrix.classification_report()
         self.other_confusion_matrix.classification_report()
@@ -117,22 +126,14 @@ class PointOfInterestValidationDomain:
             self._add_fp(poi_type)
 
     def _find_nearest(self, gt_points, dp_points):
-        RADIUS = 0.1 / 6371
-        neigh = NearestNeighbors(radius=RADIUS, algorithm='ball_tree', metric='haversine')
+        neigh = NearestNeighbors(
+            radius=PointsOfInterestValidationConfiguration.RADIUS.get_value(),
+            algorithm='ball_tree', metric='haversine')
         neigh = neigh.fit(dp_points)
         rng = neigh.radius_neighbors(gt_points)
         distances = rng[0]
         indexes = rng[1]
         return distances, indexes
-        # if len(indexes[0]) > 0:
-        #     n_distance = indexes[0][0]
-        #     n_distance = np.degrees([n_distance])*6371
-        #     print("Do sklearn: ", n_distance)
-        #     original = haversine_distances([dp_points[0], gt_points[0]])[0][1]
-        #     distancia = (original*6371)
-        #     print("Distancia: ", "original: ", original, "depois: ", distancia )
-        #     if distancia > 0.1:
-        #         print("coord: ", np.degrees(gt_points[0]), np.degrees(dp_points[0]))
 
     def _add_tp(self, poi_type):
         if poi_type == "home":
