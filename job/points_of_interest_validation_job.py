@@ -1,7 +1,7 @@
 from foundation.abs_classes.job import Job
-from domains.user_step_domain import UserStepDomain
+from domain.user_step_domain import UserStepDomain
 from foundation.configuration.input import Input
-from domains.points_of_interest_validation_domain import PointOfInterestValidationDomain
+from domain.points_of_interest_validation_domain import PointOfInterestValidationDomain
 
 class PointsOfInterestValidation:
 

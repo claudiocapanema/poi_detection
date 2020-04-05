@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import haversine_distances
 
-from models.confusion_matrix import ConfusionMatrix
-from configurations.points_of_interest_validation_configuration import PointsOfInterestValidationConfiguration
+from model.confusion_matrix import ConfusionMatrix
+from configuration.points_of_interest_validation_configuration import PointsOfInterestValidationConfiguration
 
 class PointOfInterestValidationDomain:
 

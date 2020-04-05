@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from extractors.file_extractor import FileExtractor
-from models.confusion_matrix import ConfusionMatrix
+from extractor.file_extractor import FileExtractor
+from model.confusion_matrix import ConfusionMatrix
 
 class UserStepDomain:
 

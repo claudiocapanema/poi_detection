@@ -4,12 +4,12 @@ import numpy as np
 import pandas as pd
 from pandas.core.frame import DataFrame
 
-from models.poi import Poi
-from models.user import User
-from configurations.points_of_interest_configuration import PointsOfInterestConfiguration
-from configurations.weekday import Weekday
+from model.poi import Poi
+from model.user import User
+from configuration.points_of_interest_configuration import PointsOfInterestConfiguration
+from configuration.weekday import Weekday
 from foundation.util.datetimes_utils import date_from_str_to_datetime
-from models.location_type import LocationType
+from model.location_type import LocationType
 
 class PointsOfInterestDomain:
 

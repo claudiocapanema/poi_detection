@@ -1,8 +1,8 @@
 import sys
 import ast
 
-from jobs.points_of_interest_job import PointOfInterest
-from jobs.points_of_interest_validation_job import PointsOfInterestValidation
+from job.points_of_interest_job import PointOfInterest
+from job.points_of_interest_validation_job import PointsOfInterestValidation
 from foundation.configuration.input import Input
 
 def start_input(args):

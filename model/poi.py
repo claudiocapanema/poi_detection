@@ -3,7 +3,7 @@
 
 from copy import copy
 import numpy as np
-from configurations.weekday import Weekday
+from configuration.weekday import Weekday
 
 class Poi:
 

@@ -1,9 +1,9 @@
 import pandas as pd
 
-from domains.user_step_domain import UserStepDomain
+from domain.user_step_domain import UserStepDomain
 from foundation.abs_classes.job import Job
-from domains.points_of_interest_domain import PointsOfInterestDomain
-from loaders.file_loader import FileLoader
+from domain.points_of_interest_domain import PointsOfInterestDomain
+from loader.file_loader import FileLoader
 from foundation.configuration.input import Input
 
 class PointOfInterest(Job):
