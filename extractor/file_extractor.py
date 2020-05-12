@@ -2,12 +2,11 @@ import pandas as pd
 import geopandas as gpd
 
 from foundation.configuration.input import Input
-from foundation.configuration.data_sources import DataSources
 
 class FileExtractor:
 
     def __init__(self):
-        self.users_steps_csv_filename = Input.get_instance().inputs['users_steps_csv']
+        self.users_steps_csv_filename = Input.get_instance().inputs['users_steps_filename']
         self.ground_truth_filename = Input.get_instance().inputs['ground_truth']
 
     def read_csv(self, filename):

@@ -14,7 +14,7 @@ class PointOfInterest(Job):
         self.file_loader = FileLoader()
 
     def start(self):
-        users_step_filename = Input.get_instance().inputs['users_steps_csv']
+        users_step_filename = Input.get_instance().inputs['users_steps_filename']
         utc_to_sp = Input.get_instance().inputs['utc_to_sp']
         users_steps = self.user_step_domain.users_steps_from_csv(users_step_filename)
 

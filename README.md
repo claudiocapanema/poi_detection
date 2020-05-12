@@ -24,13 +24,19 @@ The code has a job-based structure, which is helpful for future conversion to Py
 
 Please modify the run.sh file considering the directory where you have placed:
 
- - Your users' steps dataset (***users_steps_csv*** parameter)
- - The ground truth dataset (***ground_truth*** parameter)
- - Where you wanna save the detected PoIs (***poi_detection_output*** parameter).
+ - Your users' steps dataset (***users_steps_filename*** parameter)
+ - Where you wanna save the detected PoIs (***poi_detection_filename*** parameter).
+ - Where you wanna save the classified PoIs (***poi_classification_filename*** parameter).
+ - The ground truth of the dataset (***ground_truth*** parameter)
 
-Then check if the ***CONFIG*** variable of the job that you wanna run is not commented (and commented the others), and finally run the command below:
+The are three "execution options": 
+ - "find_pois": applied to generate the users' pois.
+ - "validate": applied to validate the generated users' pois.
+ - "find_pois_and_validate": applied to run together the two previous options.
 
-    bash run.sh
+Finally, run the bash script informing a execution option argument:
+
+    bash run.sh "find_pois_and_validate"
 
     
 ---
@@ -49,5 +55,4 @@ Bibtex entry of the PoI Detection paper:
     pages   = {16-29},
     month   = {Maio}
     }
-
 

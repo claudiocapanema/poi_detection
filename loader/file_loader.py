@@ -1,7 +1,5 @@
 import pandas as pd
 
-from foundation.configuration.data_sources import DataSources
-
 class FileLoader:
 
     def __init__(self):
