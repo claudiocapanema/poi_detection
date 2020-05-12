@@ -2,7 +2,7 @@
 
 class ConfusionMatrix:
 
-    def __init__(self, poi_type):
+    def __init__(self, poi_type='all types'):
         self.tp = 0
         self.fp = 0
         self.tn = 0

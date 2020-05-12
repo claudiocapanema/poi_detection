@@ -6,14 +6,13 @@ class PointsOfInterestConfiguration(Enum):
 
     # Seconds to convert datetime from UTC to SP timezone
 
-    UTC_TO_SP = ("utc_to_sp", 3*3600, False, "Seconds to convert datetime from UTC to SP timezone, 3 hours of difference")
-
-    TZ = ("tz", pytz.timezone('America/Sao_Paulo'), False, "timezone")
+    TZ = ("tz", 'America/Sao_Paulo', False, "timezone")
 
     # DBSCAN
 
     METERS = ("meters", 10, False, "radius in meters")
     EPSILON = ("epsilon", 0.01 / 6371.0088, "False", "epsilon")
+    MIN_SAMPLES = ("min_samples", 8, "False", "minimum number of samples of a cluster")
 
     # PoI identification
 
@@ -28,6 +27,10 @@ class PointsOfInterestConfiguration(Enum):
     HOME_HOUR = ("home_hour", {'start': 20, 'end': 8},  False, "home time span")
     WORK_HOUR = ("work_hour", {'start': 10, 'end': 18},  False, "work time span")
     MIN_MAX_INVERTED_ROUTINE = ("min_max_inverted_routine", {'min': 8, 'max': 21}, False, "min max inverted routine")
+    MIN_HOME_EVENTS = ("min_home_events", 3, False, "minimum number of poi's events to it be classified as Home")
+    MIN_WORK_EVENTS = ("min_work_events", 18, False, "minimum number of poi's events to it be classified as Work")
+    MIN_DAYS = ("min_days", 6, False, "minimum number of different days of a cluster to become a PoI")
+    RADIUS_CLASSIFICATION = ("radius_classification", 0.02 / 6371.0088, "False", "epsilon")
 
     # run
     MIN_EVENTS = ("min_events", 10,  False, "minimum quantity of events necessary to a user be processed")

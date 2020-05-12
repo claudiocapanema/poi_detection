@@ -3,13 +3,15 @@ from foundation.general_code.dbscan import Dbscan
 import numpy as np
 import pandas as pd
 from pandas.core.frame import DataFrame
+import pytz
 
 from model.poi import Poi
 from model.user import User
 from configuration.points_of_interest_configuration import PointsOfInterestConfiguration
 from configuration.weekday import Weekday
-from foundation.util.datetimes_utils import date_from_str_to_datetime
+from foundation.util.datetimes_utils import DatetimesUtils
 from model.location_type import LocationType
+from foundation.general_code.nearest_neighbors import NearestNeighbors
 
 class PointsOfInterestDomain:
 
@@ -82,7 +84,8 @@ class PointsOfInterestDomain:
                     max_start_hour < PointsOfInterestConfiguration.MIN_MAX_INVERTED_ROUTINE.get_value()['max'] and \
                     max_end_hour > PointsOfInterestConfiguration.MIN_MAX_INVERTED_ROUTINE.get_value()['min'] and \
                     max_end_hour < PointsOfInterestConfiguration.MIN_MAX_INVERTED_ROUTINE.get_value()['max']:
-                print(max_start_hour, max_end_hour)
+                #print(max_start_hour, max_end_hour)
+                pass
             return max_start_hour, max_end_hour
 
         except Exception as e:
@@ -271,7 +274,8 @@ class PointsOfInterestDomain:
         except Exception as e:
             raise e
 
-    def individual_point_interest(self, user_id: int, latitude:list, longitude:list, reference_date:list) -> DataFrame:
+    def identify_points_of_interest(self, user_id: int, latitude:list, longitude:list,
+                                    reference_date:list, utc_to_sp:str) -> DataFrame:
         """
             This function identifies individual points of interest
             ------
@@ -297,23 +301,21 @@ class PointsOfInterestDomain:
             size = min([len(latitude), len(longitude)])
             coordinates = np.asarray([(latitude[i], longitude[i]) for i in range(size)], dtype=np.float64)
 
-            sp_time_zone = PointsOfInterestConfiguration.UTC_TO_SP.get_value()
-            tz_time_zone = PointsOfInterestConfiguration.TZ.get_value()
-
-            times = [(reference_date[i] - dt.timedelta(seconds=sp_time_zone)).replace(tzinfo=tz_time_zone) for i in range(len(reference_date))]
+            # if the timezones are utc, you can adjust them here
+            if utc_to_sp == "yes":
+                sp_time_zone = PointsOfInterestConfiguration.TZ.get_value()
+                times = [DatetimesUtils.convert_tz(reference_date[i], pytz.utc, sp_time_zone) for i in range(len(reference_date))]
+            else:
+                times = reference_date
             n_events = len(coordinates)
 
-            # reduce min_samples for users with few data
-            if n_events < PointsOfInterestConfiguration.MAX_EVENTS_TO_CHANGE_PARAMETERS.get_value():
-                min_samples = 2
-                min_days = 1
-                min_home_events = 0
-                min_work_events = 0
-            else:
-                min_samples = 6
-                min_days = 4
-                min_home_events = 0
-                min_work_events = 0
+            # Setting the identification parameters
+            min_samples = PointsOfInterestConfiguration.MIN_SAMPLES.get_value()
+            min_days = PointsOfInterestConfiguration.MIN_DAYS.get_value()
+            # Setting the classification parameters
+            min_home_events = PointsOfInterestConfiguration.MIN_HOME_EVENTS.get_value()
+            min_work_events = PointsOfInterestConfiguration.MIN_WORK_EVENTS.get_value()
+
             dbscan = Dbscan(coordinates, min_samples, PointsOfInterestConfiguration.EPSILON.get_value())
             dbscan.cluster_geo_data()
             pois_coordinates, pois_times = dbscan.get_clusters_with_points_and_datatime(times)
@@ -326,8 +328,8 @@ class PointsOfInterestDomain:
                 p = Poi(pois_coordinates[i], pois_times[i])
                 if p.different_days < min_days:
                     continue
-                """if p.different_schedules < 7:
-                    continue"""
+                if p.different_schedules < 7:
+                    continue
                 pois.append(p)
 
             user = User(user_id, pois, n_events, PointsOfInterestConfiguration.METERS.get_value(), min_samples, min_home_events, min_work_events)
@@ -336,3 +338,74 @@ class PointsOfInterestDomain:
 
         except Exception as e:
             raise e
+
+    def classify_pois_from_ground_truth(self, user_steps, ground_truth, utc_to_sp):
+
+        ids = ground_truth['id'].unique().tolist()
+        classified_users_pois = []
+        for user_id in ids:
+            us = user_steps.query("id=="+str(user_id))
+            gt = ground_truth.query("id==" + str(user_id))
+            us_latitudes = us['latitude'].tolist()
+            us_longitudes = us['longitude'].tolist()
+            gt_latitudes = gt['latitude'].tolist()
+            gt_longitudes = gt['longitude'].tolist()
+            us_points = np.radians([(long, lat) for long, lat in zip(us_latitudes, us_longitudes)])
+            gt_points = np.radians([(long, lat) for long, lat in zip(gt_latitudes, gt_longitudes)])
+            distances, indexes = NearestNeighbors. \
+                find_radius_neighbors(gt_points, us_points,
+                                      PointsOfInterestConfiguration.RADIUS_CLASSIFICATION.get_value())
+
+            pois = []
+            for j in range(len(indexes)):
+                poi_coordinates = []
+                poi_times = []
+                for k in range(len(indexes[j])):
+                    latitude = us['latitude'].iloc[indexes[j][k]]
+                    longitude = us['longitude'].iloc[indexes[j][k]]
+                    poi_coordinates.append((latitude, longitude))
+                    datetime = us['datetime'].iloc[indexes[j][k]]
+                    if utc_to_sp == "yes":
+                        sp_time_zone = PointsOfInterestConfiguration.TZ.get_value()
+                        datetime = DatetimesUtils.convert_tz(datetime, pytz.utc, sp_time_zone)
+                    poi_times.append(datetime)
+
+                if len(poi_coordinates) == 0:
+                    continue
+                p = Poi(poi_coordinates, poi_times)
+                pois.append(p)
+
+            n_events = []
+            """
+            this parameter is for the dbscan, but as we don't apply it in this moment the parameter value is
+            set to -1
+            """
+            min_samples = -1
+            user = User(user_id, pois, n_events, PointsOfInterestConfiguration.METERS.get_value(), min_samples,
+                        PointsOfInterestConfiguration.MIN_HOME_EVENTS.get_value(),
+                        PointsOfInterestConfiguration.MIN_WORK_EVENTS.get_value())
+
+            classified_user_pois = self.classify_points_of_interest(user)
+            classified_users_pois.append(classified_user_pois)
+
+        return pd.Series(classified_users_pois)
+
+    def concatenate_dataframes(self, processed_users_pois):
+        """
+        Organazing the results into a single table
+        """
+        concatenated_processed_users_pois = pd.DataFrame({"id": [], "poi_type": [],
+                                                         "latitude": [], "longitude": [],
+                                                         "work_time_events": [], "home_time_events": []})
+
+        for i in range(processed_users_pois.shape[0]):
+            concatenated_processed_users_pois = concatenated_processed_users_pois. \
+                append(processed_users_pois.iloc[i], ignore_index=True)
+
+        concatenated_processed_users_pois['id'] = concatenated_processed_users_pois['id'].astype('int64')
+
+
+        return concatenated_processed_users_pois
+
+
+

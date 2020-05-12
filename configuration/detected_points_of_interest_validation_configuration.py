@@ -2,7 +2,7 @@ from enum import Enum
 import pytz
 
 
-class PointsOfInterestValidationConfiguration(Enum):
+class DetectedPointsOfInterestValidationConfiguration(Enum):
 
     # Radius for the nearestneighbors algorithm - 100m
 

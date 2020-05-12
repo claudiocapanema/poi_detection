@@ -9,8 +9,8 @@ class UserStepDomain:
     def __init__(self):
         self.file_extractor = FileExtractor()
 
-    def users_steps_from_csv(self):
-        users_steps = self.file_extractor.extract_user_steps_from_csv()
+    def users_steps_from_csv(self, filename):
+        users_steps = self.file_extractor.read_csv(filename)
         # linha,id,datetime,latitude,longitude,handset,operating_system
         users_steps = users_steps[['id', 'datetime', 'latitude', 'longitude']]
         users_steps['id'] = users_steps['id'].astype('int64')
@@ -31,20 +31,20 @@ class UserStepDomain:
 
         return sorted_users_steps
 
-    def detected_pois_from_csv(self):
+    def user_pois_from_csv(self, filename):
         """ id, poi_type, latitude, longitude, work_time_events, home_time_events, inactive_interval_start,
         inactive_interval_end, inactive_applied_flag, inverted_routine_flag
         """
-        df = self.file_extractor.extract_detected_pois()
+        df = self.file_extractor.read_csv(filename)
         # gdf = gpd.GeoDataFrame(
         #     df, geometry=gpd.points_from_xy(df.longitude, df.latitude))
 
         return df
 
-    def ground_truth_from_csv(self):
+    def ground_truth_from_csv(self, filename):
         """ID Usuario, Latitude, Longitude, Classe"""
         poi_type_to_eng = {"Casa": "home", "Trabalho": "work", "Outro": "other", "Lazer": "other"}
-        df = self.file_extractor.extract_ground_truth_from_csv()
+        df = self.file_extractor.read_csv(filename)
         df.columns = ['id', 'latitude', 'longitude', 'poi_type']
         df['poi_type'] = df['poi_type'].apply(lambda e: poi_type_to_eng[e])
 

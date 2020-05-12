@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
-from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import haversine_distances
 
 from model.confusion_matrix import ConfusionMatrix
-from configuration.points_of_interest_validation_configuration import PointsOfInterestValidationConfiguration
+from configuration.detected_points_of_interest_validation_configuration import DetectedPointsOfInterestValidationConfiguration
+from foundation.general_code.nearest_neighbors import NearestNeighbors
 
-class PointOfInterestValidationDomain:
+class DetectedPointOfInterestValidationDomain:
 
     def __init__(self):
 
@@ -14,7 +14,9 @@ class PointOfInterestValidationDomain:
         self.work_confusion_matrix = ConfusionMatrix('work')
         self.other_confusion_matrix = ConfusionMatrix('other')
 
-    def detected_pois_validation(self, detected_pois, ground_truth):
+    def users_pois_validation(self, detected_pois, ground_truth, description):
+        print("------------------\n " + description)
+        print("sizes: ", detected_pois.shape, ground_truth.shape)
         ids = ground_truth['id'].unique().tolist()
         ids_users_with_inverted_routine = []
 
@@ -37,7 +39,11 @@ class PointOfInterestValidationDomain:
             dp_latitudes = dp['latitude'].tolist()
             dp_longitudes = dp['longitude'].tolist()
             dp_points = np.radians([(long, lat) for long, lat in zip(dp_latitudes, dp_longitudes)])
-            distances, indexes = self._find_nearest(gt_points, dp_points)
+            if len(dp_points) < 1:
+                continue
+            distances, indexes = NearestNeighbors.\
+                find_radius_neighbors(gt_points, dp_points,
+                                      DetectedPointsOfInterestValidationConfiguration.RADIUS.get_value())
             validated_indexes = []
 
             """
@@ -89,11 +95,12 @@ class PointOfInterestValidationDomain:
             self._calculate_fp(dp, new_dp_indexes)
             self._count_samples_of_each_poi_type(gt)
 
-        number_users_inverted_routine_tp = pd.Series(ids_users_with_inverted_routine).astype('object').describe()
+        number_users_inverted_routine_tp = pd.Series(ids_users_with_inverted_routine).astype('object').describe()['count']
         self._classification_report(number_users_inverted_routine_tp)
 
     def _classification_report(self, number_users_inverted_routine_tp):
-        print("Users that have inverted routine tp: ", number_users_inverted_routine_tp)
+        if number_users_inverted_routine_tp > 0:
+            print("Users that have inverted routine tp: ", number_users_inverted_routine_tp)
         self.home_confusion_matrix.classification_report()
         self.work_confusion_matrix.classification_report()
         self.other_confusion_matrix.classification_report()
@@ -124,16 +131,6 @@ class PointOfInterestValidationDomain:
         for i in new_dp_indexes:
             poi_type = dp.iloc[i].loc['poi_type']
             self._add_fp(poi_type)
-
-    def _find_nearest(self, gt_points, dp_points):
-        neigh = NearestNeighbors(
-            radius=PointsOfInterestValidationConfiguration.RADIUS.get_value(),
-            algorithm='ball_tree', metric='haversine')
-        neigh = neigh.fit(dp_points)
-        rng = neigh.radius_neighbors(gt_points)
-        distances = rng[0]
-        indexes = rng[1]
-        return distances, indexes
 
     def _add_tp(self, poi_type):
         if poi_type == "home":
