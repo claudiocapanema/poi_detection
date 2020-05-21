@@ -24,9 +24,18 @@ class ConfusionMatrix:
         self.fn+=1
 
     def classification_report(self):
-        precision = self.tp/(self.tp + self.fp)
-        recall = self.tp/(self.tp + self.fn)
-        fscore = 2*(precision*recall)/(precision+recall)
+        if self.tp + self.fp > 0:
+            precision = self.tp/(self.tp + self.fp)
+        else:
+            precision = 0
+        if self.tp + self.fn > 0:
+            recall = self.tp/(self.tp + self.fn)
+        else:
+            recall = 0
+        if precision+recall > 0:
+            fscore = 2*(precision*recall)/(precision+recall)
+        else:
+            fscore = 0
         print("---------")
         print("Poi type: ", self.poi_type)
         print("Precision: ", precision)

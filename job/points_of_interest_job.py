@@ -41,7 +41,7 @@ class PointOfInterest(Job):
                                               utc_to_sp))
 
         """
-        Organazing the results into a single table
+        Organizing the results into a single table
         """
         users_pois_detected_concatenated = self.points_of_interest_domain. \
             concatenate_dataframes(users_pois_detected)
@@ -55,7 +55,7 @@ class PointOfInterest(Job):
         users_pois_classified = self.points_of_interest_domain.classify_pois_from_ground_truth(
             users_steps, ground_truth, utc_to_sp)
         """
-        Organazing the results into a single table
+        Organizing the results into a single table
         """
         users_pois_classified_concatenated = self.points_of_interest_domain. \
             concatenate_dataframes(users_pois_classified)
