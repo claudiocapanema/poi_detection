@@ -33,7 +33,7 @@ Sencond, modify the run.sh file considering the directory where you have placed:
  - Where you wanna save the classified PoIs (***poi_classification_filename*** parameter).
  - The ground truth of the dataset (***ground_truth*** parameter)
 
-The are three "execution options": 
+There are three "execution options": 
  - "find_pois": applied to generate the users' pois.
  - "validate": applied to validate the generated users' pois.
  - "find_pois_and_validate": applied to run together the two previous options.
