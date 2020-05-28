@@ -22,7 +22,11 @@ The code has a job-based structure, which is helpful for future conversion to Py
 
 ## How to run?
 
-Please modify the run.sh file considering the directory where you have placed:
+First, install the requirements:
+
+    pip install -r requirements.txt
+
+Sencond, modify the run.sh file considering the directory where you have placed:
 
  - Your users' steps dataset (***users_steps_filename*** parameter)
  - Where you wanna save the detected PoIs (***poi_detection_filename*** parameter).
@@ -55,4 +59,6 @@ Bibtex entry of the PoI Detection paper:
     pages   = {16-29},
     month   = {Maio}
     }
+
+
 
