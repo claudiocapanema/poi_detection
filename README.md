@@ -45,11 +45,11 @@ Finally, run the bash script informing a execution option argument:
     
 ---
 
-## License
+## Citing
 
-The license is free. If this work was helpful for you, i would appreciate a citation in scientific publications. 
+If you use this code, please cite the PoI Detection paper.
 
-Bibtex entry of the PoI Detection paper:
+Bibtex:
 
     @ARTICLE {capanema2019identificacao,
     author  = {Cláudio G. S. Capanema and Fabrício A. Silva and Thais R. M. B. Silva},
