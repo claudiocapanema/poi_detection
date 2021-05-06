@@ -12,24 +12,13 @@ class UserStepDomain:
     def users_steps_from_csv(self, filename):
         users_steps = self.file_extractor.read_csv(filename)
         # linha,id,datetime,latitude,longitude,handset,operating_system
-        users_steps = users_steps[['id', 'datetime', 'latitude', 'longitude']]
+        users_steps = users_steps[['installation_id', 'datetime', 'latitude', 'longitude']]
+        users_steps.columns = ['id', 'datetime', 'latitude', 'longitude']
+        users_steps['index'] = np.array([i for i in range(len(users_steps))])
         users_steps['id'] = users_steps['id'].astype('int64')
         users_steps['datetime'] = pd.to_datetime(users_steps['datetime'], infer_datetime_format=True)
-        #users_steps = users_steps.drop_duplicates()
-        users_steps = self._sort_users_records(users_steps)
+        print("Describe datetime: ", users_steps['datetime'].describe())
         return users_steps
-
-
-    def _sort_users_records(self, users_steps):
-        sorted_users_steps = pd.DataFrame(data={'id': [], 'datetime': [], 'latitude': [], 'longitude': []})
-        ids = users_steps['id'].unique().tolist()
-
-        for i in ids:
-            user_records = users_steps.query("id==" + str(i))
-            user_records = user_records.sort_values(by='datetime')
-            sorted_users_steps = sorted_users_steps.append(user_records)
-
-        return sorted_users_steps
 
     def user_pois_from_csv(self, filename):
         """ id, poi_type, latitude, longitude, work_time_events, home_time_events, inactive_interval_start,

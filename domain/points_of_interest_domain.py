@@ -274,8 +274,7 @@ class PointsOfInterestDomain:
         except Exception as e:
             raise e
 
-    def identify_points_of_interest(self, user_id: int, latitude:list, longitude:list,
-                                    reference_date:list, utc_to_sp:str) -> DataFrame:
+    def identify_points_of_interest(self, user_df: pd.DataFrame, utc_to_sp:str) -> DataFrame:
         """
             This function identifies individual points of interest
             ------
@@ -296,6 +295,13 @@ class PointsOfInterestDomain:
             that the most relevant POIs will be generated, discarding those ones that were visited in only few days.
         """
         try:
+            user_df = user_df.sort_values('datetime')
+            user_id = user_df['id'].tolist()
+            latitude = user_df['latitude'].tolist()
+            longitude = user_df['longitude'].tolist()
+            reference_date = user_df['datetime'].tolist()
+
+
             user_id = int(user_id[0])
 
             size = min([len(latitude), len(longitude)])
@@ -328,7 +334,7 @@ class PointsOfInterestDomain:
                 p = Poi(pois_coordinates[i], pois_times[i])
                 if p.different_days < min_days:
                     continue
-                if p.different_schedules < 7:
+                if p.different_schedules < 2:
                     continue
                 pois.append(p)
 
@@ -404,8 +410,67 @@ class PointsOfInterestDomain:
 
         concatenated_processed_users_pois['id'] = concatenated_processed_users_pois['id'].astype('int64')
 
+        # media de pontos de interesse encontrados por usuário
+        media = concatenated_processed_users_pois.groupby(by='id').apply(lambda e: pd.DataFrame({'total': [len(e)]}))
+        print("Quantidade de usuários: ", len(concatenated_processed_users_pois['id'].tolist()))
+        print("Média de pontos de interesse encontrados por usuário: ", media['total'].mean())
+        print("Quantidade total de pontos de interesse encontrados: ", len(concatenated_processed_users_pois))
+
 
         return concatenated_processed_users_pois
 
+    def associate_users_steps_with_pois(self, user_steps, pois):
 
+        gt_latitudes = pois['latitude'].tolist()
+        gt_longitudes = pois['longitude'].tolist()
+        gt_points = np.radians([(long, lat) for long, lat in zip(gt_latitudes, gt_longitudes)])
+        dp_latitudes = user_steps['latitude'].tolist()
+        dp_longitudes = user_steps['longitude'].tolist()
+        dp_points = np.radians([(long, lat) for long, lat in zip(dp_latitudes, dp_longitudes)])
+        if len(dp_points) < 1:
+            continue
+        distances, indexes = NearestNeighbors. \
+            find_radius_neighbors(gt_points, dp_points,
+                                  PointsOfInterestConfiguration.RADIUS.get_value())
+
+        """
+            Calculating the metrics
+        """
+
+        for j in range(len(indexes)):
+            poi_type = pois['poi_type'].iloc[j]
+            found_poi_flag = False
+
+            """
+                Sorting nearest points by distance
+            """
+            result = [(dis, ind) for dis, ind in zip(distances[j], indexes[j])]
+            result = sorted(result, key=lambda e: e[0])
+
+            validated_indexes = []
+            for k in range(len(result)):  # indexes
+                # if distances[i][j] > RADIUS or distances[i][j] * 6371 > 0.1:
+                #     print("erro: ", distances[i][j], " raio: ", RADIUS)
+                if dp['poi_type'].iloc[result[k][1]] == poi_type:
+                    row = dp.iloc[result[k][1]]
+
+                    """
+                        it gets the users that have inverted routine, that is, 
+                        the users that have night work
+                    """
+                    if row['inverted_routine_flag']:
+                        # print("flag: ", row['inverted_routine_flag'], row['id'])
+                        if str(row['id']) not in ids_users_with_inverted_routine and poi_type != "other":
+                            ids_users_with_inverted_routine.append(row['id'])
+                        if poi_type == "home":
+                            self.home_confusion_matrix.add_total_users_inverted_routine_tp()
+                        elif poi_type == "work":
+                            self.work_confusion_matrix.add_total_users_inverted_routine_tp()
+
+                    validated_indexes.append(result[k][1])
+                    self._add_tp(poi_type)
+                    found_poi_flag = True
+                    break
+            if not found_poi_flag:
+                self._add_fn(poi_type)
 
