@@ -419,58 +419,102 @@ class PointsOfInterestDomain:
 
         return concatenated_processed_users_pois
 
-    def associate_users_steps_with_pois(self, user_steps, pois):
+    def associate_users_steps_with_pois(self, users_steps, pois):
 
-        gt_latitudes = pois['latitude'].tolist()
-        gt_longitudes = pois['longitude'].tolist()
-        gt_points = np.radians([(long, lat) for long, lat in zip(gt_latitudes, gt_longitudes)])
+        print(users_steps)
+        print(pois)
+
+        users_steps_with_pois = users_steps.groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois(e, pois))
+        print("final")
+        print(users_steps_with_pois)
+
+    def associate_user_steps_with_pois(self, user_steps, pois):
+
+        userid = user_steps['id'].iloc[0]
+        user_pois = pois.query("id == " + str(userid)).head(2)
+        if len(user_pois) == 0:
+            return pd.DataFrame({column: [] for column in ['id', 'datetime', 'latitude', 'longitude', 'index', 'index_assign', 'id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag']})
+        poi_latitudes = user_pois['latitude'].tolist()
+        poi_longitudes = user_pois['longitude'].tolist()
+        poi_points = np.radians([(long, lat) for long, lat in zip(poi_latitudes, poi_longitudes)])
         dp_latitudes = user_steps['latitude'].tolist()
         dp_longitudes = user_steps['longitude'].tolist()
-        dp_points = np.radians([(long, lat) for long, lat in zip(dp_latitudes, dp_longitudes)])
-        if len(dp_points) < 1:
-            continue
+        user_steps['index'] = np.array([i for i in range(len(user_steps))])
+        user_steps_points = np.radians([(long, lat) for long, lat in zip(dp_latitudes, dp_longitudes)])
+        user_pois.columns = ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag']
+        new_columns = ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag']
+        # if len(dp_points) < 1:
+        #     continue
         distances, indexes = NearestNeighbors. \
-            find_radius_neighbors(gt_points, dp_points,
-                                  PointsOfInterestConfiguration.RADIUS.get_value())
+            find_radius_neighbors(poi_points, user_steps_points,
+                                  PointsOfInterestConfiguration.EPSILON.get_value())
+
+        columns = user_steps.columns.tolist() + ['index_assign'] + user_pois.columns.tolist()
+        new_users_steps = {column: [] for column in columns}
+        """
+            get user_steps that don't belong to POIs
+        """
+        flatten_indexes = []
+        for index in indexes:
+            flatten_indexes = flatten_indexes + index.tolist()
+        flatten_indexes = sorted(flatten_indexes)
+        non_indexes = []
+        for i in range(1, len(flatten_indexes)):
+            non_indexes = non_indexes + [i for i in range(flatten_indexes[i-1], flatten_indexes[i])]
+
+        pattern_row = {}
+        for column in ['id_right', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag']:
+            pattern_row[column] = user_pois.iloc[0][column]
+        pattern_row['poi_type'] = "Displacement"
+        for column in ['poi_latitude', 'poi_longitude', 'work_time_events',
+        'home_time_events']:
+            pattern_row[column] = -1
+        for i in range(len(non_indexes)):
+            index = non_indexes[i]
+
+            user_step = user_steps.iloc[index]
+            for column in user_steps.columns:
+                new_users_steps[column].append(user_step[column])
+
+            for column in pattern_row.keys():
+                new_users_steps[column].append(pattern_row[column])
+
+        new_users_steps['index_assign'] = [i for i in non_indexes]
+        tamanhos = []
+        for column in columns:
+            if len(new_users_steps[column]) == 0:
+                print(column)
+            tamanhos.append(len(new_users_steps[column]))
 
         """
             Calculating the metrics
         """
+        for i in range(len(indexes)):
+            poi_indexes = indexes[i]
+            poi = user_pois.iloc[i]
+            for j in poi_indexes:
+                user_steps['index_assign'] = j
+                row = pd.concat([user_steps.iloc[j], poi])
+                for column in row.index.tolist():
+                    new_users_steps[column].append(row[column])
 
-        for j in range(len(indexes)):
-            poi_type = pois['poi_type'].iloc[j]
-            found_poi_flag = False
+        users_steps_with_pois = pd.DataFrame(new_users_steps)
+        #users_steps_with_pois.append(lambda e: self.verify_users_steps_pois_assignment(e))
 
-            """
-                Sorting nearest points by distance
-            """
-            result = [(dis, ind) for dis, ind in zip(distances[j], indexes[j])]
-            result = sorted(result, key=lambda e: e[0])
+        return users_steps_with_pois
 
-            validated_indexes = []
-            for k in range(len(result)):  # indexes
-                # if distances[i][j] > RADIUS or distances[i][j] * 6371 > 0.1:
-                #     print("erro: ", distances[i][j], " raio: ", RADIUS)
-                if dp['poi_type'].iloc[result[k][1]] == poi_type:
-                    row = dp.iloc[result[k][1]]
 
-                    """
-                        it gets the users that have inverted routine, that is, 
-                        the users that have night work
-                    """
-                    if row['inverted_routine_flag']:
-                        # print("flag: ", row['inverted_routine_flag'], row['id'])
-                        if str(row['id']) not in ids_users_with_inverted_routine and poi_type != "other":
-                            ids_users_with_inverted_routine.append(row['id'])
-                        if poi_type == "home":
-                            self.home_confusion_matrix.add_total_users_inverted_routine_tp()
-                        elif poi_type == "work":
-                            self.work_confusion_matrix.add_total_users_inverted_routine_tp()
-
-                    validated_indexes.append(result[k][1])
-                    self._add_tp(poi_type)
-                    found_poi_flag = True
-                    break
-            if not found_poi_flag:
-                self._add_fn(poi_type)
-
+    def verify_users_steps_pois_assignment(self, row):
+        print(row)
+        print("Verificação")
+        if row['id'] != row['id_right'] or row['index'] != row['index_assign']:
+            print("Erro")
+            raise
+        return None

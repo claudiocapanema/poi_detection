@@ -39,6 +39,10 @@ class UserStepDomain:
 
         return df
 
+    def read_csv(self, filename):
+
+        return self.file_extractor.read_csv(filename)
+
     # def geodesic_point_buffer(lati, lon, km):
     #     # Azimuthal equidistant projection
     #     aeqd_proj = '+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'

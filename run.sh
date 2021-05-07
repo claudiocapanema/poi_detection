@@ -23,7 +23,8 @@ POI_CONFIG='{
           "poi_detection_filename": "'$DETECTED_USERS_5_MIL_MAX_500_POINTS'",
           "poi_classification_filename": "'$CLASSIFIED_USERS_5_MIL_MAX_500_POINTS'",
           "ground_truth": "'$GROUND_TRUTH'",
-          "utc_to_sp": "no"
+          "utc_to_sp": "no",
+          "users_steps_join_detected_pois":"yes"
           }'
 
 # points_of_interest_validation_job
