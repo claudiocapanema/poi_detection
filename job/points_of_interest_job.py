@@ -18,10 +18,15 @@ class PointOfInterest(Job):
         utc_to_sp = Input.get_instance().inputs['utc_to_sp']
         poi_detection_filename = Input.get_arg("poi_detection_filename")
         users_steps_join_detected_pois = Input.get_instance().inputs['users_steps_join_detected_pois']
+        users_detected_pois_with_osm_pois_filename = Input.get_instance().inputs['users_detected_pois_with_osm_pois_filename']
+        users_steps_with_detected_pois_with_osm_pois_filename = Input.get_instance().inputs['users_steps_with_detected_pois_with_osm_pois_filename']
         users_steps = self.user_step_domain.users_steps_from_csv(users_step_filename)
-        users_steps = users_steps[users_steps.datetime < pd.Timestamp(year=2018, month=8, day=1)]
-        users_steps = users_steps[users_steps.datetime >= pd.Timestamp(year=2018, month=7, day=1)]
-
+        min_datetime = pd.Timestamp(year=2018, month=7, day=1)
+        max_datetime = pd.Timestamp(year=2018, month=9, day=1)
+        users_steps = users_steps[users_steps.datetime < max_datetime]
+        users_steps = users_steps[users_steps.datetime >= min_datetime]
+        print("Filtrado")
+        print(users_steps['datetime'].describe())
         # ----------------------------------------
 
         """
@@ -36,9 +41,14 @@ class PointOfInterest(Job):
         #self.users_pois_classificaion(users_steps, utc_to_sp)
 
         if users_steps_join_detected_pois == "yes":
-            users_detected_pois = self.user_step_domain.read_csv(poi_detection_filename)
+            users_detected_pois = self.user_step_domain.read_csv(users_detected_pois_with_osm_pois_filename)
+            #self.file_loader.save_df_to_json(users_detected_pois, poi_detection_filename)
             users_detected_pois['id'] = users_detected_pois['id'].astype('int')
-            self.points_of_interest_domain.associate_users_steps_with_pois(users_steps, users_detected_pois)
+            users_steps['id'] = users_steps['id'].astype('int')
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(users_steps, users_detected_pois)
+
+            self.file_loader.save_df_to_csv(users_steps_with_pois, users_steps_with_detected_pois_with_osm_pois_filename)
+            #self.file_loader.save_df_to_json(users_steps_with_pois, users_detected_pois_with_osm_pois_filename)
 
     def users_pois_detection(self, users_steps, utc_to_sp, poi_detection_filename):
 

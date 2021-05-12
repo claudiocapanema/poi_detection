@@ -424,18 +424,39 @@ class PointsOfInterestDomain:
         print(users_steps)
         print(pois)
 
-        users_steps_with_pois = users_steps.groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois(e, pois))
+        users_steps_with_pois = users_steps.groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois(e, pois)).reset_index(drop=True)
+        users_steps_with_pois['id'] = users_steps_with_pois['id'].astype('int')
+        users_steps_with_pois['index'] = users_steps_with_pois['index'].astype('int')
+        users_steps_with_pois['id_right'] = users_steps_with_pois['id_right'].astype("int")
+        users_steps_with_pois['index_assign'] = users_steps_with_pois['index_assign'].astype('int')
+        users_steps_with_pois['work_time_events'] = users_steps_with_pois['work_time_events'].astype('int')
+        users_steps_with_pois['home_time_events'] = users_steps_with_pois['home_time_events'].astype('int')
+        users_steps_with_pois['inactive_applied_flag'] = users_steps_with_pois['inactive_applied_flag'].astype("int")
+        users_steps_with_pois['inactive_interval_start'] = users_steps_with_pois['inactive_interval_start'].astype("int")
+        users_steps_with_pois['inactive_interval_end'] = users_steps_with_pois['inactive_interval_end'].astype("int")
+        users_steps_with_pois['inverted_routine_flag'] = users_steps_with_pois['inverted_routine_flag'].astype("int")
         print("final")
+        print("colunas: ", users_steps_with_pois.columns)
         print(users_steps_with_pois)
+
+        self.verify_users_steps_pois_assignment(users_steps_with_pois)
+        users_steps_with_pois = users_steps_with_pois[
+            ['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+             'work_time_events', 'home_time_events', 'inactive_applied_flag',
+             'inactive_interval_end', 'inactive_interval_start',
+             'inverted_routine_flag', 'poi_osm',
+        'distance_osm']]
+        return users_steps_with_pois
 
     def associate_user_steps_with_pois(self, user_steps, pois):
 
         userid = user_steps['id'].iloc[0]
         user_pois = pois.query("id == " + str(userid)).head(2)
         if len(user_pois) == 0:
-            return pd.DataFrame({column: [] for column in ['id', 'datetime', 'latitude', 'longitude', 'index', 'index_assign', 'id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+            return pd.DataFrame({column: [] for column in ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
-       'inactive_interval_start', 'inverted_routine_flag']})
+       'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+        'distance_osm']})
         poi_latitudes = user_pois['latitude'].tolist()
         poi_longitudes = user_pois['longitude'].tolist()
         poi_points = np.radians([(long, lat) for long, lat in zip(poi_latitudes, poi_longitudes)])
@@ -443,12 +464,14 @@ class PointsOfInterestDomain:
         dp_longitudes = user_steps['longitude'].tolist()
         user_steps['index'] = np.array([i for i in range(len(user_steps))])
         user_steps_points = np.radians([(long, lat) for long, lat in zip(dp_latitudes, dp_longitudes)])
+        user_pois = user_pois[['id', 'poi_type', 'latitude', 'longitude', 'work_time_events',
+       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+       'distance_osm']]
         user_pois.columns = ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
-       'inactive_interval_start', 'inverted_routine_flag']
-        new_columns = ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
-       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
-       'inactive_interval_start', 'inverted_routine_flag']
+       'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+        'distance_osm']
         # if len(dp_points) < 1:
         #     continue
         distances, indexes = NearestNeighbors. \
@@ -476,6 +499,8 @@ class PointsOfInterestDomain:
         for column in ['poi_latitude', 'poi_longitude', 'work_time_events',
         'home_time_events']:
             pattern_row[column] = -1
+        pattern_row['poi_osm'] = 'empty'
+        pattern_row['distance_osm'] = 999
         for i in range(len(non_indexes)):
             index = non_indexes[i]
 
@@ -505,6 +530,11 @@ class PointsOfInterestDomain:
                 for column in row.index.tolist():
                     new_users_steps[column].append(row[column])
 
+        # print("usuario ----------")
+        # for k in new_users_steps:
+        #     print("Chave: ", k)
+        #     print("Tamanho: ", len(new_users_steps[k]))
+
         users_steps_with_pois = pd.DataFrame(new_users_steps)
         #users_steps_with_pois.append(lambda e: self.verify_users_steps_pois_assignment(e))
 
@@ -514,7 +544,6 @@ class PointsOfInterestDomain:
     def verify_users_steps_pois_assignment(self, row):
         print(row)
         print("Verificação")
-        if row['id'] != row['id_right'] or row['index'] != row['index_assign']:
+        if row['id'].tolist() != row['id_right'].tolist() or row['index'].tolist() != row['index_assign'].tolist():
             print("Erro")
             raise
-        return None

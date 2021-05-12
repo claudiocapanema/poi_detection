@@ -8,9 +8,13 @@ USERS_194_STEPS_FILENAME="${USERS_STEPS_BASE_DIR}194_users_data.csv"
 USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_BASE_DIR}df_mais_de_10_mil_limite_500_pontos.csv"
 DETECTED_USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_10_mil_limite_500_pontos.csv"
 CLASSIFIED_USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}classified_df_mais_de_10_mil_limite_500_pontos.csv"
+USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_POIS_FILENAME="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_10_mil_limite_500_pontos_with_osm_pois_20.csv"
+USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME="${USERS_STEPS_OUTPUT_BASE_DIR}users_steps_10_mil_limite_500_pontos_with_detected_pois_with_osm_pois.csv"
 USERS_5_MIL_MAX_500_POINTS="${USERS_STEPS_BASE_DIR}df_mais_de_5_mil_limite_500_pontos.csv"
 DETECTED_USERS_5_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_5_mil_limite_500_pontos.csv"
+DETECTED_USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_10_mil_limite_500_pontos.csv"
 CLASSIFIED_USERS_5_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}classified_df_mais_de_5_mil_limite_500_pontos.csv"
+CLASSIFIED_USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}classified_df_mais_de_10_mil_limite_500_pontos.csv"
 POI_DETECTION_FILENAME="/home/claudio/Documentos/pycharmprojects/poi_detection_output/users_detected_pois.csv"
 POI_CLASSIFICATION_FILENAME="/home/claudio/Documentos/pycharmprojects/poi_detection_output/users_classified_pois.csv"
 GROUND_TRUTH="/home/claudio/Documentos/pycharmprojects/poi_detection_output/pontosmarcados_corrigido_periodico.csv"
@@ -19,11 +23,14 @@ GROUND_TRUTH="/home/claudio/Documentos/pycharmprojects/poi_detection_output/pont
 # This job is applied to detect users' pois
 POI_CONFIG='{
           "job": "points_of_interest_job",
-          "users_steps_filename": "'$USERS_5_MIL_MAX_500_POINTS'",
-          "poi_detection_filename": "'$DETECTED_USERS_5_MIL_MAX_500_POINTS'",
-          "poi_classification_filename": "'$CLASSIFIED_USERS_5_MIL_MAX_500_POINTS'",
+          "users_steps_filename": "'$USERS_10_MIL_MAX_500_POINTS'",
+          "poi_detection_filename": "'$DETECTED_USERS_10_MIL_MAX_500_POINTS'",
+          "poi_detection_join_osm_filename": "'$DETECTED_USERS_10_MIL_MAX_500_POINTS'",
+          "poi_classification_filename":"'$CLASSIFIED_USERS_10_MIL_MAX_500_POINTS'",
+          "users_detected_pois_with_osm_pois_filename":"'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_POIS_FILENAME'",
+          "users_steps_with_detected_pois_with_osm_pois_filename":"'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
           "ground_truth": "'$GROUND_TRUTH'",
-          "utc_to_sp": "no",
+          "utc_to_sp": "yes",
           "users_steps_join_detected_pois":"yes"
           }'
 
