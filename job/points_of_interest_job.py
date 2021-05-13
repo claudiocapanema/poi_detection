@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from domain.user_step_domain import UserStepDomain
@@ -25,6 +26,8 @@ class PointOfInterest(Job):
         max_datetime = pd.Timestamp(year=2018, month=9, day=1)
         users_steps = users_steps[users_steps.datetime < max_datetime]
         users_steps = users_steps[users_steps.datetime >= min_datetime]
+        users_steps = self.select_article_users(users_steps)
+        #users_steps['index'] = np.array([i for i in range(len(users_steps))])
         print("Filtrado")
         print(users_steps['datetime'].describe())
         # ----------------------------------------
@@ -42,13 +45,12 @@ class PointOfInterest(Job):
 
         if users_steps_join_detected_pois == "yes":
             users_detected_pois = self.user_step_domain.read_csv(users_detected_pois_with_osm_pois_filename)
-            #self.file_loader.save_df_to_json(users_detected_pois, poi_detection_filename)
             users_detected_pois['id'] = users_detected_pois['id'].astype('int')
             users_steps['id'] = users_steps['id'].astype('int')
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(users_steps, users_detected_pois)
-
+            print("Salvar")
+            print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois, users_steps_with_detected_pois_with_osm_pois_filename)
-            #self.file_loader.save_df_to_json(users_steps_with_pois, users_detected_pois_with_osm_pois_filename)
 
     def users_pois_detection(self, users_steps, utc_to_sp, poi_detection_filename):
 
@@ -80,5 +82,13 @@ class PointOfInterest(Job):
             concatenate_dataframes(users_pois_classified)
         self.file_loader.save_df_to_csv(users_pois_classified_concatenated, poi_classification_filename)
 
+    def select_article_users(self, users_steps):
 
+        filename = "/media/claudio/Data/backup_linux/Documentos/users_steps_datasets/df_mais_de_5_mil_limite_500_pontos.csv"
+        users_ids = pd.read_csv(filename)['installation_id'].unique().tolist()
 
+        users_steps = users_steps.query("id in {}".format(str(users_ids)))
+
+        print("Quantidade de usuários selecionados: ", len(users_steps['id'].unique().tolist()))
+
+        return users_steps

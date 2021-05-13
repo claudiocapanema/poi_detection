@@ -44,6 +44,16 @@ VALIDATION_CONFIG='{
           "ground_truth": "'$GROUND_TRUTH'"
           }'
 
+SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
+          "job": "next_poi_category_prediction_sequences_generation_job",
+          "users_steps_filename": "'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
+          "base_dir":"'$USERS_STEPS_BASE_DIR'",
+          "users_sequences_folder":"'$USERS_STEPS_BASE_DIR'/sequences/",
+          "categories_type":"10_categories",
+          "ground_truth": "'$GROUND_TRUTH'",
+          "dataset_name":"users_steps"
+          }'
+
 echo $CONFIG
 
 case $1 in
@@ -56,5 +66,8 @@ case $1 in
   "find_poi_and_validate")
     python main.py "${POI_CONFIG}"
     python main.py "${VALIDATION_CONFIG}"
+    ;;
+  "sequences_generation")
+    python main.py "${SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG}"
     ;;
 esac

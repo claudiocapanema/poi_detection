@@ -1,4 +1,5 @@
 import datetime as dt
+from iteration_utilities import duplicates
 from foundation.general_code.dbscan import Dbscan
 import numpy as np
 import pandas as pd
@@ -12,6 +13,7 @@ from configuration.weekday import Weekday
 from foundation.util.datetimes_utils import DatetimesUtils
 from model.location_type import LocationType
 from foundation.general_code.nearest_neighbors import NearestNeighbors
+from foundation.util.geospatial_utils import points_distance
 
 class PointsOfInterestDomain:
 
@@ -421,9 +423,10 @@ class PointsOfInterestDomain:
 
     def associate_users_steps_with_pois(self, users_steps, pois):
 
-        print(users_steps)
-        print(pois)
 
+        print("Tamanho users teps: ", len(users_steps))
+        print("Tamanho pois: ", len(pois))
+        #users_steps = users_steps.query("id == '1306539'")
         users_steps_with_pois = users_steps.groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois(e, pois)).reset_index(drop=True)
         users_steps_with_pois['id'] = users_steps_with_pois['id'].astype('int')
         users_steps_with_pois['index'] = users_steps_with_pois['index'].astype('int')
@@ -435,28 +438,29 @@ class PointsOfInterestDomain:
         users_steps_with_pois['inactive_interval_start'] = users_steps_with_pois['inactive_interval_start'].astype("int")
         users_steps_with_pois['inactive_interval_end'] = users_steps_with_pois['inactive_interval_end'].astype("int")
         users_steps_with_pois['inverted_routine_flag'] = users_steps_with_pois['inverted_routine_flag'].astype("int")
-        print("final")
-        print("colunas: ", users_steps_with_pois.columns)
-        print(users_steps_with_pois)
-
-        self.verify_users_steps_pois_assignment(users_steps_with_pois)
+        users_steps_with_pois['row_index'] = np.array([i for i in range(len(users_steps_with_pois))])
+        if len(users_steps_with_pois) > 0:
+            users_steps_with_pois = users_steps_with_pois.groupby('row_index').apply(lambda e: self.resulting_poi_type(e))
         users_steps_with_pois = users_steps_with_pois[
             ['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
              'work_time_events', 'home_time_events', 'inactive_applied_flag',
              'inactive_interval_end', 'inactive_interval_start',
              'inverted_routine_flag', 'poi_osm',
-        'distance_osm']]
+        'distance_osm', 'poi_resulting']]
+
+        print("Categorias unicas na coluna 'poi_resulting': ", users_steps_with_pois['poi_resulting'].unique().tolist())
         return users_steps_with_pois
 
     def associate_user_steps_with_pois(self, user_steps, pois):
 
         userid = user_steps['id'].iloc[0]
-        user_pois = pois.query("id == " + str(userid)).head(2)
+        user_pois = pois.query("id == " + str(userid))
         if len(user_pois) == 0:
             return pd.DataFrame({column: [] for column in ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
-        'distance_osm']})
+        'distance_osm', 'poi_resulting']})
+
         poi_latitudes = user_pois['latitude'].tolist()
         poi_longitudes = user_pois['longitude'].tolist()
         poi_points = np.radians([(long, lat) for long, lat in zip(poi_latitudes, poi_longitudes)])
@@ -489,13 +493,24 @@ class PointsOfInterestDomain:
         flatten_indexes = sorted(flatten_indexes)
         non_indexes = []
         for i in range(1, len(flatten_indexes)):
-            non_indexes = non_indexes + [i for i in range(flatten_indexes[i-1], flatten_indexes[i])]
+            non_indexes = non_indexes + [i for i in range(flatten_indexes[i-1] + 1, flatten_indexes[i])]
+        # print("indices")
+        # print(flatten_indexes)
+        # print("nao indices")
+        # print(non_indexes)
+        if len(flatten_indexes) == 0 and len(non_indexes) == 0:
+            return pd.DataFrame(
+                {column: [] for column in ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+                                           'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+                                           'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+                                           'distance_osm', 'poi_resulting']})
 
+        # add displacement user steps to the new user steps
         pattern_row = {}
         for column in ['id_right', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag']:
             pattern_row[column] = user_pois.iloc[0][column]
-        pattern_row['poi_type'] = "Displacement"
+        pattern_row['poi_type'] = "displacement"
         for column in ['poi_latitude', 'poi_longitude', 'work_time_events',
         'home_time_events']:
             pattern_row[column] = -1
@@ -504,22 +519,19 @@ class PointsOfInterestDomain:
         for i in range(len(non_indexes)):
             index = non_indexes[i]
 
+            # columns of user steps
             user_step = user_steps.iloc[index]
             for column in user_steps.columns:
                 new_users_steps[column].append(user_step[column])
 
+            # columns of user pois
             for column in pattern_row.keys():
                 new_users_steps[column].append(pattern_row[column])
 
-        new_users_steps['index_assign'] = [i for i in non_indexes]
-        tamanhos = []
-        for column in columns:
-            if len(new_users_steps[column]) == 0:
-                print(column)
-            tamanhos.append(len(new_users_steps[column]))
+        new_users_steps['index_assign'] = [j for j in non_indexes]
 
         """
-            Calculating the metrics
+            Join user steps with pois
         """
         for i in range(len(indexes)):
             poi_indexes = indexes[i]
@@ -530,20 +542,59 @@ class PointsOfInterestDomain:
                 for column in row.index.tolist():
                     new_users_steps[column].append(row[column])
 
-        # print("usuario ----------")
-        # for k in new_users_steps:
-        #     print("Chave: ", k)
-        #     print("Tamanho: ", len(new_users_steps[k]))
-
         users_steps_with_pois = pd.DataFrame(new_users_steps)
-        #users_steps_with_pois.append(lambda e: self.verify_users_steps_pois_assignment(e))
+        tamanho = len(users_steps_with_pois)
+        users_steps_with_pois = users_steps_with_pois.drop_duplicates(subset='index')
+        if tamanho != len(users_steps_with_pois):
+            print("Indices duplicados: ", tamanho - len(users_steps_with_pois))
+            print("Usuário: ", users_steps_with_pois['id'].iloc[0])
+
+        self.verify_users_steps_pois_assignment(users_steps_with_pois)
 
         return users_steps_with_pois
 
 
     def verify_users_steps_pois_assignment(self, row):
-        print(row)
-        print("Verificação")
         if row['id'].tolist() != row['id_right'].tolist() or row['index'].tolist() != row['index_assign'].tolist():
             print("Erro")
             raise
+
+        if len(row) != len(row['index'].unique().tolist()):
+            print("Indexes repetidos")
+            print(list(duplicates(row['index'].tolist())))
+            raise Exception("Indices repetidos\n" + "Tamanho: " + str(len(row)) + "\nQuantidade de indices diferentes: " + str(len(row['index'].unique().tolist())))
+
+        # user_steps_latitudes = row['latitude'].tolist()
+        # user_steps_longitude = row['longitude'].tolist()
+        # poi_latitudes = row['poi_latitude'].tolist()
+        # poi_longitudes = row['poi_longitude'].tolist()
+        # for i in range(len(user_steps_latitudes)):
+        #
+        #     user_steps_point = (user_steps_latitudes[i], user_steps_longitude[i])
+        #     poi_point = (poi_latitudes[i], poi_longitudes[i])
+        #     if poi_point == (-1, -1):
+        #         continue
+        #     distance =  points_distance(user_steps_point, poi_point)
+        #     if distance > PointsOfInterestConfiguration.METERS.get_value():
+        #         points = "\n" + str(user_steps_point) + ", " + str(poi_point)
+        #         raise Exception("Ponto mais distance que o limite\n" + "Distância: " + str(distance) + points)
+
+    def resulting_poi_type(self, row):
+        """
+            Add the "poi_resulting" column, which contains the resultant poi considering poi_type and poi_osm columns
+        :param row:
+        :return: Series with added "poi_resulting" index.
+        """
+        poi_type = row.iloc[0]['poi_type']
+        poi_osm = row.iloc[0]['poi_osm']
+
+        if poi_type == 'home' or poi_type == 'work' or poi_type == 'displacement':
+            poi_resulting = poi_type
+        elif poi_type == 'other' and poi_osm == 'empty':
+            poi_resulting = poi_type
+        else:
+            poi_resulting = poi_osm
+
+        row['poi_resulting'] = poi_resulting
+
+        return row

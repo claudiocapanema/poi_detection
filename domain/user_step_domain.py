@@ -15,7 +15,6 @@ class UserStepDomain:
         users_steps['datetime'] = np.array(users_steps['reference_date'].tolist())
         users_steps = users_steps[['installation_id', 'datetime', 'latitude', 'longitude']]
         users_steps.columns = ['id', 'datetime', 'latitude', 'longitude']
-        users_steps['index'] = np.array([i for i in range(len(users_steps))])
         users_steps['id'] = users_steps['id'].astype('int64')
         users_steps['datetime'] = pd.to_datetime(users_steps['datetime'], infer_datetime_format=True)
         print("Describe datetime: ", users_steps['datetime'].describe())
