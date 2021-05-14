@@ -27,8 +27,9 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                            category_column,
                            locationid_column,
                            datetime_column,
-                           categories_to_int,
-                           max_pois):
+                           categories_to_int):
+
+        df = df.sort_values(by=datetime_column)
 
         categories_names = df[category_column].tolist()
         datetime_list = df[datetime_column].tolist()
@@ -53,10 +54,12 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
             else:
                 day_type = 1
                 hour = date.hour + 24
-            sequence = [user_id[i], categories_id[i], hour, day_type]
+
+            #
+            sequence = [categories_id[i], hour, day_type, user_id[i]]
             user_sequence.append(sequence)
 
-        return pd.DataFrame({'id': user_id[0], 'sequence': str(user_sequence), 'categories': str(categories_id)})
+        return pd.DataFrame({'id': user_id[0], 'sequence': [str(user_sequence)], 'categories': [str(categories_id)]})
 
     def generate_sequences(self, users_checkins, sequences_size, max_pois, userid_column,
                            category_column,
@@ -70,12 +73,9 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                                                                                           category_column,
                                                                                           locationid_column,
                                                                                           datetime_column,
-                                                                                          categories_to_int,
-                                                                                          max_pois))
-        print("ant", df.shape, df, df.columns)
-        df = df.query("location != 'nan'")
-        print("ds", df.shape, df, df.columns)
-        df = self._flatten_df(df, userid_column)
+                                                                                          categories_to_int))
+
+        #df = self._flatten_df(df, userid_column)
 
         return df
 
@@ -101,7 +101,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
 
     def sequences_to_csv(self, df, users_sequences_folder, dataset_name, categories_type):
 
-        filename = users_sequences_folder+dataset_name+"_"+categories_type+"_sequences.csv"
+        filename = users_sequences_folder + dataset_name + "_" + categories_type + "_sequences.csv"
 
         self.sequences_generation_for_poi_categorization_sequential_baselines_loader.sequences_to_csv(df, filename)
 

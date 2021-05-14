@@ -4,6 +4,7 @@ import ast
 from job.points_of_interest_job import PointOfInterest
 from job.points_of_interest_validation_job import PointsOfInterestValidation
 from job.next_poi_category_prediction_sequences_generation_job import NextPoiCategoryPredictionSequencesGenerationJob
+from job.next_poi_category_prediction_job import NextPoiCategoryPredictionJob
 from foundation.configuration.input import Input
 
 def start_input(args):
@@ -21,6 +22,8 @@ def start_job(args):
         job = PointsOfInterestValidation()
     elif job_name == "next_poi_category_prediction_sequences_generation_job":
         job = NextPoiCategoryPredictionSequencesGenerationJob()
+    elif job_name == "next_poi_category_prediction_job":
+        job = NextPoiCategoryPredictionJob()
 
     job.start()
 

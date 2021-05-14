@@ -27,7 +27,6 @@ class PointOfInterest(Job):
         users_steps = users_steps[users_steps.datetime < max_datetime]
         users_steps = users_steps[users_steps.datetime >= min_datetime]
         users_steps = self.select_article_users(users_steps)
-        #users_steps['index'] = np.array([i for i in range(len(users_steps))])
         print("Filtrado")
         print(users_steps['datetime'].describe())
         # ----------------------------------------

@@ -19,6 +19,7 @@ class PointsOfInterestDomain:
 
     def __init__(self):
         self.location_type = LocationType()
+        self.datetime_utils = DatetimesUtils()
 
     def inactive_interval(self, events_hours: list) ->tuple:
         """
@@ -315,6 +316,8 @@ class PointsOfInterestDomain:
                 times = [DatetimesUtils.convert_tz(reference_date[i], pytz.utc, sp_time_zone) for i in range(len(reference_date))]
             else:
                 times = reference_date
+            # # utc to local datetime
+            # times = [self.datetime_utils.find_timezone(date, lat ,lon) for date, lat, lon in zip(reference_date, latitude, longitude)]
             n_events = len(coordinates)
 
             # Setting the identification parameters
@@ -426,8 +429,9 @@ class PointsOfInterestDomain:
 
         print("Tamanho users teps: ", len(users_steps))
         print("Tamanho pois: ", len(pois))
+        users_steps['id'] = users_steps['id'].astype('int')
         #users_steps = users_steps.query("id == '1306539'")
-        users_steps_with_pois = users_steps.groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois(e, pois)).reset_index(drop=True)
+        users_steps_with_pois = users_steps.head(int(len(users_steps)/2)).groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois(e, pois)).reset_index(drop=True)
         users_steps_with_pois['id'] = users_steps_with_pois['id'].astype('int')
         users_steps_with_pois['index'] = users_steps_with_pois['index'].astype('int')
         users_steps_with_pois['id_right'] = users_steps_with_pois['id_right'].astype("int")

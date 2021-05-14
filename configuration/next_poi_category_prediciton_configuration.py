@@ -15,30 +15,30 @@ class NextPoiCategoryPredictionConfiguration:
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
-        self.BATCH = ("batch", {'serm': 200, 'map': 200, 'stf': 200})
+        self.BATCH = ("batch", {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200})
 
-        self.OPTIMIZER = ("learning_rate", {'serm': Adam(), 'map': Adam(), 'stf': Adam(epsilon=0.1, clipnorm=1)})
+        self.OPTIMIZER = ("learning_rate", {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(epsilon=0.1, clipnorm=1)})
 
         self.OUTPUT_BASE_DIR = (
-        "output_dir", "output/poi_categorization_sequential_baselines/", False, "output directory for the poi_categorization")
+        "output_dir", "output/next_poi_category_prediction/", False, "output directory for the poi_categorization")
 
-        self.MODEL_NAME = ("model_name", {'serm': "serm/", 'map': "map/", 'stf': "stf/"})
+        self.MODEL_NAME = ("model_name", {'mfa': "mfa/", 'serm': "serm/", 'map': "map/", 'stf': "stf/"})
 
-        self.DATASET_TYPE = ("dataset_type", {'foursquare': "foursquare/", 'weeplaces': "weeplaces/"})
+        self.DATASET_TYPE = ("dataset_type", {'users_steps': "users_steps/"})
 
         self.CATEGORY_TYPE = ("category_type",
-                         {'osm': "13_categories/",
-                          'reduced_osm': "9_categories/", '7_categories_osm': "7_categories/"})
+                         {'10_categories': "10_categories/"})
 
         self.CLASS_WEIGHT = ("class_weight",
-                        {'7_categories_osm': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
-                                              'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
-                                              'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1}}})
+                        {'10_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
+                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
+                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
+                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1}}})
 
         self.DATASET_COLUMNS = ("dataset_columns", {"users_steps": {"datetime": "datetime",
                                                                   "userid": "id",
                                                                   "locationid": "placeid",
-                                                                  "category": "category",
+                                                                  "category": "poi_resulting",
                                                                   "latitude": "latitude",
                                                                   "longitude": "longitude"}})
 
@@ -48,6 +48,30 @@ class NextPoiCategoryPredictionConfiguration:
                                                             {"10_categories": {self.CATEGORIES[i]: i for i in range(len(self.CATEGORIES))}}})
 
         self.MAX_POIS = ("max_pois", 10)
+
+        self.REPORT_10_INT_CATEGORIES = ("report_10_int_categories",
+                                        {'0': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '1': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '2': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '3': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '4': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '5': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '6': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '7': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '8': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         '9': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         'accuracy': [],
+                                         'macro avg': {'precision': [], 'recall': [], 'f1-score': [], 'support': []},
+                                         'weighted avg': {'precision': [], 'recall': [], 'f1-score': [],
+                                                          'support': []}},
+                                        "report")
+
+        self.REPORT_MODEL = ("report_model",
+                             {'10_categories': self.REPORT_10_INT_CATEGORIES[1]})
+
+        self.NUMBER_OF_CATEGORIES = ("number_of_categories", {'10_categories': 10})
+
+        self.STEP_SIZE = ("step_size", 4)
 
     def __str__(self):
         return self.name
