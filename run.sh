@@ -57,7 +57,7 @@ SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
 NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
           "job": "next_poi_category_prediction_job",
           "users_sequences": "'$USERS_STEPS_SEQUENCES_FILENAME'",
-          "baseline": "mfa",
+          "baseline": "stf",
           "dataset_name":"users_steps",
           "categories_type":"10_categories"
           }'

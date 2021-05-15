@@ -1,11 +1,11 @@
-from keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropout, SimpleRNN, Input, Lambda, \
-    Flatten, Reshape
-from keras.layers.merge import add,concatenate
-from keras.layers.embeddings import Embedding
-from keras.models import Model
+from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropout, SimpleRNN, Input, Lambda, \
+    Flatten, Reshape, MultiHeadAttention
+from tensorflow.keras.layers import add, Concatenate
+from tensorflow.keras.layers import Embedding
+from tensorflow.keras.models import Model
 #from keras_multi_head import MultiHeadAttention
 from keras.regularizers import l1, l2
-from keras_self_attention import SeqSelfAttention
+#from keras_self_attention import SeqSelfAttention
 import tensorflow as tf
 
 
@@ -43,13 +43,12 @@ class MAP:
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
         srnn = SimpleRNN(300, return_sequences=True)(spatial_embedding)
         srnn = Dropout(0.5)(srnn)
-        concat_1 = concatenate(inputs=[srnn, temporal_embedding])
+        concat_1 = Concatenate(inputs=[srnn, temporal_embedding])
 
-        att = SeqSelfAttention(attention_width=4,
-                               attention_activation='sigmoid',
+        att = MultiHeadAttention(num_heads=4,
                                name='Attention')(concat_1)
 
-        att = concatenate(inputs=[srnn, att])
+        att = Concatenate(inputs=[srnn, att])
         att = Flatten()(att)
         drop_1 = Dropout(0.6)(att)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)

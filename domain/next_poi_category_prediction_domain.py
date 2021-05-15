@@ -6,14 +6,10 @@ import json
 import scipy.sparse as sp
 from sklearn.preprocessing import normalize
 from sklearn.model_selection import KFold
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.callbacks import EarlyStopping
-import copy
 import sklearn.metrics as skm
-from keras import utils as np_utils
-import tensorflow as tf
+import tensorflow
+from tensorflow.keras import utils as np_utils
 from sklearn.model_selection import KFold
-import keras
 
 from extractor.file_extractor import FileExtractor
 from foundation.util.next_poi_category_prediction_util import sequence_to_x_y, \
@@ -44,8 +40,16 @@ class NextPoiCategoryPredictionDomain:
             self.count+=1
         #print("resul: ", series.replace("\n", "").replace(" ", ",").replace(".","").replace(",,",",").replace("[,", "[").replace(",,",","))
         series = json.loads(series.replace("\n", "").replace(" ", ",").replace(".","").replace(",,",",").replace("[,", "[").replace(",,",",").replace("[,", "[").replace(",,", ","))
+        # series = series.replace("(", "[").replace(")", "]")
+        # series = series.split("],")
+        # new_series = []
+        # for e in series:
+        #     e = e.replace("[", "").replace("]", "")
+        #     data, hour, location = e.split(",")
+        #     new_series.append([data.replace(" '", "").replace("'", ""), int(hour.replace(" ", "")), int(location.replace(" ", ""))])
 
-        return series
+        # new_series = np.array(new_series)
+        return np.array(series)
 
     def read_sequences(self, filename, n_splits):
 
@@ -62,37 +66,49 @@ class NextPoiCategoryPredictionDomain:
 
             user_id = users_ids[i]
             sequence = sequences[i]
-
+            new_sequence = []
             for j in range(len(sequence)):
-                sequence[j][3] = user_id
+                location = sequence[j][0]
+                hour = sequence[j][1]
+                day_type = sequence[j][2]
+                new_sequence.append([location, hour, day_type, user_id])
 
-            new_sequences.append(sequence)
+            new_sequences.append(new_sequence)
 
         print("quantidade usuarios: ", len(users_ids))
         print("quantidade se: ", len(new_sequences))
         df['sequence'] = np.array(new_sequences)
 
-        # print("tamanho", users_trajectories.shape)
-        # users_sequences = np.zeros(shape=users_trajectories.shape[0], dtype=object)
-        # for i in range(users_trajectories.shape[0]):
-        #     user_trajetory = self._sequence_to_list(users_trajectories[i])
-        #     user_sequences = []
-        #     sequence = []
-        #     for j in range(len(user_trajetory)):
-        #         sequence.append(user_trajetory[j])
-        #         if len(sequence) == sequences_size:
+        # df = self.file_extractor.read_csv(
+        #     "/media/claudio/Data/backup_linux/Documentos/pycharmprojects/masters_research/location_sequence_48hours_10mil_usuarios.csv")
+        # print("Colunas")
+        # print(df)
+        # # reindex ids
+        # df['id'] = np.array([i for i in range(len(df))])
+        # df['sequence'] = df['location_sequence'].apply(lambda e: self._sequence_to_list(e))
+        # users_ids = df['user_id'].tolist()
+        # sequences = df['sequence'].tolist()
+        # new_users_sequences = []
+        # for i in range(len(users_ids)):
         #
-        #             user_sequences.append(sequence)
-        #             sequence = []
-        #     users_sequences[i] = np.array(user_sequences)
-        #     #users_sequences[i] = np.array([df['userid'].iloc[i], user_sequences])
-        #     #print(np.array([df['userid'].iloc[i], user_sequences]))
+        #     user_id = users_ids[i]
+        #     sequence = sequences[i]
+        #     new_sequence = []
+        #     for j in range(len(sequence)):
+        #         hour = int(sequence[j][1])
+        #         location = int(sequence[j][2])
+        #         datatime_str = sequence[j][0]
+        #         datetime = dt.datetime.strptime(datatime_str, '%Y-%m-%d %H:%M:%S')
+        #         if datetime.weekday() < 5:
+        #             day_type = 0
+        #         else:
+        #             day_type = 1
+        #         new_sequence.append([location, hour, day_type, user_id])
+        #     new_users_sequences.append(new_sequence)
         #
-        #
-        #
-        # users_sequences = np.array([users_ids, users_sequences]).T
+        # df['sequence'] = np.array(new_users_sequences)
 
-        # return users_sequences
+
 
         kf = KFold(n_splits=n_splits)
         users_train_indexes = [None] * n_splits
@@ -122,7 +138,6 @@ class NextPoiCategoryPredictionDomain:
         # remove users that have few samples
         df = df[['id', 'sequence']].query("id not in " + str(ids_remove_users))
         users_trajectories = df.to_numpy()
-        print("akii", users_trajectories.shape)
         return users_trajectories, users_train_indexes, users_test_indexes, max_userid
 
     def run_tests_one_location_output_k_fold(self,
@@ -143,13 +158,11 @@ class NextPoiCategoryPredictionDomain:
                                              optimizer,
                                              output_dir):
 
-        print("testes", n_replications)
+        print("Número de replicações", n_replications)
         folds_histories = []
         histories = []
         iteration = 0
         for i in range(k_folds):
-            # if i > 1:
-            #     continue
             X_train, X_test, y_train, y_test = self.extract_train_test_from_indexes_k_fold(users_list=users_list,
                                                                                            users_train_indexes=
                                                                                            users_train_index[i],
@@ -212,35 +225,19 @@ class NextPoiCategoryPredictionDomain:
         y_train = y_train_concat
         y_test = y_test_concat
 
-        y_train_hours = return_hour_from_sequence_y(y_train)
-        y_test_hours = return_hour_from_sequence_y(y_test)
-
         # Remove hours. Currently training without events hour
-        # X_train = remove_hour_from_sequence_x(X_train)
-        # X_test = remove_hour_from_sequence_x(X_test)
         y_train = remove_hour_from_sequence_y(y_train)
         y_test = remove_hour_from_sequence_y(y_test)
-
-        # Sequence tuples to ndarray. Use it if the remove hour function was not called
-        # X_train = sequence_tuples_to_ndarray_x(X_train)
-        # X_test = sequence_tuples_to_ndarray_x(X_test)
-        # y_train = sequence_tuples_to_ndarray_y(y_train)
-        # y_test = sequence_tuples_to_ndarray_y(y_test)
 
         # Sequence tuples to [spatial[,step_size], temporal[,step_size]] ndarray. Use with embedding layer.
         X_train = sequence_tuples_to_spatial_temporal_and_feature3_ndarrays(X_train)
         X_test = sequence_tuples_to_spatial_temporal_and_feature3_ndarrays(X_test)
 
-        # X_train = np.asarray(X_train)
-        # X_train = X_train.reshape(X_train.shape + (1,)) # perform it if the step doesn't have hour
         y_train = np.asarray(y_train)
-        # X_test = np.asarray(X_test)
-        # X_test = X_test.reshape(X_test.shape + (1,))
         y_test = np.asarray(y_test)
 
         # Convert integers to one-hot-encoding. It is important to convert the y (labels) to that.
-        print("aqu")
-        print(y_train)
+        #print(y_train.tolist())
         y_train = np_utils.to_categorical(y_train, num_classes=number_of_categories)
         y_test = np_utils.to_categorical(y_test, num_classes=number_of_categories)
 
@@ -284,19 +281,20 @@ class NextPoiCategoryPredictionDomain:
                                   output_dir):
 
         logdir = output_dir + "logs/fit/" + dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
+        tensorboard_callback = tensorflow.keras.callbacks.TensorBoard(log_dir=logdir)
 
         model.compile(optimizer='adam', loss=["categorical_crossentropy"],
-                      weighted_metrics=[keras.metrics.Accuracy(name="acc")])
+                      metrics=tensorflow.keras.metrics.CategoricalAccuracy(name="acc"))
 
-        #print("entrada", X_train)
+        print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
+        print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
         hi = model.fit(X_train,
                        y_train,
                        validation_data=(X_test, y_test),
                        batch_size=batch,
                        epochs=epochs)
 
-        print("summary: ", model.summary())
+        #print("summary: ", model.summary())
         # print("history: ", h)
 
         y_predict_location = model.predict(X_test, batch_size=batch)
@@ -311,7 +309,8 @@ class NextPoiCategoryPredictionDomain:
         y_test_location = one_hot_decoding(y_test[0])
 
         report = skm.classification_report(y_test_location, y_predict_location, output_dict=True)
-
+        print("Histórico")
+        print(hi.history)
         return hi.history, report
 
     def output_dir(self, output_base_dir, dataset_type, category_type, model_name=""):

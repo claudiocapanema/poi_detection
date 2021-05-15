@@ -41,19 +41,23 @@ class NextPoiCategoryPredictionLoader:
                 if show:
                     pyplot.show()
 
-    def save_report_to_csv(self, output_dir, report, n_folds, n_replications):
+    def save_report_to_csv(self, output_dir, report, n_folds, n_replications, usuarios):
 
         new_dict = {}
-        column_size = n_folds*n_replications
+        column_size = n_folds * n_replications
         for key in report:
             if key == 'accuracy':
                 column = 'accuracy'
                 new_dict[column] = report[key]
                 continue
-            elif key == 'macro avg' or key == 'recall' or key == 'f1-score' \
-                    or key == 'support' or key == 'weighted avg':
+            elif key == 'recall' or key == 'f1-score' \
+                    or key == 'support':
                 continue
-            column = key + "_fscore"
+            if key == 'macro avg' or key == 'weighted avg':
+                column = key.replace(" ", "_") + "_fscore"
+                new_dict[column] = report[key]['f1-score']
+                continue
+            column = key + " F-score"
             column_data = report[key]['f1-score']
             if len(column_data) < column_size:
                 while len(column_data) < column_size:

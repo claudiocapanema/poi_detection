@@ -1,12 +1,7 @@
-from keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropout, SimpleRNN, Input, Lambda, \
-    Flatten, Reshape
-from keras.layers.merge import add,concatenate
-from keras.layers.embeddings import Embedding
-from keras.models import Model
-#from keras_multi_head import MultiHeadAttention
-from keras_transformer.transformer import MultiHeadAttention
-from keras.regularizers import l1, l2
-import keras
+from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropout, SimpleRNN, Input, Lambda, \
+    Flatten, Reshape, Concatenate, Embedding, MultiHeadAttention
+from tensorflow.keras.models import Model
+from tensorflow.keras.regularizers import l1, l2
 
 from configuration.next_poi_category_prediciton_configuration import NextPoiCategoryPredictionConfiguration
 from model.next_poi_category_prediction_models.neural_network_base_model import NNBase
@@ -32,7 +27,7 @@ class MFA_RNN(NNBase):
         id_output_dim = (gru_units//8)*8 + 8*n - gru_units
         emb1 = Embedding(input_dim=location_input_dim, output_dim=5, input_length=step_size)
         emb2 = Embedding(input_dim=time_input_dim, output_dim=10, input_length=step_size)
-        emb3 = Embedding(input_dim=5400, output_dim=2, input_length=step_size)
+        emb3 = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
         emb4 = Embedding(input_dim=2, output_dim=1, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
@@ -40,8 +35,8 @@ class MFA_RNN(NNBase):
         id_embedding = emb3(user_id_input)
         daytype_embedding = emb4(week_day_input)
 
-        concat_1 = concatenate(inputs=[spatial_embedding, temporal_embedding])
-        concat_1 = concatenate(inputs=[concat_1, daytype_embedding])
+        concat_1 = Concatenate(inputs=[spatial_embedding, temporal_embedding])
+        concat_1 = Concatenate(inputs=[concat_1, daytype_embedding])
         print("concat_1: ", concat_1.shape)
 
         # Unlike LSTM, the GRU can find correlations between location/events
@@ -61,8 +56,8 @@ class MFA_RNN(NNBase):
         #y_pe = self.pe(input=concat_2, id_embedding=daytype_embedding)
         # y_pe = concatenate(inputs=[y_pe, daytype_embedding])
         #id_embedding = Flatten()(id_embedding)
-        final = concatenate([y_mhsa, gru_1])
-        final = concatenate([final, id_embedding])
+        final = Concatenate([y_mhsa, gru_1])
+        final = Concatenate([final, id_embedding])
         final = Flatten()(final)
         final = Dropout(0.2)(final)
         final = Dense(location_input_dim)(final)
@@ -78,7 +73,7 @@ class MFA_RNN(NNBase):
         #     name='Multi-Head',
         # )(concat_2)
         att_layer = MultiHeadAttention(
-            head_num=4,
+            num_heads=4,
             name='Multi-Head-self-attention',
         )(input)
         print("att", att_layer.shape, "att id_embedding", id_embedding.shape)

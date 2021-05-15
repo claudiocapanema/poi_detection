@@ -1,8 +1,8 @@
-from keras.layers import GRU, LSTM, Activation, Dense, Masking, \
+from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, \
     Dropout, SimpleRNN, Input, Lambda, Flatten, Reshape
-from keras.layers import Add, Concatenate
-from keras.layers import Embedding
-from keras.models import Model
+from tensorflow.keras.layers import Add, Concatenate
+from tensorflow.keras.layers import Embedding
+from tensorflow.keras.models import Model
 import numpy as np
 
 class SERM:

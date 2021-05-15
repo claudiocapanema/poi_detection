@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from matplotlib import pyplot
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 CATEGORIES = [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [0, 8], [0, 9], [0, 10], [0, 11], [0, 12],
               [0, 13], [0, 14], [0, 15], [0, 16], [0, 17], [0, 18], [0, 19], [0, 20], [0, 21], [0, 22], [0, 23],
@@ -23,7 +23,6 @@ def sequence_to_x_y(list_events: list, step_size):
             step.append(e)
             cont = cont + 1
         else:
-            #print("valor e: ", e)
             y.append(e)
             x.append(step)
             step = []

@@ -32,6 +32,7 @@ class NextPoiCategoryPredictionJob:
             output_dir(output_base_dir, dataset_type_dir, category_type_dir, model_name_dir)
         report_model = self.next_poi_category_prediction_configuration.REPORT_MODEL[1][categories_type]
         number_of_categories = self.next_poi_category_prediction_configuration.NUMBER_OF_CATEGORIES[1][categories_type]
+        int_to_categories = self.next_poi_category_prediction_configuration.INT_TO_CATEGORIES[1][dataset_name][categories_type]
 
         filename=0
 
@@ -60,8 +61,23 @@ class NextPoiCategoryPredictionJob:
                                                 )
 
         print("numero classes: ", number_of_categories)
+        base_report = self.preprocess_report(base_report, int_to_categories)
         self.next_poi_category_prediction_loader.plot_history_metrics(folds_histories, base_report, output_dir, n_splits, n_replications)
-        self.next_poi_category_prediction_loader.save_report_to_csv(output_dir, base_report, n_splits, n_replications)
+        self.next_poi_category_prediction_loader.save_report_to_csv(output_dir, base_report, n_splits, n_replications, num_users)
+
+
+
+    def preprocess_report(self, report, int_to_categories):
+
+        new_report = {}
+
+        for key in report:
+            if key != 'accuracy' and key != 'macro avg' and key != 'weighted avg':
+                new_report[int_to_categories[key]] = report[key]
+            else:
+                new_report[key] = report[key]
+
+        return new_report
 
 
 
