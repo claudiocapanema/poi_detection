@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from pandas.core.frame import DataFrame
 import pytz
+import geopandas as gp
 
 from model.poi import Poi
 from model.user import User
@@ -13,7 +14,7 @@ from configuration.weekday import Weekday
 from foundation.util.datetimes_utils import DatetimesUtils
 from model.location_type import LocationType
 from foundation.general_code.nearest_neighbors import NearestNeighbors
-from foundation.util.geospatial_utils import points_distance
+from foundation.util.geospatial_utils import points_distance, geodesic_point_buffer
 
 class PointsOfInterestDomain:
 
@@ -429,13 +430,17 @@ class PointsOfInterestDomain:
 
         print("Tamanho users teps: ", len(users_steps))
         print("Tamanho pois: ", len(pois))
+        print("Quantidade de usuários: ", len(users_steps['id'].unique().tolist()))
+        print("pois usuarios: ", len(pois['id'].unique().tolist()))
+        pois = self.create_buffer(pois, 'latitude', 'longitude')
+        users_steps = gp.GeoDataFrame(users_steps, geometry=gp.points_from_xy(users_steps.longitude, users_steps.latitude), crs='EPSG:4326')
         users_steps['id'] = users_steps['id'].astype('int')
         #users_steps = users_steps.query("id == '1306539'")
-        users_steps_with_pois = users_steps.head(int(len(users_steps)/2)).groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois(e, pois)).reset_index(drop=True)
+        users_steps_with_pois = users_steps.groupby(by='id').apply(lambda e: self.associate_user_steps_with_pois_geopandas(e, pois))
         users_steps_with_pois['id'] = users_steps_with_pois['id'].astype('int')
-        users_steps_with_pois['index'] = users_steps_with_pois['index'].astype('int')
-        users_steps_with_pois['id_right'] = users_steps_with_pois['id_right'].astype("int")
-        users_steps_with_pois['index_assign'] = users_steps_with_pois['index_assign'].astype('int')
+        #users_steps_with_pois['index'] = users_steps_with_pois['index'].astype('int')
+        #users_steps_with_pois['id_right'] = users_steps_with_pois['id_right'].astype("int")
+        #users_steps_with_pois['index_assign'] = users_steps_with_pois['index_assign'].astype('int')
         users_steps_with_pois['work_time_events'] = users_steps_with_pois['work_time_events'].astype('int')
         users_steps_with_pois['home_time_events'] = users_steps_with_pois['home_time_events'].astype('int')
         users_steps_with_pois['inactive_applied_flag'] = users_steps_with_pois['inactive_applied_flag'].astype("int")
@@ -452,6 +457,7 @@ class PointsOfInterestDomain:
              'inverted_routine_flag', 'poi_osm',
         'distance_osm', 'poi_resulting']]
 
+        print("sobraram usuarios: ", len(users_steps_with_pois['id'].unique().tolist()))
         print("Categorias unicas na coluna 'poi_resulting': ", users_steps_with_pois['poi_resulting'].unique().tolist())
         return users_steps_with_pois
 
@@ -557,6 +563,138 @@ class PointsOfInterestDomain:
 
         return users_steps_with_pois
 
+    def associate_user_steps_with_pois_geopandas(self, user_steps, pois):
+
+        userid = user_steps['id'].iloc[0]
+        user_pois = pois.query("id == " + str(userid))
+        if len(user_pois) == 0:
+            return pd.DataFrame({column: [] for column in ['id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+        'distance_osm']})
+
+        user_steps['index'] = np.array([i for i in range(len(user_steps))])
+        user_pois = user_pois[['id', 'poi_type', 'latitude', 'longitude', 'work_time_events',
+       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+       'distance_osm', 'geometry']]
+        user_pois.columns = ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+       'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+        'distance_osm', 'geometry']
+        user_steps_join = gp.sjoin(user_pois, user_steps, op='contains')
+        # if len(dp_points) < 1:
+        #     continue
+
+        columns = user_steps.columns.tolist() + ['index_assign'] + user_pois.columns.tolist()
+        new_users_steps = {column: [] for column in columns}
+        """
+            get user_steps that don't belong to POIs
+        """
+        flatten_indexes = sorted(user_steps_join['index'].tolist())
+        non_indexes = []
+        for i in range(1, len(flatten_indexes)):
+            non_indexes = non_indexes + [i for i in range(flatten_indexes[i-1] + 1, flatten_indexes[i])]
+        # print("indices")
+        # print(flatten_indexes)
+        # print("nao indices")
+        # print(non_indexes)
+        if len(flatten_indexes) == 0 and len(non_indexes) == 0:
+            return pd.DataFrame(
+                {column: [] for column in ['id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+                                           'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
+                                           'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
+                                           'distance_osm']})
+
+        # add displacement user steps to the new user steps
+        pattern_row = {}
+        for column in ['id', 'inactive_applied_flag', 'inactive_interval_end',
+       'inactive_interval_start', 'inverted_routine_flag']:
+            if column == 'id':
+                continue
+                #pattern_row[column] = user_pois.iloc[0]['id_right']
+            else:
+                pattern_row[column] = user_pois.iloc[0][column]
+        pattern_row['poi_type'] = "displacement"
+        for column in ['poi_latitude', 'poi_longitude', 'work_time_events',
+        'home_time_events']:
+            pattern_row[column] = -1
+        pattern_row['poi_osm'] = 'empty'
+        pattern_row['distance_osm'] = 999
+        for i in range(len(non_indexes)):
+            index = non_indexes[i]
+
+            # columns of user steps
+            user_step = user_steps.iloc[index]
+            for column in user_steps.columns:
+                new_users_steps[column].append(user_step[column])
+
+            # columns of user pois
+            for column in pattern_row.keys():
+                new_users_steps[column].append(pattern_row[column])
+
+        new_users_steps['index_assign'] = [j for j in non_indexes]
+        new_users_steps['id_right'] = [userid for j in range(len(non_indexes))]
+        """
+            Join user steps with pois
+        """
+        # print("dicionario")
+        # print(new_users_steps)
+        # for key in new_users_steps:
+        #     print("chave", key)
+        #     print(len(new_users_steps[key]))
+        new_users_steps = pd.DataFrame(new_users_steps)[['id', 'datetime', 'latitude', 'longitude', 'index',
+       'index_assign', 'id_right', 'poi_type', 'poi_latitude', 'poi_longitude',
+       'work_time_events', 'home_time_events', 'inactive_applied_flag',
+       'inactive_interval_end', 'inactive_interval_start',
+       'inverted_routine_flag', 'poi_osm', 'distance_osm']]
+        new_users_steps = new_users_steps[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+       'work_time_events', 'home_time_events', 'inactive_applied_flag',
+       'inactive_interval_end', 'inactive_interval_start',
+       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index']]
+        user_steps_join = user_steps_join[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+       'work_time_events', 'home_time_events', 'inactive_applied_flag',
+       'inactive_interval_end', 'inactive_interval_start',
+       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index']]
+        users_steps_with_pois = user_steps_join.append(new_users_steps, ignore_index=True).drop_duplicates(subset='index')
+        tamanho = len(users_steps_with_pois)
+        #users_steps_with_pois = users_steps_with_pois.drop_duplicates(subset='index')
+        if tamanho != len(users_steps_with_pois):
+            print("Indices duplicados: ", tamanho - len(users_steps_with_pois))
+            print("Usuário: ", users_steps_with_pois['id'].iloc[0])
+
+        self.verify_users_steps_pois_assignment_geopandas(users_steps_with_pois)
+
+        return users_steps_with_pois[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+       'work_time_events', 'home_time_events', 'inactive_applied_flag',
+       'inactive_interval_end', 'inactive_interval_start',
+       'inverted_routine_flag', 'poi_osm', 'distance_osm']]
+
+
+    def verify_users_steps_pois_assignment_geopandas(self, row):
+        # if row['id'].tolist() != row['id_right'].tolist() or row['index'].tolist() != row['index_assign'].tolist():
+        #     print("Erro")
+        #     raise
+
+        if len(row) != len(row['index'].unique().tolist()):
+            print("Indexes repetidos")
+            print(list(duplicates(row['index'].tolist())))
+            raise Exception("Indices repetidos\n" + "Tamanho: " + str(len(row)) + "\nQuantidade de indices diferentes: " + str(len(row['index'].unique().tolist())))
+
+        # user_steps_latitudes = row['latitude'].tolist()
+        # user_steps_longitude = row['longitude'].tolist()
+        # poi_latitudes = row['poi_latitude'].tolist()
+        # poi_longitudes = row['poi_longitude'].tolist()
+        # for i in range(len(user_steps_latitudes)):
+        #
+        #     user_steps_point = (user_steps_latitudes[i], user_steps_longitude[i])
+        #     poi_point = (poi_latitudes[i], poi_longitudes[i])
+        #     if poi_point == (-1, -1):
+        #         continue
+        #     distance =  points_distance(user_steps_point, poi_point)
+        #     if distance > PointsOfInterestConfiguration.METERS.get_value():
+        #         points = "\n" + str(user_steps_point) + ", " + str(poi_point)
+        #         raise Exception("Ponto mais distance que o limite\n" + "Distância: " + str(distance) + points)
 
     def verify_users_steps_pois_assignment(self, row):
         if row['id'].tolist() != row['id_right'].tolist() or row['index'].tolist() != row['index_assign'].tolist():
@@ -566,7 +704,9 @@ class PointsOfInterestDomain:
         if len(row) != len(row['index'].unique().tolist()):
             print("Indexes repetidos")
             print(list(duplicates(row['index'].tolist())))
-            raise Exception("Indices repetidos\n" + "Tamanho: " + str(len(row)) + "\nQuantidade de indices diferentes: " + str(len(row['index'].unique().tolist())))
+            raise Exception(
+                "Indices repetidos\n" + "Tamanho: " + str(len(row)) + "\nQuantidade de indices diferentes: " + str(
+                    len(row['index'].unique().tolist())))
 
         # user_steps_latitudes = row['latitude'].tolist()
         # user_steps_longitude = row['longitude'].tolist()
@@ -602,3 +742,17 @@ class PointsOfInterestDomain:
         row['poi_resulting'] = poi_resulting
 
         return row
+
+    def create_buffer(self, df, latitude_column, longitude_column):
+
+        latitude = df[latitude_column].tolist()
+        longitude = df[longitude_column].tolist()
+
+        polygons = []
+
+        for lat, lng in zip(latitude, longitude):
+
+            polygon = geodesic_point_buffer(lat, lng, PointsOfInterestConfiguration.METERS.get_value())
+            polygons.append(polygon)
+
+        return gp.GeoDataFrame(df, geometry=polygons, crs="EPSG:4326")

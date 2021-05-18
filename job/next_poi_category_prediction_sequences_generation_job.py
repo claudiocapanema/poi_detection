@@ -1,5 +1,8 @@
+import numpy as np
+
 from configuration.next_poi_category_prediciton_configuration import NextPoiCategoryPredictionConfiguration
 from domain.next_poi_category_prediction_sequences_generation_domain import NextPoiCategoryPredictionSequencesGenerationDomain
+from loader.file_loader import FileLoader
 from configuration.next_poi_category_prediction_sequences_generation_confiiguration import SequencesGenerationForPoiCategorizationSequentialBaselinesConfiguration
 
 from foundation.configuration.input import Input
@@ -7,6 +10,7 @@ from foundation.configuration.input import Input
 class NextPoiCategoryPredictionSequencesGenerationJob:
 
     def __init__(self):
+        self.file_loader = FileLoader()
         self.poi_categorization_configuration = NextPoiCategoryPredictionConfiguration()
         self.sequences_generation_for_poi_categorization_sequential_baselines_domain = NextPoiCategoryPredictionSequencesGenerationDomain(Input.get_instance().inputs['dataset_name'])
 
@@ -14,6 +18,8 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
         users_checkin_filename = Input.get_instance().inputs['users_steps_filename']
         dataset_name = Input.get_instance().inputs['dataset_name']
         categories_type = Input.get_instance().inputs['categories_type']
+        to_8_categories = Input.get_instance().inputs['to_8_categories']
+        filename_8_categories = Input.get_instance().inputs['8_categories_filename']
         users_sequences_folder = Input.get_instance().inputs['users_sequences_folder']
         print("Dataset: ", Input.get_instance().inputs['dataset_name'])
 
@@ -27,6 +33,11 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
 
         users_checkin = self.sequences_generation_for_poi_categorization_sequential_baselines_domain.read_csv(users_checkin_filename, datetime_column)
 
+        if to_8_categories == "yes":
+            users_checkin = self.join_work_and_office_join_sport_leisure(users_checkin, category_column)
+            print("cate: ", users_checkin['poi_resulting'].unique().tolist())
+            self.file_loader.save_df_to_csv(users_checkin, filename_8_categories)
+
         users_sequences = self.sequences_generation_for_poi_categorization_sequential_baselines_domain.generate_sequences(users_checkin,
                                                                                                                           sequences_size,
                                                                                                                           max_pois,
@@ -38,4 +49,23 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
 
         self.sequences_generation_for_poi_categorization_sequential_baselines_domain.sequences_to_csv(users_sequences, users_sequences_folder, dataset_name, categories_type)
 
+    def join_work_and_office_join_sport_leisure(self, users_checkins, category_column):
 
+        new_poi_resulting_list = []
+
+        poi_resulting_list = users_checkins[category_column].tolist()
+
+        for i in range(len(poi_resulting_list)):
+
+            poi_resulting = poi_resulting_list[i]
+
+            if poi_resulting == 'office':
+                poi_resulting = 'work'
+            elif poi_resulting == 'sport':
+                poi_resulting = 'leisure'
+
+            new_poi_resulting_list.append(poi_resulting)
+
+        users_checkins['poi_resulting'] = np.array(new_poi_resulting_list)
+
+        return users_checkins

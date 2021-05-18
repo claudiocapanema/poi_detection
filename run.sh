@@ -5,13 +5,15 @@ echo "Argument: "$1
 USERS_STEPS_BASE_DIR="/media/claudio/Data/backup_linux/Documentos/users_steps_datasets/"
 USERS_STEPS_OUTPUT_BASE_DIR="/media/claudio/Data/backup_win_hd/Downloads/doutorado/users_steps_output/"
 USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR="${USERS_STEPS_OUTPUT_BASE_DIR}sequences/"
-USERS_STEPS_SEQUENCES_FILENAME="${USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR}users_steps_10_categories_sequences.csv"
+USERS_STEPS_10_CATEGORIES_SEQUENCES_FILENAME="${USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR}users_steps_10_categories_sequences.csv"
+USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME="${USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR}users_steps_8_categories_sequences.csv"
 USERS_194_STEPS_FILENAME="${USERS_STEPS_BASE_DIR}194_users_data.csv"
 USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_BASE_DIR}df_mais_de_10_mil_limite_500_pontos_local_datetime.csv"
 DETECTED_USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_10_mil_limite_500_pontos_local_datetime.csv"
 CLASSIFIED_USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}classified_df_mais_de_10_mil_limite_500_pontos.csv"
 USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_POIS_FILENAME="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_10_mil_limite_500_pontos_local_datetime_with_osm_pois_50.csv"
 USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME="${USERS_STEPS_OUTPUT_BASE_DIR}users_steps_10_mil_limite_500_pontos_local_datetime_with_detected_pois_with_osm_pois_50.csv"
+USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME="${USERS_STEPS_OUTPUT_BASE_DIR}users_steps_8_categories_10_mil_limite_500_pontos_local_datetime_with_detected_pois_with_osm_pois_50.csv"
 USERS_5_MIL_MAX_500_POINTS="${USERS_STEPS_BASE_DIR}df_mais_de_5_mil_limite_500_pontos.csv"
 DETECTED_USERS_5_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_5_mil_limite_500_pontos.csv"
 CLASSIFIED_USERS_5_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}classified_df_mais_de_5_mil_limite_500_pontos.csv"
@@ -49,17 +51,19 @@ SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
           "users_steps_filename": "'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
           "base_dir":"'$USERS_STEPS_BASE_DIR'",
           "users_sequences_folder":"'$USERS_STEPS_OUTPUT_BASE_DIR'sequences/",
-          "categories_type":"10_categories",
+          "8_categories_filename":"'$USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
+          "categories_type":"8_categories",
           "ground_truth": "'$GROUND_TRUTH'",
+          "to_8_categories":"yes",
           "dataset_name":"users_steps"
           }'
 
 NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
           "job": "next_poi_category_prediction_job",
-          "users_sequences": "'$USERS_STEPS_SEQUENCES_FILENAME'",
+          "users_sequences": "'$USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME'",
           "baseline": "stf",
           "dataset_name":"users_steps",
-          "categories_type":"10_categories"
+          "categories_type":"8_categories"
           }'
 
 echo $CONFIG

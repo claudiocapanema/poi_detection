@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 
-from configuration import USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME
+from configuration import USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME
 
 
 def save_fig(dir, filename, fig):
@@ -21,7 +21,7 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Total': total})
 
     barplot(dir, 'Category', 'Total', df, "barplot_category_total_" + week + title,
-                 "Percentage of events per category (" + week + ")" + title)
+                 "Total events per category" + title)
 
 def barplot(dir, x, y, df, filename, title):
 
@@ -32,11 +32,19 @@ def barplot(dir, x, y, df, filename, title):
 
 if __name__ == "__main__":
 
-    df = pd.read_csv(USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME)
+    df = pd.read_csv(USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME)
     poi_resulting = df['poi_resulting']
     df['datetime'] = pd.to_datetime(df['datetime'], infer_datetime_format=True)
-    categories = poi_resulting.unique().tolist()
-    poi_resulting = poi_resulting.tolist()
+
+    poi_resulting_list = poi_resulting.tolist()
+
+    for i in range(len(poi_resulting_list)):
+
+        s = poi_resulting_list[i]
+        s = s[0].upper() + s[1:]
+        poi_resulting_list[i] = s
+    categories = pd.Series(poi_resulting_list).unique().tolist()
+    print(df['poi_resulting'].unique().tolist())
     hour_week_day_frequency_dict = {i: 0 for i in categories}
     hour_weekend_frequency_dict = {i: 0 for i in categories}
     frequency_dict = {i: 0 for i in categories}
@@ -46,12 +54,12 @@ if __name__ == "__main__":
     for i in range(len(local_datetime)):
         date = local_datetime[i]
         if date.weekday() < 5:
-            hour_week_day_frequency_dict[poi_resulting[i]] += 1
+            hour_week_day_frequency_dict[poi_resulting_list[i]] += 1
         else:
-            hour_weekend_frequency_dict[poi_resulting[i]] += 1
+            hour_weekend_frequency_dict[poi_resulting_list[i]] += 1
 
-        frequency_dict[poi_resulting[i]] += 1
+        frequency_dict[poi_resulting_list[i]] += 1
 
-    hour_frequency_plot(hour_week_day_frequency_dict, "", "Weekday frequency categories", "frequency_weekday")
-    hour_frequency_plot(hour_weekend_frequency_dict, "", "Weekend frequency categories", "frequency_weekend")
-    hour_frequency_plot(frequency_dict, "", "Frequency categories", "frequency")
+    hour_frequency_plot(hour_week_day_frequency_dict, "", " on week days", "8_categories_frequency_weekday")
+    hour_frequency_plot(hour_weekend_frequency_dict, "", " on weekends", "8_categories_frequency_weekend")
+    hour_frequency_plot(frequency_dict, "", "", "8_categories_frequency")

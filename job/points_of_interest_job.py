@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import os
+from contextlib import suppress
 
 from domain.user_step_domain import UserStepDomain
 from foundation.abs_classes.job import Job
@@ -34,7 +36,7 @@ class PointOfInterest(Job):
         """
         Detecting (Identifying and classifying together) PoIs of each user
         """
-        #users_detected_pois = self.users_pois_detection(users_steps, utc_to_sp, poi_detection_filename)
+        users_detected_pois = self.users_pois_detection(users_steps, utc_to_sp, poi_detection_filename)
         # ----------------------------------------
 
         """
@@ -43,13 +45,26 @@ class PointOfInterest(Job):
         #self.users_pois_classificaion(users_steps, utc_to_sp)
 
         if users_steps_join_detected_pois == "yes":
+            with suppress(OSError):
+                os.remove(users_steps_with_detected_pois_with_osm_pois_filename)
             users_detected_pois = self.user_step_domain.read_csv(users_detected_pois_with_osm_pois_filename)
             users_detected_pois['id'] = users_detected_pois['id'].astype('int')
+            print("ca", users_detected_pois['poi_osm'].unique().tolist())
             users_steps['id'] = users_steps['id'].astype('int')
-            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(users_steps, users_detected_pois)
-            print("Salvar")
+            users_steps_ids = users_steps['id'].unique().tolist()
+            first_half = int(len(users_steps_ids)/2)
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(users_steps.query("id in " + str(users_steps_ids[:first_half])),
+                                                                                                   users_detected_pois.query("id in " + str(users_steps_ids[:first_half])))
+            print("Salvar 1")
             print(users_steps_with_pois)
-            self.file_loader.save_df_to_csv(users_steps_with_pois, users_steps_with_detected_pois_with_osm_pois_filename)
+            self.file_loader.save_df_to_csv(users_steps_with_pois, users_steps_with_detected_pois_with_osm_pois_filename, 'a')
+
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
+                users_steps.query("id in " + str(users_steps_ids[first_half:])), users_detected_pois.query("id in " + str(users_steps_ids[first_half:])))
+            print("Salvar 1")
+            print(users_steps_with_pois)
+            self.file_loader.save_df_to_csv(users_steps_with_pois,
+                                            users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
 
     def users_pois_detection(self, users_steps, utc_to_sp, poi_detection_filename):
 

@@ -15,6 +15,9 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
     def read_csv(self, filename, datetime_column=None):
 
         df = self.file_extractor.read_csv(filename)
+        print("colunas")
+        print(df.columns)
+        print(df)
         if datetime_column is not None:
             df[datetime_column] = pd.to_datetime(df[datetime_column], infer_datetime_format=True)
         df = df.dropna()

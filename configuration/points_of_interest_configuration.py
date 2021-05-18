@@ -10,7 +10,7 @@ class PointsOfInterestConfiguration(Enum):
 
     # DBSCAN
 
-    METERS = ("meters", 20, False, "radius in meters")
+    METERS = ("meters",30, False, "radius in meters")
     EPSILON = ("epsilon", 0.02 / 6371.0088, "False", "epsilon")
     MIN_SAMPLES = ("min_samples", 8, "False", "minimum number of samples of a cluster")
 
