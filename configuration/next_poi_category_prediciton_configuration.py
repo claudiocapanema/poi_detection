@@ -9,7 +9,7 @@ class NextPoiCategoryPredictionConfiguration:
     def __init__(self):
         self.SEQUENCES_SIZE = ("sequences_size", 4)
 
-        self.N_SPLITS = ("n_splits", 2)
+        self.N_SPLITS = ("n_splits", 5)
 
         self.EPOCHS = ("epochs", 10)
 

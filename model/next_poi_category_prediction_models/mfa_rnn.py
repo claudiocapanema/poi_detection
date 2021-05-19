@@ -28,7 +28,7 @@ class MFA_RNN(NNBase):
         emb1 = Embedding(input_dim=location_input_dim, output_dim=5, input_length=step_size)
         emb2 = Embedding(input_dim=time_input_dim, output_dim=10, input_length=step_size)
         emb3 = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
-        emb4 = Embedding(input_dim=30, output_dim=1, input_length=step_size)
+        emb4 = Embedding(input_dim=30, output_dim=2, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
         temporal_embedding = emb2(temporal_input)
@@ -36,7 +36,7 @@ class MFA_RNN(NNBase):
         country_embbeding = emb4(country_input)
 
         concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
-        concat_1 = Concatenate()([concat_1, country_embbeding])
+        #concat_1 = Concatenate()([concat_1, country_embbeding])
         print("concat_1: ", concat_1.shape)
 
         # Unlike LSTM, the GRU can find correlations between location/events
@@ -44,7 +44,7 @@ class MFA_RNN(NNBase):
         drop_1 = Dropout(0.5)(concat_1)
         gru_1 = GRU(gru_units, return_sequences=True)(drop_1)
         print("gru_1: ", gru_1.shape, "id_embedding: ", id_embedding.shape)
-        gru_1 = Dropout(0.4)(gru_1)
+        #gru_1 = Dropout(0.4)(gru_1)
         #concat_2 = concatenate(inputs=[gru_1, id_embedding])
         #concat_2 = concatenate(inputs=[concat_2, daytype_embedding])
         #concat_2 = Dropout(0.5)(concat_2)
@@ -58,6 +58,7 @@ class MFA_RNN(NNBase):
         #id_embedding = Flatten()(id_embedding)
         final = Concatenate()([y_mhsa, gru_1])
         final = Concatenate()([final, id_embedding])
+        final = Concatenate()([final, country_embbeding])
         final = Flatten()(final)
         final = Dropout(0.2)(final)
         final = Dense(location_input_dim)(final)
