@@ -9,7 +9,7 @@ class NextPoiCategoryPredictionConfiguration:
     def __init__(self):
         self.SEQUENCES_SIZE = ("sequences_size", 4)
 
-        self.N_SPLITS = ("n_splits", 5)
+        self.N_SPLITS = ("n_splits", 2)
 
         self.EPOCHS = ("epochs", 10)
 
@@ -50,7 +50,8 @@ class NextPoiCategoryPredictionConfiguration:
                                                                   "locationid": "placeid",
                                                                   "category": "poi_resulting",
                                                                   "latitude": "latitude",
-                                                                  "longitude": "longitude"}})
+                                                                  "longitude": "longitude",
+                                                                    "country": "country_name"}})
 
         self.CATEGORIES_10 = ['home', 'work', 'other', 'displacement', 'amenity', 'leisure', 'office', 'shop', 'sport', 'tourism']
 

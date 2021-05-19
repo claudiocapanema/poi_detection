@@ -24,9 +24,9 @@ class PointOfInterest(Job):
         users_detected_pois_with_osm_pois_filename = Input.get_instance().inputs['users_detected_pois_with_osm_pois_filename']
         users_steps_with_detected_pois_with_osm_pois_filename = Input.get_instance().inputs['users_steps_with_detected_pois_with_osm_pois_filename']
         users_steps = self.user_step_domain.users_steps_from_csv(users_step_filename)
-        min_datetime = pd.Timestamp(year=2018, month=7, day=1)
-        max_datetime = pd.Timestamp(year=2018, month=9, day=1)
-        users_steps = users_steps[users_steps.datetime < max_datetime]
+        min_datetime = pd.Timestamp(year=2018, month=6, day=30)
+        # max_datetime = pd.Timestamp(year=2018, month=9, day=1)
+        # users_steps = users_steps[users_steps.datetime < max_datetime]
         users_steps = users_steps[users_steps.datetime >= min_datetime]
         users_steps = self.select_article_users(users_steps)
         print("Filtrado")
@@ -36,7 +36,7 @@ class PointOfInterest(Job):
         """
         Detecting (Identifying and classifying together) PoIs of each user
         """
-        users_detected_pois = self.users_pois_detection(users_steps, utc_to_sp, poi_detection_filename)
+        #users_detected_pois = self.users_pois_detection(users_steps, utc_to_sp, poi_detection_filename)
         # ----------------------------------------
 
         """
@@ -106,3 +106,5 @@ class PointOfInterest(Job):
         print("Quantidade de usuários selecionados: ", len(users_steps['id'].unique().tolist()))
 
         return users_steps
+
+

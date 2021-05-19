@@ -36,7 +36,7 @@ class NextPoiCategoryPredictionJob:
 
         filename=0
 
-        users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits)
+        users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits, model_name)
 
         num_users +=1
         print("numero usuarios: ", num_users)

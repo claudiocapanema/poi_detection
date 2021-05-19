@@ -15,28 +15,28 @@ class MFA_RNN(NNBase):
         location_category_input = Input((step_size,), dtype='int32', name='spatial')
         temporal_input = Input((step_size,), dtype='int32', name='temporal')
         user_id_input = Input((step_size,), dtype='float32', name='id')
-        week_day_input = Input((step_size,), dtype='float32', name='daytype')
+        country_input = Input((step_size,), dtype='float32', name='daytype')
 
         # The embedding layer converts integer encoded vectors to the specified
         # shape (none, input_lenght, output_dim) with random weights, which are
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        gru_units = 60
+        gru_units = 30
         n = 2
         id_output_dim = (gru_units//8)*8 + 8*n - gru_units
         emb1 = Embedding(input_dim=location_input_dim, output_dim=5, input_length=step_size)
         emb2 = Embedding(input_dim=time_input_dim, output_dim=10, input_length=step_size)
         emb3 = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
-        emb4 = Embedding(input_dim=2, output_dim=1, input_length=step_size)
+        emb4 = Embedding(input_dim=30, output_dim=1, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
         temporal_embedding = emb2(temporal_input)
         id_embedding = emb3(user_id_input)
-        daytype_embedding = emb4(week_day_input)
+        country_embbeding = emb4(country_input)
 
-        concat_1 = Concatenate(inputs=[spatial_embedding, temporal_embedding])
-        concat_1 = Concatenate(inputs=[concat_1, daytype_embedding])
+        concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
+        concat_1 = Concatenate()([concat_1, country_embbeding])
         print("concat_1: ", concat_1.shape)
 
         # Unlike LSTM, the GRU can find correlations between location/events
@@ -50,20 +50,20 @@ class MFA_RNN(NNBase):
         #concat_2 = Dropout(0.5)(concat_2)
         #print("concat_2: ", concat_2.shape)
 
-        y_mhsa = self.mhsa(input=gru_1, id_embedding=daytype_embedding)
+        y_mhsa = self.mhsa(input=gru_1, id_embedding=country_embbeding)
         #y_pe = self.dense_output(input=gru_1, id_embedding=id_embedding)
 
         #y_pe = self.pe(input=concat_2, id_embedding=daytype_embedding)
         # y_pe = concatenate(inputs=[y_pe, daytype_embedding])
         #id_embedding = Flatten()(id_embedding)
-        final = Concatenate([y_mhsa, gru_1])
-        final = Concatenate([final, id_embedding])
+        final = Concatenate()([y_mhsa, gru_1])
+        final = Concatenate()([final, id_embedding])
         final = Flatten()(final)
         final = Dropout(0.2)(final)
         final = Dense(location_input_dim)(final)
         final = Activation('softmax', name='ma_activation_1')(final)
 
-        model = Model(inputs=[location_category_input, temporal_input, week_day_input, user_id_input], outputs=[final], name="MFA-RNN")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, user_id_input], outputs=[final], name="MFA-RNN")
 
         return model
 
@@ -73,23 +73,11 @@ class MFA_RNN(NNBase):
         #     name='Multi-Head',
         # )(concat_2)
         att_layer = MultiHeadAttention(
+            key_dim=2,
             num_heads=4,
             name='Multi-Head-self-attention',
-        )(input)
+        )(input, input)
         print("att", att_layer.shape, "att id_embedding", id_embedding.shape)
-
-        # att_layer = concatenate(inputs=[att_layer, id_embedding])
-        # print("att concat_3: ", att_layer.shape)
-
-        # concat_3 = Reshape((reshape_size,), input_shape=(4,))(concat_3)
-        # print("att concat_3:  ", concat_3.shape, concat_3)
-
-        #flatten_1 = Flatten(name="ma_flatten_1")(att_layer)
-
-        #att_layer = Dropout(0.5, name="drop_1")(att_layer)
-
-        # dense_1 = Dense(numLocations, kernel_regularizer=l2(0.01), name='dense_1')(drop_1)
-        # y_mhsa = Activation('softmax', name='ma_activation_1')(dense_1)
 
         return att_layer
 

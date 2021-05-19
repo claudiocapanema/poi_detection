@@ -14,9 +14,10 @@ class SERM:
         if seed is not None:
             np.random.seed(seed)
 
-        id_input = Input((step_size,), dtype='float32', name='id')
         s_input = Input((step_size,), dtype='int32', name='spatial')
         t_input = Input((step_size,), dtype='int32', name='temporal')
+        week_day_input = Input((step_size,), dtype='int32', name='daytype')
+        id_input = Input((step_size,), dtype='int32', name='userid')
 
         # The embedding layer converts integer encoded vectors to the specified
         # shape (none, input_lenght, output_dim) with random weights, which are
@@ -24,8 +25,7 @@ class SERM:
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
         units = 540
-        n = 1
-        id_output_dim = (units//8)*8 + 8*n - units
+
         emb3 = Embedding(input_dim=num_users, output_dim=50, input_length=step_size)
         emb1 = Embedding(input_dim=location_input_dim, output_dim=15, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=15, input_length=step_size)

@@ -3,10 +3,7 @@ from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropo
 from tensorflow.keras.layers import add, Concatenate
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.models import Model
-#from keras_multi_head import MultiHeadAttention
-from keras.regularizers import l1, l2
-#from keras_self_attention import SeqSelfAttention
-import tensorflow as tf
+import numpy as np
 
 
 class MAP:
@@ -16,10 +13,12 @@ class MAP:
 
     def build(self, step_size, location_input_dim, time_input_dim, num_users, seed=None):
         if seed is not None:
-            tf.random.set_seed(seed)
+            np.random.seed(seed)
+
         s_input = Input((step_size,), dtype='int32', name='spatial')
         t_input = Input((step_size,), dtype='int32', name='temporal')
-        id_input = Input((step_size,), dtype='float32', name='id')
+        week_day_input = Input((step_size,), dtype='int32', name='daytype')
+        id_input = Input((step_size,), dtype='int32', name='userid')
 
         # The embedding layer converts integer encoded vectors to the specified
         # shape (none, input_lenght, output_dim) with random weights, which are
@@ -45,7 +44,7 @@ class MAP:
         srnn = Dropout(0.5)(srnn)
         concat_1 = Concatenate(inputs=[srnn, temporal_embedding])
 
-        att = MultiHeadAttention(num_heads=4,
+        att = MultiHeadAttention(num_heads=1,
                                name='Attention')(concat_1)
 
         att = Concatenate(inputs=[srnn, att])
@@ -55,7 +54,7 @@ class MAP:
 
 
 
-        model = Model(inputs=[s_input, t_input, id_input], outputs=[y_srnn], name="MAP_baseline")
+        model = Model(inputs=[s_input, t_input, day_type, id_input], outputs=[y_srnn], name="MAP_baseline")
 
         return model
 

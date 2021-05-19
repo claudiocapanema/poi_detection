@@ -30,7 +30,9 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                            category_column,
                            locationid_column,
                            datetime_column,
-                           categories_to_int):
+                           country_column,
+                           categories_to_int,
+                           countries_to_int):
 
         df = df.sort_values(by=datetime_column)
 
@@ -41,6 +43,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
             categories_id.append(categories_to_int[categories_names[i]])
 
         df['category_id'] = np.array(categories_id)
+        countries_list = df[country_column].tolist()
 
         user_sequence = []
         user_hours = []
@@ -51,6 +54,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
         for i in range(len(df)):
             date = datetime_list[i]
             week_day = date.weekday()
+            country = countries_to_int[countries_list[i]]
             if week_day < 5:
                 day_type = 0
                 hour = date.hour
@@ -58,8 +62,11 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                 day_type = 1
                 hour = date.hour + 24
 
-            #
-            sequence = [categories_id[i], hour, day_type, user_id[i]]
+            # if countries_list[i] != 'Brazil':
+            #     print("diferente")
+            #     print(country)
+            #     print(countries_list[i])
+            sequence = [categories_id[i], hour, country, user_id[i]]
             user_sequence.append(sequence)
 
         return pd.DataFrame({'id': user_id[0], 'sequence': [str(user_sequence)], 'categories': [str(categories_id)]})
@@ -68,15 +75,20 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                            category_column,
                            locationid_column,
                            datetime_column,
+                           country_column,
                            categories_to_int):
 
         #users_checkins = users_checkins.head(10000)
         #df = users_checkins.query(str(userid_column)+" == '"+str(user_id) + "'")
+        countries = users_checkins[country_column].unique().tolist()
+        countries_to_int = {countries[i]: i for i in range(len(countries))}
         df = users_checkins.groupby(userid_column).apply(lambda e:self._user_steps_to_int(e,
                                                                                           category_column,
                                                                                           locationid_column,
                                                                                           datetime_column,
-                                                                                          categories_to_int))
+                                                                                          country_column,
+                                                                                          categories_to_int,
+                                                                                          countries_to_int))
 
         #df = self._flatten_df(df, userid_column)
 

@@ -39,7 +39,8 @@ class NextPoiCategoryPredictionDomain:
         if "." in series:
             self.count+=1
         #print("resul: ", series.replace("\n", "").replace(" ", ",").replace(".","").replace(",,",",").replace("[,", "[").replace(",,",","))
-        series = json.loads(series.replace("\n", "").replace(" ", ",").replace(".","").replace(",,",",").replace("[,", "[").replace(",,",",").replace("[,", "[").replace(",,", ","))
+        #series = json.loads(series.replace("\n", "").replace(" ", ",").replace(".","").replace(",,",",").replace("[,", "[").replace(",,",",").replace("[,", "[").replace(",,", ","))
+        series = json.loads(series.replace("'", ""))
         # series = series.replace("(", "[").replace(")", "]")
         # series = series.split("],")
         # new_series = []
@@ -51,7 +52,7 @@ class NextPoiCategoryPredictionDomain:
         # new_series = np.array(new_series)
         return np.array(series)
 
-    def read_sequences(self, filename, n_splits):
+    def read_sequences(self, filename, n_splits, model_name):
 
         df = self.file_extractor.read_csv(filename)
 
@@ -62,16 +63,20 @@ class NextPoiCategoryPredictionDomain:
         users_ids = df['id'].tolist()
         sequences = df['sequence'].tolist()
         new_sequences = []
+        countries = {}
         for i in range(len(users_ids)):
 
             user_id = users_ids[i]
             sequence = sequences[i]
             new_sequence = []
             for j in range(len(sequence)):
-                location = sequence[j][0]
+                location_category_id = sequence[j][0]
                 hour = sequence[j][1]
-                day_type = sequence[j][2]
-                new_sequence.append([location, hour, day_type, user_id])
+                if model_name in ['map', 'stf'] and hour >= 24:
+                    hour = hour - 24
+                country = sequence[j][2]
+                countries[country] = 0
+                new_sequence.append([location_category_id, hour, country, user_id])
 
             new_sequences.append(new_sequence)
 
@@ -108,7 +113,7 @@ class NextPoiCategoryPredictionDomain:
         #
         # df['sequence'] = np.array(new_users_sequences)
 
-
+        print("paises: ", len(list(countries.keys())))
 
         kf = KFold(n_splits=n_splits)
         users_train_indexes = [None] * n_splits
@@ -309,8 +314,6 @@ class NextPoiCategoryPredictionDomain:
         y_test_location = one_hot_decoding(y_test[0])
 
         report = skm.classification_report(y_test_location, y_predict_location, output_dict=True)
-        print("Histórico")
-        print(hi.history)
         return hi.history, report
 
     def output_dir(self, output_base_dir, dataset_type, category_type, model_name=""):
