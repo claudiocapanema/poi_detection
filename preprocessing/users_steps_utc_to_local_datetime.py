@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from configuration import USERS_10_MIL_MAX_500_POINTS, COUNTRIES, USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME
+from configuration import USERS_10_MIL_MAX_500_POINTS, COUNTRIES, USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, TIMEZONES
 import timezonefinder
 import pytz
 import datetime as dt
@@ -56,43 +56,78 @@ if __name__ == "__main__":
     datetime_utils = DatetimesUtils()
     df = pd.read_csv(USERS_10_MIL_MAX_500_POINTS)
     df['reference_date'] = pd.to_datetime(df['reference_date'], infer_datetime_format=True)
+    df['index'] = np.array([i for i in range(len(df))])
     print("Tamanho inicial: ", len(df))
     gdf = gp.GeoDataFrame(
-        df, geometry=gp.points_from_xy(df.longitude, df.latitude))
+        df, geometry=gp.points_from_xy(df.longitude, df.latitude), crs="EPSG:4326")
 
-    gf = gp.read_file(COUNTRIES)
-    gf = gp.sjoin(gf, gdf, op='contains')
-    gf = gf[['id', 'installation_id', 'reference_date', 'latitude', 'longitude', 'CNTRY_NAME']]
-    gf.columns = ['id', 'installation_id', 'reference_date', 'latitude', 'longitude', 'country_name']
-    print("Tamanho final: ", len(gf))
-    print(gf)
+    timezones = gp.read_file(TIMEZONES)
+    print("Timezones columns: ", timezones.columns)
 
-    print(gf['reference_date'])
-    reference_date = gf['reference_date'].tolist()
-    latitude = gf['latitude'].tolist()
-    longitude = gf['longitude'].tolist()
-    countries = gf['country_name'].tolist()
-    print("Fora do brasil: ", len(gf.query("country_name != 'Brazil'")))
-    print("rodar")
+    df_timezone = gp.sjoin(timezones, gdf, op='contains')[['id', 'index', 'installation_id', 'reference_date', 'tzid', 'latitude', 'longitude']]
 
-    local_datetimes = []
-    p = int(len(gf)/10)
-    n = 10
-    for i in range(len(gf)):
-        date = reference_date[i]
-        if countries[i] == "Brazil":
-            local_datetime = datetime_utils.convert_tz(date, pytz.utc, 'America/Sao_Paulo')
-            local_datetimes.append(local_datetime)
-        else:
-            lat = latitude[i]
-            lon = longitude[i]
-            local_datetime = datetime_utils.find_timezone(date, lat, lon)
-            local_datetimes.append(local_datetime)
-        if i == p:
-            p = p + p
-            print("Roudou " + str(n) + "%")
-            n = n + 10
+    df_countries = gp.read_file(COUNTRIES)
+    df_countries = gp.sjoin(df_countries, gdf, op='contains')
+    df_countries = df_countries[['id', 'index', 'installation_id', 'reference_date', 'latitude', 'longitude', 'CNTRY_NAME']]
+    df_countries.columns = ['id', 'index', 'installation_id', 'reference_date', 'latitude', 'longitude', 'country_name']
+    df_countries = df_countries[['index', 'country_name']]
 
-    gf['local_datetime'] = np.array(local_datetimes)
+    datetime_list = df_timezone['reference_date'].tolist()
+    tz_list = df_timezone['tzid'].tolist()
+    print("converter")
+    local_datetime_list = []
+    for i in range(len(datetime_list)):
+        date = datetime_list[i]
+        tz = tz_list[i]
+        date = date.replace(tzinfo=pytz.utc)
+        date = date.astimezone(pytz.timezone(tz))
+        local_datetime_list.append(date)
 
-    gf[['id', 'installation_id', 'local_datetime', 'reference_date', 'latitude', 'longitude', 'country_name']].to_csv(USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, index=False)
+    df_timezone['local_datetime'] = np.array(local_datetime_list)
+
+    print("timezone")
+    print(df_timezone.columns)
+    print(df_timezone)
+    print("countries")
+    print(df_countries)
+
+    df_timezone_country = df_timezone.join(df_countries.set_index('index'), on='index')
+
+    print("final")
+    print(df_timezone_country)
+    print("tamanho final: ", len(df_timezone_country))
+
+    print(df_timezone_country.query("tzid == 'America/Sao_Paulo'")[['reference_date', 'local_datetime']])
+    #
+    df_timezone_country[['id', 'installation_id', 'local_datetime', 'tzid', 'reference_date', 'latitude', 'longitude', 'country_name']].to_csv(USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, index=False)
+
+
+    # print(gf['reference_date'])
+    # reference_date = gf['reference_date'].tolist()
+    # latitude = gf['latitude'].tolist()
+    # longitude = gf['longitude'].tolist()
+    # countries = gf['country_name'].tolist()
+    # print("Fora do brasil: ", len(gf.query("country_name != 'Brazil'")))
+    # print("rodar")
+    #
+    # local_datetimes = []
+    # p = int(len(gf)/10)
+    # n = 10
+    # for i in range(len(gf)):
+    #     date = reference_date[i]
+    #     if countries[i] == "Brazil":
+    #         local_datetime = datetime_utils.convert_tz(date, pytz.utc, 'America/Sao_Paulo')
+    #         local_datetimes.append(local_datetime)
+    #     else:
+    #         lat = latitude[i]
+    #         lon = longitude[i]
+    #         local_datetime = datetime_utils.find_timezone(date, lat, lon)
+    #         local_datetimes.append(local_datetime)
+    #     if i == p:
+    #         p = p + p
+    #         print("Roudou " + str(n) + "%")
+    #         n = n + 10
+
+    # df_countries['local_datetime'] = np.array(local_datetimes)
+    #
+    # df_countries[['id', 'installation_id', 'local_datetime', 'reference_date', 'latitude', 'longitude', 'country_name']].to_csv(USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, index=False)

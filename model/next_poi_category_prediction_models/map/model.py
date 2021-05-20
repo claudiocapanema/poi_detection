@@ -5,6 +5,8 @@ from tensorflow.keras.layers import Embedding
 from tensorflow.keras.models import Model
 import numpy as np
 
+import tensorflow as tf
+
 
 class MAP:
 
@@ -13,11 +15,11 @@ class MAP:
 
     def build(self, step_size, location_input_dim, time_input_dim, num_users, seed=None):
         if seed is not None:
-            np.random.seed(seed)
+            tf.random.set_seed(seed)
 
         s_input = Input((step_size,), dtype='int32', name='spatial')
         t_input = Input((step_size,), dtype='int32', name='temporal')
-        week_day_input = Input((step_size,), dtype='int32', name='daytype')
+        country_input = Input((step_size,), dtype='int32', name='country_input')
         id_input = Input((step_size,), dtype='int32', name='userid')
 
         # The embedding layer converts integer encoded vectors to the specified
@@ -26,8 +28,6 @@ class MAP:
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
         simple_rnn_units = 15
-        n = 2
-        id_output_dim = (simple_rnn_units//8)*8 + 8*n - simple_rnn_units
         emb1 = Embedding(input_dim=location_input_dim, output_dim=5, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=5, input_length=step_size)
 
@@ -42,19 +42,20 @@ class MAP:
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
         srnn = SimpleRNN(300, return_sequences=True)(spatial_embedding)
         srnn = Dropout(0.5)(srnn)
-        concat_1 = Concatenate(inputs=[srnn, temporal_embedding])
+        concat_1 = Concatenate()([srnn, temporal_embedding])
 
-        att = MultiHeadAttention(num_heads=1,
-                               name='Attention')(concat_1)
+        att = MultiHeadAttention(key_dim=2,
+                                 num_heads=1,
+                                 name='Attention')(concat_1, concat_1)
 
-        att = Concatenate(inputs=[srnn, att])
+        att = Concatenate()([srnn, att])
         att = Flatten()(att)
         drop_1 = Dropout(0.6)(att)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
 
 
-        model = Model(inputs=[s_input, t_input, day_type, id_input], outputs=[y_srnn], name="MAP_baseline")
+        model = Model(inputs=[s_input, t_input, country_input, id_input], outputs=[y_srnn], name="MAP_baseline")
 
         return model
 

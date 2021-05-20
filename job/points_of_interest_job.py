@@ -52,7 +52,8 @@ class PointOfInterest(Job):
             print("ca", users_detected_pois['poi_osm'].unique().tolist())
             users_steps['id'] = users_steps['id'].astype('int')
             users_steps_ids = users_steps['id'].unique().tolist()
-            first_half = int(len(users_steps_ids)/2)
+            first_half = int(len(users_steps_ids)/3)
+            second_half = first_half*2
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(users_steps.query("id in " + str(users_steps_ids[:first_half])),
                                                                                                    users_detected_pois.query("id in " + str(users_steps_ids[:first_half])))
             print("Salvar 1")
@@ -60,8 +61,16 @@ class PointOfInterest(Job):
             self.file_loader.save_df_to_csv(users_steps_with_pois, users_steps_with_detected_pois_with_osm_pois_filename, 'a')
 
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
-                users_steps.query("id in " + str(users_steps_ids[first_half:])), users_detected_pois.query("id in " + str(users_steps_ids[first_half:])))
-            print("Salvar 1")
+                users_steps.query("id in " + str(users_steps_ids[first_half:second_half])), users_detected_pois.query("id in " + str(users_steps_ids[first_half:second_half])))
+            print("Salvar 2")
+            print(users_steps_with_pois)
+            self.file_loader.save_df_to_csv(users_steps_with_pois,
+                                            users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
+
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
+                users_steps.query("id in " + str(users_steps_ids[second_half:])),
+                users_detected_pois.query("id in " + str(users_steps_ids[second_half:])))
+            print("Salvar 3")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
                                             users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)

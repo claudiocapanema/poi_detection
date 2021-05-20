@@ -524,7 +524,7 @@ class PointsOfInterestDomain:
         for column in ['id_right', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag']:
             pattern_row[column] = user_pois.iloc[0][column]
-        pattern_row['poi_type'] = "displacement"
+        pattern_row['poi_type'] = "Commuting"
         for column in ['poi_latitude', 'poi_longitude', 'work_time_events',
         'home_time_events']:
             pattern_row[column] = -1
@@ -619,7 +619,7 @@ class PointsOfInterestDomain:
                 #pattern_row[column] = user_pois.iloc[0]['id_right']
             else:
                 pattern_row[column] = user_pois.iloc[0][column]
-        pattern_row['poi_type'] = "displacement"
+        pattern_row['poi_type'] = "Commuting"
         for column in ['poi_latitude', 'poi_longitude', 'work_time_events',
         'home_time_events']:
             pattern_row[column] = -1
@@ -736,13 +736,14 @@ class PointsOfInterestDomain:
         poi_type = row.iloc[0]['poi_type']
         poi_osm = row.iloc[0]['poi_osm']
 
-        if poi_type == 'home' or poi_type == 'work' or poi_type == 'displacement':
+        if poi_type == 'Home' or poi_type == 'Work' or poi_type == 'Commuting':
             poi_resulting = poi_type
-        elif poi_type == 'other' and poi_osm == 'empty':
+        elif poi_type == 'Other' and poi_osm == 'empty':
             poi_resulting = poi_type
         else:
             poi_resulting = poi_osm
 
+        poi_resulting = poi_resulting[0].upper() + poi_resulting[1:]
         row['poi_resulting'] = poi_resulting
 
         return row

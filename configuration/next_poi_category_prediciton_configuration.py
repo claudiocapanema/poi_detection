@@ -15,14 +15,19 @@ class NextPoiCategoryPredictionConfiguration:
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
-        self.BATCH = ("batch", {'mfa': 100, 'serm': 200, 'map': 200, 'stf': 200})
+        self.BATCH = ("batch", {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200})
 
-        self.OPTIMIZER = ("learning_rate", {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(epsilon=0.1, clipnorm=1)})
+        self.OPTIMIZER = ("learning_rate", {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),
+                                            'next': Adam()})
+
+        self.FORMAT_MODEL_NAME = ("format_model_name", {'mfa': 'MFA-RNN', 'serm': 'SERM', 'map': 'MAP', 'stf': 'STF-RNN',
+                                            'next': 'MHSA+PE'})
 
         self.OUTPUT_BASE_DIR = (
         "output_dir", "output/next_poi_category_prediction/", False, "output directory for the poi_categorization")
 
-        self.MODEL_NAME = ("model_name", {'mfa': "mfa/", 'serm': "serm/", 'map': "map/", 'stf': "stf/"})
+        self.MODEL_NAME = ("model_name", {'mfa': "mfa/", 'serm': "serm/", 'map': "map/", 'stf': "stf/",
+                                          'next': "next/"})
 
         self.DATASET_TYPE = ("dataset_type", {'users_steps': "users_steps/"})
 
@@ -35,15 +40,18 @@ class NextPoiCategoryPredictionConfiguration:
                         {'10_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
                                            'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
                                            'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
-                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1}},
+                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
+                                           'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1}},
                          '8_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
-                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1}},
+                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
+                                          'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1}},
                          '3_categories': {'serm': {0: 1, 1: 1, 2: 1},
                                            'map': {0: 1, 1: 1, 2: 1},
                                            'stf': {0: 1, 1: 1, 2: 1},
-                                           'mfa': {0: 1, 1: 1, 2: 1}}})
+                                           'mfa': {0: 1, 1: 1, 2: 1},
+                                          'next': {0: 1, 1: 1, 2: 1}}})
 
         self.DATASET_COLUMNS = ("dataset_columns", {"users_steps": {"datetime": "datetime",
                                                                   "userid": "id",
@@ -53,9 +61,9 @@ class NextPoiCategoryPredictionConfiguration:
                                                                   "longitude": "longitude",
                                                                     "country": "country_name"}})
 
-        self.CATEGORIES_10 = ['home', 'work', 'other', 'displacement', 'amenity', 'leisure', 'office', 'shop', 'sport', 'tourism']
+        self.CATEGORIES_10 = ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Office', 'Shop', 'Sport', 'Tourism']
 
-        self.CATEGORIES_8 = ['home', 'work', 'other', 'displacement', 'amenity', 'leisure', 'shop', 'tourism']
+        self.CATEGORIES_8 = ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Shop', 'Tourism']
 
         self.CATEGORIES_3 = ['displacement', 'home', 'other']
 

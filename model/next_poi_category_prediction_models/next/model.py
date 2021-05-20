@@ -5,6 +5,7 @@ from tensorflow.keras.layers import Embedding
 from tensorflow.keras.models import Model
 import numpy as np
 
+import tensorflow as tf
 
 class NEXT:
 
@@ -13,11 +14,11 @@ class NEXT:
 
     def build(self, step_size, location_input_dim, time_input_dim, num_users, seed=None):
         if seed is not None:
-            np.random.seed(seed)
+            tf.random.set_seed(seed)
 
         s_input = Input((step_size,), dtype='int32', name='spatial')
         t_input = Input((step_size,), dtype='int32', name='temporal')
-        week_day_input = Input((step_size,), dtype='int32', name='daytype')
+        country_input = Input((step_size,), dtype='int32', name='daytype')
         id_input = Input((step_size,), dtype='int32', name='userid')
 
         # The embedding layer converts integer encoded vectors to the specified
@@ -25,14 +26,13 @@ class NEXT:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        simple_rnn_units = 15
-        n = 2
-        id_output_dim = (simple_rnn_units//8)*8 + 8*n - simple_rnn_units
         emb1 = Embedding(input_dim=location_input_dim, output_dim=5, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=5, input_length=step_size)
+        emb3 = Embedding(input_dim=num_users, output_dim=5, input_length=step_size)
 
         spatial_embedding = emb1(s_input)
         temporal_embedding = emb2(t_input)
+        id_embbeding = emb3(id_input)
 
 
 
@@ -40,21 +40,65 @@ class NEXT:
         # separated by longer times (bigger sentences)
         # spatial_embedding = Dropout(0.5)(spatial_embedding)
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
-        srnn = SimpleRNN(300, return_sequences=True)(spatial_embedding)
+        concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
+        srnn = GRU(300, return_sequences=True)(concat_1)
         srnn = Dropout(0.5)(srnn)
-        concat_1 = Concatenate(inputs=[srnn, temporal_embedding])
+        concat_2 = Concatenate()([srnn, id_embbeding])
 
-        att = MultiHeadAttention(num_heads=1,
-                               name='Attention')(concat_1)
+        att = MultiHeadAttention(
+            key_dim=1,
+            num_heads=4,
+            name='Attention')(concat_2, concat_2)
 
-        att = Concatenate(inputs=[srnn, att])
+        print("aaaa")
+        print(concat_2.shape)
+        pos = self.positional_encoding(concat_2, 4)
+
+        att = Concatenate()([att, pos])
         att = Flatten()(att)
         drop_1 = Dropout(0.6)(att)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
 
 
-        model = Model(inputs=[s_input, t_input, day_type, id_input], outputs=[y_srnn], name="NEXT_baseline")
+        model = Model(inputs=[s_input, t_input, country_input, id_input], outputs=[y_srnn], name="NEXT_baseline")
 
         return model
 
+    def positional_encoding(self, inputs,
+                            maxlen,
+                            masking=False,
+                            scope="positional_encoding"):
+        '''Sinusoidal Positional_Encoding. See 3.5
+        inputs: 3d tensor. (N, T, E)
+        maxlen: scalar. Must be >= T
+        masking: Boolean. If True, padding positions are set to zeros.
+        scope: Optional scope for `variable_scope`.
+        returns
+        3d tensor that has the same shape as inputs.
+        '''
+
+        E = inputs.shape[-1]  # static
+        N, T = tf.shape(inputs)[0], tf.shape(inputs)[1]  # dynamic
+        with tf.compat.v1.variable_scope(scope, reuse=tf.compat.v1.AUTO_REUSE):
+            # position indices
+            position_ind = tf.tile(tf.expand_dims(tf.range(T), 0), [N, 1])  # (N, T)
+
+            # First part of the PE function: sin and cos argument
+            position_enc = np.array([
+                [pos / np.power(10000, (i - i % 2) / E) for i in range(E)]
+                for pos in range(maxlen)])
+
+            # Second part, apply the cosine to even columns and sin to odds.
+            position_enc[:, 0::2] = np.sin(position_enc[:, 0::2])  # dim 2i
+            position_enc[:, 1::2] = np.cos(position_enc[:, 1::2])  # dim 2i+1
+            position_enc = tf.convert_to_tensor(position_enc, tf.float32)  # (maxlen, E)
+
+            # lookup
+            outputs = tf.nn.embedding_lookup(position_enc, position_ind)
+
+            # masks
+            if masking:
+                outputs = tf.where(tf.equal(inputs, 0), inputs, outputs)
+
+            return tf.cast(outputs, tf.float32)

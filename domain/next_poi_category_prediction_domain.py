@@ -23,6 +23,7 @@ from model.next_poi_category_prediction_models.serm.model import SERM
 from model.next_poi_category_prediction_models.map.model import MAP
 from model.next_poi_category_prediction_models.stf.model import STF
 from model.next_poi_category_prediction_models.mfa_rnn import MFA_RNN
+from model.next_poi_category_prediction_models.next.model import NEXT
 
 
 class NextPoiCategoryPredictionDomain:
@@ -230,6 +231,14 @@ class NextPoiCategoryPredictionDomain:
         y_train = y_train_concat
         y_test = y_test_concat
 
+        # df = pd.DataFrame({'x_train': X_train, 'y_train': y_train}).sample(frac=1, random_state=2)
+        #
+        # df_test = pd.DataFrame({'x_test': X_test, 'y_test': y_test}).sample(frac=1, random_state=2)
+        # X_train = df['x_train'].tolist()
+        # X_test = df_test['x_test'].tolist()
+        # y_train = df['y_train'].tolist()
+        # y_test = df_test['y_test'].tolist()
+
         # Remove hours. Currently training without events hour
         y_train = remove_hour_from_sequence_y(y_train)
         y_test = remove_hour_from_sequence_y(y_test)
@@ -272,6 +281,8 @@ class NextPoiCategoryPredictionDomain:
             return STF()
         elif model_name == "mfa":
             return MFA_RNN()
+        elif model_name == "next":
+            return NEXT()
 
     def _train_and_evaluate_model(self,
                                   model,
@@ -314,6 +325,8 @@ class NextPoiCategoryPredictionDomain:
         y_test_location = one_hot_decoding(y_test[0])
 
         report = skm.classification_report(y_test_location, y_predict_location, output_dict=True)
+        print("Relatorio")
+        print(report)
         return hi.history, report
 
     def output_dir(self, output_base_dir, dataset_type, category_type, model_name=""):

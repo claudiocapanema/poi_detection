@@ -28,6 +28,12 @@ def sequence_to_x_y(list_events: list, step_size):
             step = []
             cont = 0
 
+    #     for i in range(4, len(list_events)-1):
+    #         e = list_events[i]
+    #         step = list_events[i-4:i]
+    #         x.append(step)
+    #         y.append(list_events[i+1])
+
     return x, y
 
 def remove_hour_from_sequence_x(list_events: list):

@@ -14,7 +14,7 @@ class Poi:
         self._times = times
         self._different_hours = None
         self._n_events_week = None
-        self._poi_class = "other"
+        self._poi_class = "Other"
         self._home_hour = {}
         self._work_hour = {}
         self._different_days = 0
