@@ -59,7 +59,8 @@ class NextPoiCategoryPredictionConfiguration:
                                                                   "category": "poi_resulting",
                                                                   "latitude": "latitude",
                                                                   "longitude": "longitude",
-                                                                    "country": "country_name"}})
+                                                                    "country": "country_name",
+                                                                    "state": "state_name"}})
 
         self.CATEGORIES_10 = ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Office', 'Shop', 'Sport', 'Tourism']
 

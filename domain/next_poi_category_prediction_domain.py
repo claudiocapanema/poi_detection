@@ -13,8 +13,9 @@ from sklearn.model_selection import KFold
 
 from extractor.file_extractor import FileExtractor
 from foundation.util.next_poi_category_prediction_util import sequence_to_x_y, \
-    sequence_tuples_to_spatial_temporal_and_feature3_ndarrays, return_hour_from_sequence_y, \
-    remove_hour_from_sequence_y, remove_hour_from_sequence_x
+    sequence_tuples_to_spatial_temporal_and_feature3_ndarrays, sequence_tuples_to_spatial_temporal_and_feature4_ndarrays, \
+    sequence_tuples_to_spatial_temporal_and_feature5_ndarrays, sequence_tuples_to_spatial_temporal_and_feature6_ndarrays, \
+    return_hour_from_sequence_y, remove_hour_from_sequence_y, remove_hour_from_sequence_x
 from foundation.util.nn_preprocessing import one_hot_decoding, \
     one_hot_decoding_predicted, top_k_rows, weighted_categorical_crossentropy, \
     filter_data_by_valid_category
@@ -65,6 +66,9 @@ class NextPoiCategoryPredictionDomain:
         sequences = df['sequence'].tolist()
         new_sequences = []
         countries = {}
+        max_country = 0
+        max_distance = 0
+        max_duration = 0
         for i in range(len(users_ids)):
 
             user_id = users_ids[i]
@@ -76,13 +80,30 @@ class NextPoiCategoryPredictionDomain:
                 if model_name in ['map', 'stf'] and hour >= 24:
                     hour = hour - 24
                 country = sequence[j][2]
+                distance = sequence[j][3]
+                duration = sequence[j][4]
+                week_day = sequence[j][5]
+
+                if distance > 50:
+                    distance = 50
+                if duration > 48:
+                    duration = 48
                 countries[country] = 0
-                new_sequence.append([location_category_id, hour, country, user_id])
+                if country > max_country:
+                    max_country = country
+                if distance > max_distance:
+                    max_distance = distance
+                if duration > max_duration:
+                    max_duration = duration
+                new_sequence.append([location_category_id, hour, country, distance, duration, week_day, user_id])
 
             new_sequences.append(new_sequence)
 
         print("quantidade usuarios: ", len(users_ids))
         print("quantidade se: ", len(new_sequences))
+        print("maior pais: ", max_country)
+        print("maior distancia: ", max_distance)
+        print("maior duracao: ", max_duration)
         df['sequence'] = np.array(new_sequences)
 
         # df = self.file_extractor.read_csv(
@@ -169,6 +190,7 @@ class NextPoiCategoryPredictionDomain:
         histories = []
         iteration = 0
         for i in range(k_folds):
+            print("Modelo: ", model_name)
             X_train, X_test, y_train, y_test = self.extract_train_test_from_indexes_k_fold(users_list=users_list,
                                                                                            users_train_indexes=
                                                                                            users_train_index[i],
@@ -244,8 +266,8 @@ class NextPoiCategoryPredictionDomain:
         y_test = remove_hour_from_sequence_y(y_test)
 
         # Sequence tuples to [spatial[,step_size], temporal[,step_size]] ndarray. Use with embedding layer.
-        X_train = sequence_tuples_to_spatial_temporal_and_feature3_ndarrays(X_train)
-        X_test = sequence_tuples_to_spatial_temporal_and_feature3_ndarrays(X_test)
+        X_train = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_train)
+        X_test = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
 
         y_train = np.asarray(y_train)
         y_test = np.asarray(y_test)
@@ -301,7 +323,6 @@ class NextPoiCategoryPredictionDomain:
 
         model.compile(optimizer='adam', loss=["categorical_crossentropy"],
                       metrics=tensorflow.keras.metrics.CategoricalAccuracy(name="acc"))
-
         print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
         print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
         hi = model.fit(X_train,

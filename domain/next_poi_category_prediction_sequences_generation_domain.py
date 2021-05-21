@@ -3,6 +3,7 @@ import pandas as pd
 
 from loader.next_poi_category_prediction_sequences_generation_loader import NextPoiCategoryPredictionSequencesGenerationLoader
 from extractor.file_extractor import FileExtractor
+from foundation.util.geospatial_utils import points_distance
 
 
 class NextPoiCategoryPredictionSequencesGenerationDomain:
@@ -31,8 +32,10 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                            locationid_column,
                            datetime_column,
                            country_column,
+                           state_column,
                            categories_to_int,
-                           countries_to_int):
+                           countries_to_int,
+                           states_to_int):
 
         df = df.sort_values(by=datetime_column)
 
@@ -44,6 +47,10 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
 
         df['category_id'] = np.array(categories_id)
         countries_list = df[country_column].tolist()
+        states_list = df[state_column].tolist()
+        latitude_list = df['latitude'].tolist()
+        longitude_list = df['longitude'].tolist()
+
 
         user_sequence = []
         user_hours = []
@@ -55,6 +62,19 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
             date = datetime_list[i]
             week_day = date.weekday()
             country = countries_to_int[countries_list[i]]
+            state = states_to_int[states_list[i]]
+            if i == 0:
+                distance = 0
+                duration = 0
+            else:
+                lat_before = latitude_list[i-1]
+                lng_before = longitude_list[i-1]
+                lat_current = latitude_list[i]
+                lng_current = longitude_list[i]
+                distance = int(points_distance([lat_before, lng_before], [lat_current, lng_current])/1000)
+                datetime_before = datetime_list[i-1]
+                datetime_current = datetime_list[i]
+                duration = int((datetime_current-datetime_before).total_seconds()/3600)
             if week_day < 5:
                 day_type = 0
                 hour = date.hour
@@ -66,7 +86,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
             #     print("diferente")
             #     print(country)
             #     print(countries_list[i])
-            sequence = [categories_id[i], hour, country, user_id[i]]
+            sequence = [categories_id[i], hour, country, distance, duration, week_day, user_id[i]]
             user_sequence.append(sequence)
 
         return pd.DataFrame({'id': user_id[0], 'sequence': [str(user_sequence)], 'categories': [str(categories_id)]})
@@ -76,19 +96,24 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                            locationid_column,
                            datetime_column,
                            country_column,
+                           state_column,
                            categories_to_int):
 
         #users_checkins = users_checkins.head(10000)
         #df = users_checkins.query(str(userid_column)+" == '"+str(user_id) + "'")
         countries = users_checkins[country_column].unique().tolist()
         countries_to_int = {countries[i]: i for i in range(len(countries))}
+        states = users_checkins[state_column].unique().tolist()
+        states_to_int = {states[i]: i for i in range(len(states))}
         df = users_checkins.groupby(userid_column).apply(lambda e:self._user_steps_to_int(e,
                                                                                           category_column,
                                                                                           locationid_column,
                                                                                           datetime_column,
                                                                                           country_column,
+                                                                                          state_column,
                                                                                           categories_to_int,
-                                                                                          countries_to_int))
+                                                                                          countries_to_int,
+                                                                                          states_to_int))
 
         #df = self._flatten_df(df, userid_column)
 

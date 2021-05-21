@@ -17,10 +17,13 @@ class MAP:
         if seed is not None:
             tf.random.set_seed(seed)
 
-        s_input = Input((step_size,), dtype='int32', name='spatial')
-        t_input = Input((step_size,), dtype='int32', name='temporal')
-        country_input = Input((step_size,), dtype='int32', name='country_input')
-        id_input = Input((step_size,), dtype='int32', name='userid')
+        location_category_input = Input((step_size,), dtype='int32', name='spatial')
+        temporal_input = Input((step_size,), dtype='int32', name='temporal')
+        country_input = Input((step_size,), dtype='int32', name='country')
+        distance_input = Input((step_size,), dtype='int32', name='distance')
+        duration_input = Input((step_size,), dtype='int32', name='duration')
+        week_day_input = Input((step_size,), dtype='int32', name='week_day')
+        user_id_input = Input((step_size,), dtype='int32', name='user')
 
         # The embedding layer converts integer encoded vectors to the specified
         # shape (none, input_lenght, output_dim) with random weights, which are
@@ -31,8 +34,8 @@ class MAP:
         emb1 = Embedding(input_dim=location_input_dim, output_dim=5, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=5, input_length=step_size)
 
-        spatial_embedding = emb1(s_input)
-        temporal_embedding = emb2(t_input)
+        spatial_embedding = emb1(location_category_input)
+        temporal_embedding = emb2(temporal_input)
 
 
 
@@ -41,7 +44,7 @@ class MAP:
         # spatial_embedding = Dropout(0.5)(spatial_embedding)
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
         srnn = SimpleRNN(300, return_sequences=True)(spatial_embedding)
-        srnn = Dropout(0.5)(srnn)
+        srnn = Dropout(0.6)(srnn)
         concat_1 = Concatenate()([srnn, temporal_embedding])
 
         att = MultiHeadAttention(key_dim=2,
@@ -55,7 +58,7 @@ class MAP:
 
 
 
-        model = Model(inputs=[s_input, t_input, country_input, id_input], outputs=[y_srnn], name="MAP_baseline")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=[y_srnn], name="MAP_baseline")
 
         return model
 

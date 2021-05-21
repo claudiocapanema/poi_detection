@@ -35,6 +35,7 @@ class NextPoiCategoryPredictionJob:
         int_to_categories = self.next_poi_category_prediction_configuration.INT_TO_CATEGORIES[1][dataset_name][categories_type]
 
         filename=0
+        print("Modelo: ", model_name)
 
         users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits, model_name)
 

@@ -16,10 +16,13 @@ class SERM:
         if seed is not None:
             tf.random.set_seed(seed)
 
-        s_input = Input((step_size,), dtype='int32', name='spatial')
-        t_input = Input((step_size,), dtype='int32', name='temporal')
-        country_input = Input((step_size,), dtype='int32', name='daytype')
-        id_input = Input((step_size,), dtype='int32', name='userid')
+        location_category_input = Input((step_size,), dtype='int32', name='spatial')
+        temporal_input = Input((step_size,), dtype='int32', name='temporal')
+        country_input = Input((step_size,), dtype='int32', name='country')
+        distance_input = Input((step_size,), dtype='int32', name='distance')
+        duration_input = Input((step_size,), dtype='int32', name='duration')
+        week_day_input = Input((step_size,), dtype='int32', name='week_day')
+        user_id_input = Input((step_size,), dtype='int32', name='user')
 
         # The embedding layer converts integer encoded vectors to the specified
         # shape (none, input_lenght, output_dim) with random weights, which are
@@ -32,15 +35,15 @@ class SERM:
         emb1 = Embedding(input_dim=location_input_dim, output_dim=10, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=2, input_length=step_size)
 
-        spatial_embedding = emb1(s_input)
-        temporal_embedding = emb2(t_input)
-        id_embedding = emb3(id_input)
+        spatial_embedding = emb1(location_category_input)
+        temporal_embedding = emb2(temporal_input)
+        id_embedding = emb3(user_id_input)
 
         concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
         lstm_1 = LSTM(units, return_sequences=True)(concat_1)
-        lstm_1 = Dropout(0.5)(lstm_1)
+        lstm_1 = Dropout(0.6)(lstm_1)
         lstm_1 = Dense(24)(lstm_1)
         lstm_1 = Concatenate()([lstm_1, id_embedding])
         lstm_1 = Dropout(0.6)(lstm_1)
@@ -48,6 +51,6 @@ class SERM:
         dense_1 = Dense(location_input_dim)(flatten_1)
         pred_location = Activation('softmax')(dense_1)
 
-        model = Model(inputs=[s_input, t_input, country_input, id_input], outputs=[pred_location], name="serm")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=[pred_location], name="serm")
 
         return model

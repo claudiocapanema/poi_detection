@@ -28,6 +28,7 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
         locationid_column  = self.poi_categorization_configuration.DATASET_COLUMNS[1][dataset_name]['locationid']
         datetime_column = self.poi_categorization_configuration.DATASET_COLUMNS[1][dataset_name]['datetime']
         country_column = self.poi_categorization_configuration.DATASET_COLUMNS[1][dataset_name]['country']
+        state_column = self.poi_categorization_configuration.DATASET_COLUMNS[1][dataset_name]['state']
         categories_to_int_osm = self.poi_categorization_configuration.CATEGORIES_TO_INT[1][dataset_name][categories_type]
         max_pois = self.poi_categorization_configuration.MAX_POIS[1]
         sequences_size = SequencesGenerationForPoiCategorizationSequentialBaselinesConfiguration.SEQUENCES_SIZE.get_value()
@@ -47,6 +48,7 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
                                                                                                                           locationid_column,
                                                                                                                           datetime_column,
                                                                                                                           country_column,
+                                                                                                                          state_column,
                                                                                                                           categories_to_int_osm)
 
         self.sequences_generation_for_poi_categorization_sequential_baselines_domain.sequences_to_csv(users_sequences, users_sequences_folder, dataset_name, categories_type)
@@ -61,10 +63,10 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
 
             poi_resulting = poi_resulting_list[i]
 
-            if poi_resulting == 'office':
-                poi_resulting = 'work'
-            elif poi_resulting == 'sport':
-                poi_resulting = 'leisure'
+            if poi_resulting == 'Office':
+                poi_resulting = 'Work'
+            elif poi_resulting == 'Sport':
+                poi_resulting = 'Leisure'
 
             new_poi_resulting_list.append(poi_resulting)
 

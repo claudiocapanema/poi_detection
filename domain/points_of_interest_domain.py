@@ -459,7 +459,7 @@ class PointsOfInterestDomain:
             ['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
              'work_time_events', 'home_time_events', 'inactive_applied_flag',
              'inactive_interval_end', 'inactive_interval_start',
-             'inverted_routine_flag', 'poi_osm', 'distance_osm', 'poi_resulting', 'country_name']]
+             'inverted_routine_flag', 'poi_osm', 'distance_osm', 'poi_resulting', 'country_name', 'state_name']]
 
         print("sobraram usuarios: ", len(users_steps_with_pois['id'].unique().tolist()))
         print("Categorias unicas na coluna 'poi_resulting': ", users_steps_with_pois['poi_resulting'].unique().tolist())
@@ -575,7 +575,7 @@ class PointsOfInterestDomain:
             return pd.DataFrame({column: [] for column in ['id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
-        'distance_osm', 'country_name']})
+        'distance_osm', 'state_name', 'country_name']})
 
         user_steps['index'] = np.array([i for i in range(len(user_steps))])
         user_pois = user_pois[['id', 'poi_type', 'latitude', 'longitude', 'work_time_events',
@@ -588,7 +588,6 @@ class PointsOfInterestDomain:
         'distance_osm', 'geometry']
         user_steps_join = gp.sjoin(user_pois, user_steps, op='contains')
         # if len(dp_points) < 1:
-        #     continue
 
         columns = user_steps.columns.tolist() + ['index_assign'] + user_pois.columns.tolist()
         new_users_steps = {column: [] for column in columns}
@@ -608,7 +607,7 @@ class PointsOfInterestDomain:
                 {column: [] for column in ['id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
                                            'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
                                            'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
-                                           'distance_osm', 'country_name']})
+                                           'distance_osm', 'state_name', 'country_name']})
 
         # add displacement user steps to the new user steps
         pattern_row = {}
@@ -651,15 +650,15 @@ class PointsOfInterestDomain:
        'index_assign', 'id_right', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
-       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'country_name']]
+       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'state_name', 'country_name']]
         new_users_steps = new_users_steps[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
-       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index', 'country_name']]
+       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index', 'state_name', 'country_name']]
         user_steps_join = user_steps_join[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
-       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index', 'country_name']]
+       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index', 'state_name', 'country_name']]
         users_steps_with_pois = user_steps_join.append(new_users_steps, ignore_index=True).drop_duplicates(subset='index')
         tamanho = len(users_steps_with_pois)
         #users_steps_with_pois = users_steps_with_pois.drop_duplicates(subset='index')
@@ -672,7 +671,7 @@ class PointsOfInterestDomain:
         return users_steps_with_pois[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
-       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'country_name']]
+       'inverted_routine_flag', 'poi_osm', 'distance_osm', 'state_name', 'country_name']]
 
 
     def verify_users_steps_pois_assignment_geopandas(self, row):
@@ -772,8 +771,8 @@ class PointsOfInterestDomain:
         select.append("CNTRY_NAME")
         users_steps = gp.sjoin(countries, users_steps, op='contains')
 
-        users_steps = users_steps[['id', 'datetime', 'latitude', 'longitude', 'CNTRY_NAME']]
-        users_steps.columns = ['id', 'datetime', 'latitude', 'longitude', 'country_name']
+        users_steps = users_steps[['id', 'datetime', 'latitude', 'longitude', 'state_name', 'CNTRY_NAME']]
+        users_steps.columns = ['id', 'datetime', 'latitude', 'longitude', 'state_name', 'country_name']
         users_steps = gp.GeoDataFrame(users_steps,
                                       geometry=gp.points_from_xy(users_steps.longitude, users_steps.latitude), crs='EPSG:4326')
 

@@ -19,7 +19,7 @@ class PerformancePlotsLoader:
 
     def plot_general_metrics(self, report, columns, base_dir):
 
-        sns.set_theme(style="whitegrid")
+        sns.set_theme()
         macro_fscore_list = []
         model_name_list = []
         accuracy_list = []

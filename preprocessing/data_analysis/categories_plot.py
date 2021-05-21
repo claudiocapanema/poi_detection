@@ -4,7 +4,7 @@ import seaborn as sns
 from pathlib import Path
 
 from configuration import USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME
-
+sns.set_theme()
 
 def save_fig(dir, filename, fig):
     Path(dir).mkdir(parents=True, exist_ok=True)
@@ -15,20 +15,20 @@ def save_fig(dir, filename, fig):
 def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     total = []
     total_frequency = sum(hour_frequency_dict.values())
-    total_frequency = 1
+    #total_frequency = 1
     for day in hour_frequency_dict:
         total.append(hour_frequency_dict[day] / total_frequency)
-    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Total': total})
+    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage': total})
 
-    barplot(dir, 'Category', 'Total', df, "barplot_category_total_" + week + title,
-                 "Total events per category" + title)
+    barplot(dir, 'Category', 'Percentage', df, "barplot_category_total_" + week + title,
+                 "Percentage of events per category" + title)
 
-def barplot(dir, x, y, df, filename, title):
+def barplot(dir, x, y, df, filename, title, save=True):
 
     plt.figure()
-    fig = sns.barplot(x=x, y=y, data=df).set_title(title).get_figure()
-
-    save_fig(dir, filename, fig)
+    fig = sns.barplot(x=x, y=y, data=df)
+    fig = fig.set_title(title).get_figure()
+    plt.xticks(rotation=35)
 
 if __name__ == "__main__":
 

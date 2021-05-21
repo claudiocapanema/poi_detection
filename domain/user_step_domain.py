@@ -11,14 +11,16 @@ class UserStepDomain:
 
     def users_steps_from_csv(self, filename):
         users_steps = self.file_extractor.read_csv(filename)
+        print("original")
+        print(users_steps)
         # linha,id,datetime,latitude,longitude,handset,operating_system
         local_datetime_list = users_steps['local_datetime'].tolist()
         for i in range(len(local_datetime_list)):
             local_datetime_list[i] = local_datetime_list[i][:19]
         users_steps['datetime'] = np.array(local_datetime_list)
         users_steps['datetime'] = pd.to_datetime(users_steps['datetime'], infer_datetime_format=True)
-        users_steps = users_steps[['installation_id', 'datetime', 'latitude', 'longitude']]
-        users_steps.columns = ['id', 'datetime', 'latitude', 'longitude']
+        users_steps = users_steps[['installation_id', 'datetime', 'latitude', 'longitude', 'country_name', 'state_name']]
+        users_steps.columns = ['id', 'datetime', 'latitude', 'longitude', 'country_name', 'state_name']
         users_steps['id'] = users_steps['id'].astype('int64')
         #users_steps['datetime'] = pd.to_datetime(users_steps['datetime'], infer_datetime_format=True)
         print("Describe datetime: ", users_steps['datetime'].describe())

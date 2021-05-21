@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from configuration import USERS_10_MIL_MAX_500_POINTS, COUNTRIES, USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, TIMEZONES
+from configuration import USERS_10_MIL_MAX_500_POINTS, COUNTRIES, USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, TIMEZONES, BRASIL_STATES
 import timezonefinder
 import pytz
 import datetime as dt
@@ -53,9 +53,12 @@ class DatetimesUtils:
 
 if __name__ == "__main__":
 
+    df_states = gp.read_file(BRASIL_STATES)[['nome', 'geometry']]
+    df_states.columns = ['state_name', 'geometry']
+
     datetime_utils = DatetimesUtils()
     df = pd.read_csv(USERS_10_MIL_MAX_500_POINTS)
-    df['reference_date'] = pd.to_datetime(df['reference_date'], infer_datetime_format=True)
+    df['reference_date'] = pd.to_datetime(df['reference_date'], format="%Y-%m-%d %H:%M:%S")
     df['index'] = np.array([i for i in range(len(df))])
     print("Tamanho inicial: ", len(df))
     gdf = gp.GeoDataFrame(
@@ -65,12 +68,18 @@ if __name__ == "__main__":
     print("Timezones columns: ", timezones.columns)
 
     df_timezone = gp.sjoin(timezones, gdf, op='contains')[['id', 'index', 'installation_id', 'reference_date', 'tzid', 'latitude', 'longitude']]
+    print("tamanho timezones: ", len(df_timezone))
 
+    # countries
     df_countries = gp.read_file(COUNTRIES)
     df_countries = gp.sjoin(df_countries, gdf, op='contains')
     df_countries = df_countries[['id', 'index', 'installation_id', 'reference_date', 'latitude', 'longitude', 'CNTRY_NAME']]
     df_countries.columns = ['id', 'index', 'installation_id', 'reference_date', 'latitude', 'longitude', 'country_name']
     df_countries = df_countries[['index', 'country_name']]
+    print("tamanho countries: ", len(df_countries))
+
+    # states
+    df_states = gp.sjoin(df_states, gdf, op='contains')[['index', 'state_name']]
 
     datetime_list = df_timezone['reference_date'].tolist()
     tz_list = df_timezone['tzid'].tolist()
@@ -90,16 +99,49 @@ if __name__ == "__main__":
     print(df_timezone)
     print("countries")
     print(df_countries)
+    print("events per country")
+    events_per_country = \
+    df_countries.groupby(by='country_name').apply(lambda e: pd.DataFrame({'Total events': [len(e)]})).reset_index()[['country_name', 'Total events']].sort_values('Total events', ascending=False)
+    print(events_per_country)
 
     df_timezone_country = df_timezone.join(df_countries.set_index('index'), on='index')
+    df_timezone_country_state = df_timezone_country.join(df_states.set_index('index'), on='index')
 
     print("final")
-    print(df_timezone_country)
-    print("tamanho final: ", len(df_timezone_country))
+    print("tamanho final (join): ", len(df_timezone_country_state))
 
-    print(df_timezone_country.query("tzid == 'America/Sao_Paulo'")[['reference_date', 'local_datetime']])
+    print(df_timezone_country_state.query("tzid == 'America/Sao_Paulo'")[['reference_date', 'local_datetime']])
+
+    df_timezone_country_state['country_name'] = df_timezone_country_state['country_name'].fillna('Others countries')
+
+    state_name_list = df_timezone_country_state['state_name'].tolist()
+    state_name_isnull_list = df_timezone_country_state['state_name'].isnull().tolist()
+    country_name_list = df_timezone_country_state['country_name'].tolist()
+    for i in range(len(state_name_isnull_list)):
+
+        if state_name_isnull_list[i]:
+            if country_name_list[i] != 'Others countries':
+                state_name_list[i] = "exterior_" + country_name_list[i]
+            else:
+                state_name_list[i] = 'Others states'
+
+    df_timezone_country_state['state_name'] = np.array(state_name_list)
+
+    print("events per country final")
+    events_per_country = \
+        df_timezone_country_state.groupby(by='country_name').apply(lambda e: pd.DataFrame({'Total events': [len(e)]})).reset_index()[
+            ['country_name', 'Total events']].sort_values('Total events', ascending=False)
+    print(events_per_country)
+
+    print("events per state final")
+    events_per_country = \
+        df_timezone_country_state.groupby(by='state_name').apply(
+            lambda e: pd.DataFrame({'Total events': [len(e)]})).reset_index()[
+            ['state_name', 'Total events']].sort_values('Total events', ascending=False)
+    print(events_per_country)
     #
-    df_timezone_country[['id', 'installation_id', 'local_datetime', 'tzid', 'reference_date', 'latitude', 'longitude', 'country_name']].to_csv(USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, index=False)
+    print(df_timezone_country_state)
+    df_timezone_country_state[['id', 'installation_id', 'local_datetime', 'tzid', 'reference_date', 'latitude', 'longitude', 'country_name', 'state_name']].to_csv(USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, index=False)
 
 
     # print(gf['reference_date'])
