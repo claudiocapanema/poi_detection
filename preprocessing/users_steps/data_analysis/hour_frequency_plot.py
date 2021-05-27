@@ -15,13 +15,13 @@ def save_fig(dir, filename, fig):
 def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     total = []
     total_frequency = sum(hour_frequency_dict.values())
-    total_frequency = 1
+    #total_frequency = 1
     for day in hour_frequency_dict:
         total.append(hour_frequency_dict[day] / total_frequency)
-    df = pd.DataFrame({'Hour': list(hour_frequency_dict.keys()), 'Total records': total})
+    df = pd.DataFrame({'Hour': list(hour_frequency_dict.keys()), 'Percentage of records': total})
 
-    barplot(dir, 'Hour', 'Total records', df, "barplot_hour_total_" + week + title,
-                 "Total events per hour on " + week)
+    barplot(dir, 'Hour', 'Percentage of records', df, "barplot_hour_percentage_" + week + title,
+                 "Percentage of records per hour on " + week)
 
 def barplot(dir, x, y, df, filename, title):
 

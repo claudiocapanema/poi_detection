@@ -36,7 +36,7 @@ class MFA_RNN(NNBase):
         emb_id = Embedding(input_dim=num_users, output_dim=5, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=2, input_length=step_size)
         emb_distance = Embedding(input_dim=51, output_dim=5, input_length=step_size)
-        emb_duration = Embedding(input_dim=25, output_dim=5, input_length=step_size)
+        emb_duration = Embedding(input_dim=49, output_dim=5, input_length=step_size)
         emb_week_day = Embedding(input_dim=7, output_dim=5, input_length=step_size)
 
         spatial_embedding = emb_category(location_category_input)
@@ -52,7 +52,7 @@ class MFA_RNN(NNBase):
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
         #drop_1 = Dropout(0.5)(concat_1)
-        gru_1 = LSTM(gru_units, return_sequences=True)(concat_1)
+        gru_1 = GRU(gru_units, return_sequences=True)(concat_1)
         print("gru_1: ", gru_1.shape, "id_embedding: ", id_embedding.shape)
 
         #concat_2 = concatenate(inputs=[gru_1, id_embedding])

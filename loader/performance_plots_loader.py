@@ -67,6 +67,58 @@ class PerformancePlotsLoader:
         #     filename = folds_replications_filename + '_barplot_' + columns[i] + "_fscore"
         #     self.barplot(metrics, 'Method', columns[i], base_dir, filename, title)
 
+    def plot_general_metrics_with_confidential_interval(self, report, columns, base_dir):
+
+        sns.set_theme()
+        macro_fscore_list = []
+        model_name_list = []
+        accuracy_list = []
+        weighted_fscore_list = []
+        for model_name in report:
+
+            fscore = report[model_name]['fscore']
+            accuracy = fscore['accuracy'].tolist()
+            weighted_fscore = fscore['weighted avg'].tolist()
+            macro_fscore = fscore['macro avg'].tolist()
+
+            # total_fscore = 0
+            # for column in columns:
+            #     total_fscore += fscore[column].tolist()
+            #
+            # macro_fscore = total_fscore/len(columns)
+            macro_fscore_list += macro_fscore
+            model_name_list += [self.next_poi_category_prediction_configuration.FORMAT_MODEL_NAME[1][model_name]]*len(accuracy)
+            accuracy_list += accuracy
+            weighted_fscore_list += weighted_fscore
+
+        metrics = pd.DataFrame({'Solution': model_name_list, 'Accuracy': accuracy_list,
+                                'Macro f-score': macro_fscore_list, 'Weighted f-score': weighted_fscore_list})
+
+        print(metrics)
+        title = ''
+        filename = 'barplot_accuracy_ci'
+        self.barplot_with_values(metrics, 'Solution', 'Accuracy', base_dir, filename, title)
+
+        #title = 'Macro average fscore'
+        filename = 'barplot_macro_avg_fscore_ci'
+        self.barplot_with_values(metrics, 'Solution', 'Macro f-score', base_dir, filename, title)
+
+        #title = 'Weighted average fscore'
+        filename = 'barplot_weighted_avg_fscore_ci'
+        self.barplot_with_values(metrics, 'Solution', 'Weighted f-score', base_dir, filename, title)
+
+        # columns = list(metrics.columns)
+        # print("antigas: ", columns)
+        # columns = list(osm_categories_to_int.sub_category()) + [columns[-4], columns[-3], columns[-2], columns[-1]]
+        # columns = [e.replace("/","_") for e in columns]
+        # metrics.columns = columns
+        # metrics.to_csv("metricas_totais.csv", index=False, index_label=False)
+        # print("novas colunas\n", metrics)
+        # for i in range(len(list(osm_categories_to_int.sub_category()))):
+        #     title = 'F-score'
+        #     filename = folds_replications_filename + '_barplot_' + columns[i] + "_fscore"
+        #     self.barplot(metrics, 'Method', columns[i], base_dir, filename, title)
+
     def barplot(self, metrics, x_column, y_column, base_dir, file_name, title):
         Path(base_dir).mkdir(parents=True, exist_ok=True)
         plt.figure()
@@ -79,15 +131,23 @@ class PerformancePlotsLoader:
         plt.figure()
         figure = sns.barplot(x=x_column, y=y_column, data=metrics)
 
-        figure.set_ylabel(x_column, fontsize=15)
-        figure.set_xlabel(y_column, fontsize=15)
+        # figure.set_ylabel(x_column, fontsize=15)
+        # figure.set_xlabel(y_column, fontsize=15)
         # figure0.tick_params(labelsize=10)
+        y_label = "accuracy"
+        count = 0
+        y_labels = {'macro': [17, 24, 20, 17, 20], 'weighted': [11, 11, 11, 11, 11], 'accuracy': [11, 11, 11, 11, 11]}
+        if "macro" in file_name:
+            y_label = "macro"
+        elif "weighted" in file_name:
+            y_label = "weighted"
         for p in figure.patches:
-            figure.annotate(format(p.get_height(), '.4f'),
+            figure.annotate(format(p.get_height(), '.2f'),
                              (p.get_x() + p.get_width() / 2., p.get_height()),
                              ha='center', va='center',
-                             xytext=(0, 9),
+                             xytext=(0, y_labels[y_label][count]),
                              textcoords='offset points')
+            count += 1
         figure = figure.get_figure()
         # plt.legend(bbox_to_anchor=(0.65, 0.74),
         #            borderaxespad=0)
@@ -142,7 +202,7 @@ class PerformancePlotsLoader:
         print("dddd")
         print(len(models_dict['mfa']))
         print(len(models_dict['stf']))
-        df = pd.DataFrame(models_dict, index=index)
+        df = pd.DataFrame(models_dict, index=index).round(2)
 
         print(df)
 
@@ -156,8 +216,29 @@ class PerformancePlotsLoader:
         # # Close the Pandas Excel writer and output the Excel file.
         # writer.save()
 
-        latex = df.to_latex()
+        max_values = df.idxmax(axis=1)
+        max_values = max_values.tolist()
+        print("zzz", max_values)
+        max_columns = {'mfa': [], 'stf': [], 'map': [], 'serm': [], 'next': []}
+        for i in range(len(max_values)):
+            e = max_values[i]
+            max_columns[e].append(i)
+
+        for key in max_columns:
+            column_values = df[key].tolist()
+
+            column_list = max_columns[key]
+            for j in range(len(column_list)):
+                k = column_list[j]
+                column_values[k] = "textbf{" + str(column_values[k]) + "}"
+
+            df[key] = np.array(column_values)
+        # for i in range(len(df)):
+        #     column = max_values[i]
+        #     df.at[i,column] = "'\textbf{" + str(df.iloc[i][column]) + "}"
+
+        latex = df.to_latex().replace("\}", "}").replace("\{", "{").replace("\\\nRecall", "\\\n\hline\nRecall").replace("\\\nF-score", "\\\n\hline\nF-score")
         pd.DataFrame({'latex': [latex]}).to_csv(output + "latex.txt", header=False, index=False)
 
-        self.plot_general_metrics(model_report, columns, output)
+        self.plot_general_metrics_with_confidential_interval(model_report, columns, output)
 

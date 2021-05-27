@@ -18,22 +18,24 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     #total_frequency = 1
     for day in hour_frequency_dict:
         total.append(hour_frequency_dict[day] / total_frequency)
-    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage': total})
+    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage of records': total})
 
-    barplot(dir, 'Category', 'Percentage', df, "barplot_category_total_" + week + title,
-                 "Percentage of events per category" + title)
+    barplot(dir, 'Category', 'Percentage of records', df, "barplot_category_total_" + week + title,
+                 "Percentage of records per category" + title)
 
 def barplot(dir, x, y, df, filename, title, save=True):
 
     plt.figure()
-    fig = sns.barplot(x=x, y=y, data=df)
+    fig = sns.barplot(x=x, y=y, data=df, color='cornflowerblue')
     fig = fig.set_title(title).get_figure()
     plt.xticks(rotation=35)
+    save_fig(dir, filename, fig)
 
 if __name__ == "__main__":
 
-    df = pd.read_csv(USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME)
+    df = pd.read_csv(USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME).query("poi_resulting in ['Other', 'Home', 'Work', 'Commuting', 'Amenity', 'Leisure', 'Tourism', 'Shop']")
     poi_resulting = df['poi_resulting']
+    print("categorias: ", poi_resulting.unique().tolist())
     df['datetime'] = pd.to_datetime(df['datetime'], infer_datetime_format=True)
 
     poi_resulting_list = poi_resulting.tolist()
