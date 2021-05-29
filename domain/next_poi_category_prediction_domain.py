@@ -1,11 +1,6 @@
-import ast
 import datetime as dt
-import pandas as pd
 import numpy as np
 import json
-import scipy.sparse as sp
-from sklearn.preprocessing import normalize
-from sklearn.model_selection import KFold
 import sklearn.metrics as skm
 import tensorflow
 from tensorflow.keras import utils as np_utils
@@ -13,18 +8,20 @@ from sklearn.model_selection import KFold
 
 from extractor.file_extractor import FileExtractor
 from foundation.util.next_poi_category_prediction_util import sequence_to_x_y, \
-    sequence_tuples_to_spatial_temporal_and_feature3_ndarrays, sequence_tuples_to_spatial_temporal_and_feature4_ndarrays, \
-    sequence_tuples_to_spatial_temporal_and_feature5_ndarrays, sequence_tuples_to_spatial_temporal_and_feature6_ndarrays, \
-    return_hour_from_sequence_y, remove_hour_from_sequence_y, remove_hour_from_sequence_x
-from foundation.util.nn_preprocessing import one_hot_decoding, \
-    one_hot_decoding_predicted, top_k_rows, weighted_categorical_crossentropy, \
-    filter_data_by_valid_category
+    sequence_tuples_to_spatial_temporal_and_feature6_ndarrays, \
+    remove_hour_from_sequence_y
+from foundation.util.nn_preprocessing import one_hot_decoding
 
-from model.next_poi_category_prediction_models.serm.model import SERM
-from model.next_poi_category_prediction_models.map.model import MAP
-from model.next_poi_category_prediction_models.stf.model import STF
-from model.next_poi_category_prediction_models.mfa_rnn import MFA_RNN
-from model.next_poi_category_prediction_models.next.model import NEXT
+from model.next_poi_category_prediction_models.users_steps.serm.model import SERMUsersSteps
+from model.next_poi_category_prediction_models.users_steps.map.model import MAPUsersSteps
+from model.next_poi_category_prediction_models.users_steps.stf.model import STFUsersSteps
+from model.next_poi_category_prediction_models.users_steps.mfa_rnnuserssteps import MFA_RNNUsersSteps
+from model.next_poi_category_prediction_models.users_steps.next.model import NEXTUsersSteps
+from model.next_poi_category_prediction_models.gowalla.serm.model import SERM
+from model.next_poi_category_prediction_models.gowalla.map.model import MAP
+from model.next_poi_category_prediction_models.gowalla.stf.model import STF
+from model.next_poi_category_prediction_models.gowalla.mfa_rnn import MFA_RNN
+from model.next_poi_category_prediction_models.gowalla.next.model import NEXT
 
 
 class NextPoiCategoryPredictionDomain:
@@ -56,7 +53,7 @@ class NextPoiCategoryPredictionDomain:
 
     def read_sequences(self, filename, n_splits, model_name):
 
-        df = self.file_extractor.read_csv(filename)
+        df = self.file_extractor.read_csv(filename).head(8000)
 
         users_trajectories = df['sequence'].to_numpy()
         # reindex ids
@@ -82,6 +79,9 @@ class NextPoiCategoryPredictionDomain:
                 country = sequence[j][2]
                 distance = sequence[j][3]
                 duration = sequence[j][4]
+                if j < len(sequence) -1:
+                    if duration > 72 and sequence[j+1][4] > 72:
+                        continue
                 week_day = sequence[j][5]
 
                 if distance > 50:
@@ -168,6 +168,7 @@ class NextPoiCategoryPredictionDomain:
         return users_trajectories, users_train_indexes, users_test_indexes, max_userid
 
     def run_tests_one_location_output_k_fold(self,
+                                             dataset_name,
                                              users_list,
                                              users_train_index,
                                              users_test_index,
@@ -200,7 +201,7 @@ class NextPoiCategoryPredictionDomain:
                                                                                            number_of_categories=number_of_categories)
 
             for j in range(n_replications):
-                model = self._find_model(model_name).build(sequences_size,
+                model = self._find_model(dataset_name, model_name).build(sequences_size,
                                                            location_input_dim=number_of_categories,
                                                            num_users=num_users,
                                                            time_input_dim=48,
@@ -293,18 +294,30 @@ class NextPoiCategoryPredictionDomain:
 
         return location_report
 
-    def _find_model(self, model_name):
+    def _find_model(self, dataset_name, model_name):
 
-        if model_name == "serm":
-            return SERM()
-        elif model_name == "map":
-            return MAP()
-        elif model_name == "stf":
-            return STF()
-        elif model_name == "mfa":
-            return MFA_RNN()
-        elif model_name == "next":
-            return NEXT()
+        if dataset_name == "users_steps":
+            if model_name == "serm":
+                return SERMUsersSteps()
+            elif model_name == "map":
+                return MAPUsersSteps()
+            elif model_name == "stf":
+                return STFUsersSteps()
+            elif model_name == "mfa":
+                return MFA_RNNUsersSteps()
+            elif model_name == "next":
+                return NEXTUsersSteps()
+        elif dataset_name == "gowalla":
+            if model_name == "serm":
+                return SERM()
+            elif model_name == "map":
+                return MAP()
+            elif model_name == "stf":
+                return STF()
+            elif model_name == "mfa":
+                return MFA_RNN()
+            elif model_name == "next":
+                return NEXT()
 
     def _train_and_evaluate_model(self,
                                   model,

@@ -1,0 +1,28 @@
+"Número de linhas: 32663479 
+Número de usuários: 315763
+Categorias: ['Entertainment', 'Travel', 'Food', 'Nightlife', 'Shopping', 'Outdoors', 'Community']
+Número de países: 211
+    
+Países com mais eventos:        country_name     total
+0     United States  15380588
+1            Sweden   3306659
+2  Others countries   2156112
+3           Germany   1812776
+4          Thailand   1488639
+5    United Kingdom   1337957
+6      Saudi Arabia   1091801
+7            Norway    814456
+8            Canada    537529
+9           Belgium    368908
+    
+Países com mais usuários:        country_name  total_users
+0     United States       120642
+1  Others countries       113503
+2            Sweden        53234
+3          Thailand        29588
+4    United Kingdom        21210
+5      Saudi Arabia        20219
+6           Germany        19511
+7            Norway        14590
+8             Spain         8685
+9            France         8194"

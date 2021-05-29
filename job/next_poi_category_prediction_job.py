@@ -16,7 +16,7 @@ class NextPoiCategoryPredictionJob:
         users_sequences_filename = Input.get_instance().inputs['users_sequences']
         model_name = Input.get_instance().inputs['baseline']
 
-        sequences_size = self.next_poi_category_prediction_configuration.SEQUENCES_SIZE[1]
+        sequences_size = self.next_poi_category_prediction_configuration.SEQUENCES_SIZE[1][dataset_name]
         n_splits = self.next_poi_category_prediction_configuration.N_SPLITS[1]
         epochs = self.next_poi_category_prediction_configuration.EPOCHS[1]
         n_replications = self.next_poi_category_prediction_configuration.N_REPLICATIONS[1]
@@ -43,7 +43,8 @@ class NextPoiCategoryPredictionJob:
         print("numero usuarios: ", num_users)
         output = output_dir + str(n_splits) + "_folds/" + str(n_replications) + "_replications/"
         folds_histories, base_report = self.next_poi_category_prediction_domain.\
-            run_tests_one_location_output_k_fold(users_trajectories,
+            run_tests_one_location_output_k_fold(dataset_name,
+                                                 users_trajectories,
                                                 users_train_indexes,
                                                 users_test_indexes,
                                                 n_replications,

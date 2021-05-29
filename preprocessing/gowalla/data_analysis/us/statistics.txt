@@ -1,0 +1,52 @@
+"Número de linhas:
+9763529
+----
+Número de usuários:
+89405
+----
+Categorias:
+['Shopping', 'Community', 'Food', 'Entertainment', 'Travel', 'Outdoors', 'Nightlife']
+----
+Número de estados:
+51
+----
+    
+Estados com mais eventos:
+      state_name    total
+0          TEXAS  2305444
+1     CALIFORNIA  1707446
+2        FLORIDA   572523
+3     WASHINGTON   353687
+4       ILLINOIS   315790
+5       OKLAHOMA   304966
+6   PENNSYLVANIA   281972
+7        GEORGIA   250556
+8  MASSACHUSETTS   196097
+9         HAWAII   184328
+-----
+    
+Estados com mais usuários:
+     state_name  total_users
+0         TEXAS        26980
+1    CALIFORNIA        25894
+2       FLORIDA        11809
+3      ILLINOIS         9703
+4      NEW YORK         9352
+5       GEORGIA         7893
+6        NEVADA         7770
+7      VIRGINIA         7107
+8  PENNSYLVANIA         6838
+9    NEW JERSEY         6260
+----
+Duração (horas) entre checkins por estado:
+      state_name  mean_duration  median_duration  mean_total  median_total
+0          TEXAS     113.663473             43.0   96.749874          19.0
+1     CALIFORNIA     127.905546             43.0   76.203578          14.0
+2       OKLAHOMA     144.110433             46.0   80.715423          12.0
+3     WASHINGTON     121.303883             32.0   68.492621          11.0
+4        FLORIDA     108.444729             27.0   58.444319          10.0
+5         HAWAII      73.727640             21.0  106.196769          10.0
+6         ALASKA      95.253571             24.0   61.692857          10.0
+7  MASSACHUSETTS     128.314852             23.0   48.952333           9.0
+8         OREGON     109.729517             25.0   43.455605           9.0
+9       MISSOURI     154.402490             41.0   41.711618           8.0"

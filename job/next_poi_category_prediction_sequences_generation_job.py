@@ -35,6 +35,8 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
 
         users_checkin = self.sequences_generation_for_poi_categorization_sequential_baselines_domain.read_csv(users_checkin_filename, datetime_column)
 
+        users_checkin = users_checkin.query("state_name == 'TEXAS'")
+
         if to_8_categories == "yes":
             users_checkin = self.join_work_and_office_join_sport_leisure(users_checkin, category_column)
             print("cate: ", users_checkin['poi_resulting'].unique().tolist())

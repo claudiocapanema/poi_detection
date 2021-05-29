@@ -28,6 +28,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
 
     def _user_steps_to_int(self,
                            df,
+                           userid_column,
                            category_column,
                            locationid_column,
                            datetime_column,
@@ -54,7 +55,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
 
         user_sequence = []
         user_hours = []
-        user_id = df['id'].tolist()
+        user_id = df[userid_column].tolist()
         user_categories_ids = categories_id
         days_types = []
 
@@ -106,6 +107,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
         states = users_checkins[state_column].unique().tolist()
         states_to_int = {states[i]: i for i in range(len(states))}
         df = users_checkins.groupby(userid_column).apply(lambda e:self._user_steps_to_int(e,
+                                                                                          userid_column,
                                                                                           category_column,
                                                                                           locationid_column,
                                                                                           datetime_column,
