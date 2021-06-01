@@ -1,3 +1,5 @@
+import math
+import statistics as st
 import numpy as np
 import pandas as pd
 
@@ -46,6 +48,10 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
         for i in range(len(categories_names)):
             categories_id.append(categories_to_int[categories_names[i]])
 
+        n_categories = len(categories_to_int)
+        categories_distances_matrix = {i: {j: [] for j in range(n_categories)} for i in range(n_categories)}
+        categories_adjacency_matrix = {i: {j: 0 for j in range(n_categories)} for i in range(n_categories)}
+
         df['category_id'] = np.array(categories_id)
         countries_list = df[country_column].tolist()
         states_list = df[state_column].tolist()
@@ -60,6 +66,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
         days_types = []
 
         for i in range(len(df)):
+            category = categories_id[i]
             date = datetime_list[i]
             week_day = date.weekday()
             country = countries_to_int[countries_list[i]]
@@ -76,6 +83,13 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                 datetime_before = datetime_list[i-1]
                 datetime_current = datetime_list[i]
                 duration = int((datetime_current-datetime_before).total_seconds()/3600)
+                # matrizes para grafos
+                # if i > 1 and distance > 0.05:
+                #     # garg baseline
+                #     categories_distances_matrix[category][categories_id[i-1]].append(distance)
+                #     categories_distances_matrix[categories_id[i - 1]][category].append(distance)
+                #     categories_adjacency_matrix[category][categories_id[i-1]] += 1
+                #     categories_adjacency_matrix[categories_id[i - 1][category]] += 1
             if week_day < 5:
                 day_type = 0
                 hour = date.hour
@@ -87,8 +101,12 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
             #     print("diferente")
             #     print(country)
             #     print(countries_list[i])
-            sequence = [categories_id[i], hour, country, distance, duration, week_day, user_id[i]]
+            sequence = [category, hour, country, distance, duration, week_day, user_id[i]]
             user_sequence.append(sequence)
+
+        # categories_distances_matrix = self.summarize_categories_distance_matrix(categories_distances_matrix)
+        # for i in range(len(user_sequence)):
+        #     user_sequence[i].append(categories_distances_matrix)
 
         return pd.DataFrame({'id': user_id[0], 'sequence': [str(user_sequence)], 'categories': [str(categories_id)]})
 
@@ -146,6 +164,26 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
         filename = users_sequences_folder + dataset_name + "_" + categories_type + "_sequences.csv"
 
         self.sequences_generation_for_poi_categorization_sequential_baselines_loader.sequences_to_csv(df, filename)
+
+    def summarize_categories_distance_matrix(self, categories_distances_matrix):
+
+        categories_distances_list = []
+        for row in categories_distances_matrix:
+
+            category_distances_list = []
+            for column in categories_distances_matrix[row]:
+
+                values = categories_distances_matrix[row][column]
+                if len(values) == 0:
+                    categories_distances_matrix[row][column] = -1
+                    category_distances_list.append(-1)
+                else:
+                    categories_distances_matrix[row][column] = st.median(values)
+                    category_distances_list.append(st.median(values))
+
+            categories_distances_list.append(category_distances_list)
+
+        return categories_distances_list
 
 
 

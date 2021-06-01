@@ -387,21 +387,20 @@ def sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(list_events: list)
     duration = []
     week_day = []
     for e in list_events:
-        spatial.append(np.asarray([e[j][0] for j in range(len(e))]))
-        temporal.append(np.asarray([e[j][1] for j in range(len(e))]))
-        country.append(np.asarray([e[j][2] for j in range(len(e))]))
-        distance.append(np.asarray([e[j][3] for j in range(len(e))]))
-        duration.append(np.asarray([e[j][4] for j in range(len(e))]))
-        week_day.append(np.asarray([e[j][5] for j in range(len(e))]))
-        ids.append(np.asarray([e[j][6] for j in range(len(e))]))
+        spatial.append([e[j][0] for j in range(len(e))])
+        temporal.append([e[j][1] for j in range(len(e))])
+        country.append([e[j][2] for j in range(len(e))])
+        distance.append([e[j][3] for j in range(len(e))])
+        duration.append([e[j][4] for j in range(len(e))])
+        week_day.append([e[j][5] for j in range(len(e))])
+        ids.append([e[j][6] for j in range(len(e))])
 
-    print("Maior country: ", max(np.array(country).flatten()))
-    print("Maior distance: ", max(np.array(distance).flatten()))
-    print("Maior duration: ", max(np.array(duration).flatten()))
-    print("Maior week day: ", max(np.array(week_day).flatten()))
+    # print("Maior country: ", max(np.array(country).flatten()))
+    # print("Maior distance: ", max(np.array(distance).flatten()))
+    # print("Maior duration: ", max(np.array(duration).flatten()))
+    # print("Maior week day: ", max(np.array(week_day).flatten()))
 
-    return [np.asarray(spatial), np.asarray(temporal), np.array(country), np.array(distance), np.array(duration), np.array(week_day), np.asarray(ids)]
-
+    return [spatial, temporal, country, distance, duration, week_day, ids]
 
 def plot_history_metrics(h: pd.DataFrame, metrics_names: list, figure_dir, show=False):
 

@@ -15,19 +15,19 @@ class NextPoiCategoryPredictionConfiguration:
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
-        self.BATCH = ("batch", {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200})
+        self.BATCH = ("batch", {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200})
 
         self.OPTIMIZER = ("learning_rate", {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),
-                                            'next': Adam()})
+                                            'next': Adam(), 'garg': Adam()})
 
         self.FORMAT_MODEL_NAME = ("format_model_name", {'mfa': 'MFA-RNN', 'serm': 'SERM', 'map': 'MAP', 'stf': 'STF-RNN',
-                                            'next': 'MHSA+PE'})
+                                            'next': 'MHSA+PE', 'garg': 'GARG'})
 
         self.OUTPUT_BASE_DIR = (
         "output_dir", "output/next_poi_category_prediction/", False, "output directory for the poi_categorization")
 
         self.MODEL_NAME = ("model_name", {'mfa': "mfa/", 'serm': "serm/", 'map': "map/", 'stf': "stf/",
-                                          'next': "next/"})
+                                          'next': "next/", 'garg': "garg/"})
 
         self.DATASET_TYPE = ("dataset_type", {'users_steps': "users_steps/", 'gowalla': 'gowalla/'})
 
@@ -52,7 +52,8 @@ class NextPoiCategoryPredictionConfiguration:
                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
-                                          'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1}},
+                                          'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
+                                          'garg': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1}},
                          '3_categories': {'serm': {0: 1, 1: 1, 2: 1},
                                            'map': {0: 1, 1: 1, 2: 1},
                                            'stf': {0: 1, 1: 1, 2: 1},
