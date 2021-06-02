@@ -14,8 +14,10 @@ class PerformancePlotsLoader:
 
     def __init__(self, dataseet_name):
         self.next_poi_category_prediction_configuration = NextPoiCategoryPredictionConfiguration()
-        self.next_poi_category_prediction_domain = NextPoiCategoryPredictionDomain(dataseet_name)
+        self.next_poi_category_prediction_domain = NextPoiCategoryPredictionDomain(dataseet_name, 0, 0)
         self.file_extractor = FileExtractor()
+        self.columns = {'users_steps': ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Shop', 'Tourism'],
+                        'gowalla': ['Shopping', 'Community', 'Food', 'Entertainment', 'Travel', 'Outdoors', 'Nightlife']}
 
     def plot_general_metrics(self, report, columns, base_dir):
 
@@ -136,7 +138,7 @@ class PerformancePlotsLoader:
         # figure0.tick_params(labelsize=10)
         y_label = "accuracy"
         count = 0
-        y_labels = {'macro': [17, 24, 20, 17, 20], 'weighted': [11, 11, 11, 11, 11], 'accuracy': [11, 11, 11, 11, 11]}
+        y_labels = {'macro': [17, 24, 20, 17, 20, 20], 'weighted': [11, 11, 11, 11, 11, 11], 'accuracy': [11, 11, 11, 11, 11, 11]}
         if "macro" in file_name:
             y_label = "macro"
         elif "weighted" in file_name:
@@ -157,9 +159,9 @@ class PerformancePlotsLoader:
         figure.savefig(base_dir + file_name + ".png", bbox_inches='tight', dpi=400)
         plt.figure()
 
-    def export_reports(self, n_splits, n_replications, output_base_dir, dataset_type_dir, category_type_dir):
+    def export_reports(self, n_splits, n_replications, output_base_dir, dataset_type_dir, category_type_dir, dataset_name):
 
-        model_report = {'mfa': {}, 'stf': {}, 'map': {}, 'serm': {}, 'next': {}}
+        model_report = {'mfa': {}, 'stf': {}, 'map': {}, 'serm': {}, 'next': {}, 'garg': {}}
         for model_name in model_report.keys():
             model_name_dir = self.next_poi_category_prediction_configuration.MODEL_NAME[1][model_name]
             output_dir = self.next_poi_category_prediction_domain. \
@@ -171,8 +173,8 @@ class PerformancePlotsLoader:
             model_report[model_name]['fscore'] = self.file_extractor.read_csv(output + "fscore.csv").round(4)
 
         print(model_report)
-        columns = ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Shop', 'Tourism']
-        index = [np.array(['Precision'] * 8 + ['Recall'] * 8 + ['Fscore'] * 8), np.array(columns * 3)]
+        columns = self.columns[dataset_name]
+        index = [np.array(['Precision'] * len(columns) + ['Recall'] * len(columns) + ['Fscore'] * len(columns)), np.array(columns * 3)]
         models_dict = {}
         for model_name in model_report:
 
@@ -201,6 +203,10 @@ class PerformancePlotsLoader:
 
         print("dddd")
         print(len(models_dict['mfa']))
+        print(len(models_dict['map']))
+        print(len(models_dict['serm']))
+        print(len(models_dict['garg']))
+        print(len(models_dict['next']))
         print(len(models_dict['stf']))
         df = pd.DataFrame(models_dict, index=index).round(2)
 
@@ -219,7 +225,7 @@ class PerformancePlotsLoader:
         max_values = df.idxmax(axis=1)
         max_values = max_values.tolist()
         print("zzz", max_values)
-        max_columns = {'mfa': [], 'stf': [], 'map': [], 'serm': [], 'next': []}
+        max_columns = {'mfa': [], 'stf': [], 'map': [], 'serm': [], 'next': [], 'garg': []}
         for i in range(len(max_values)):
             e = max_values[i]
             max_columns[e].append(i)

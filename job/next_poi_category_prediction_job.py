@@ -7,7 +7,9 @@ class NextPoiCategoryPredictionJob:
 
     def __init__(self):
         self.next_poi_category_prediction_configuration = NextPoiCategoryPredictionConfiguration()
-        self.next_poi_category_prediction_domain = NextPoiCategoryPredictionDomain(Input.get_instance().inputs['dataset_name'])
+        self.next_poi_category_prediction_domain = NextPoiCategoryPredictionDomain(Input.get_instance().inputs['dataset_name'],
+                                                                                   self.next_poi_category_prediction_configuration.DISTANCE_SIGMA[1][Input.get_instance().inputs['dataset_name']],
+                                                                                   self.next_poi_category_prediction_configuration.DURATION_SIGMA[1][Input.get_instance().inputs['dataset_name']])
         self.next_poi_category_prediction_loader = NextPoiCategoryPredictionLoader()
 
     def start(self):
@@ -20,7 +22,7 @@ class NextPoiCategoryPredictionJob:
         n_splits = self.next_poi_category_prediction_configuration.N_SPLITS[1]
         epochs = self.next_poi_category_prediction_configuration.EPOCHS[1]
         n_replications = self.next_poi_category_prediction_configuration.N_REPLICATIONS[1]
-        batch = self.next_poi_category_prediction_configuration.BATCH[1][model_name]
+        batch = self.next_poi_category_prediction_configuration.BATCH[1][dataset_name][model_name]
 
         output_base_dir = self.next_poi_category_prediction_configuration.OUTPUT_BASE_DIR[1]
         dataset_type_dir = self.next_poi_category_prediction_configuration.DATASET_TYPE[1][dataset_name]

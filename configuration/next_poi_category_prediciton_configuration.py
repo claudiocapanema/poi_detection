@@ -1,6 +1,6 @@
 from enum import Enum
 import pytz
-from tensorflow.keras.optimizers import Adam, Adadelta, SGD, RMSprop, Nadam
+from tensorflow.keras.optimizers import Adam, Adadelta, SGD, RMSprop, Nadam, Ftrl
 
 
 class NextPoiCategoryPredictionConfiguration:
@@ -15,7 +15,8 @@ class NextPoiCategoryPredictionConfiguration:
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
-        self.BATCH = ("batch", {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200})
+        self.BATCH = ("batch", {'users_steps': {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200},
+                                'gowalla': {'mfa': 300, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200}})
 
         self.OPTIMIZER = ("learning_rate", {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),
                                             'next': Adam(), 'garg': Adam()})
@@ -167,7 +168,13 @@ class NextPoiCategoryPredictionConfiguration:
                                                               '7_categories': 7,
                                                               '3_categories': 3})
 
-        self.STEP_SIZE = ("step_size", 4)
+        self.STEP_SIZE = ("step_size", 8)
+
+        self.DISTANCE_SIGMA = ("distance_sigma", {'users_steps': 0.5,
+                                                  'gowalla': 10})
+
+        self.DURATION_SIGMA = ("duration_sigma", {'users_steps': 0.5,
+                                                  'gowalla': 10})
 
     def __str__(self):
         return self.name

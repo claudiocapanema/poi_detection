@@ -22,7 +22,7 @@ class PerformancePlots(Job):
         self.points_of_interest_domain = PointsOfInterestDomain()
         self.next_poi_category_prediction_configuration = NextPoiCategoryPredictionConfiguration()
         self.next_poi_category_prediction_domain = NextPoiCategoryPredictionDomain(
-            Input.get_instance().inputs['dataset_name'])
+            Input.get_instance().inputs['dataset_name'], 0, 0)
         self.file_loader = FileLoader()
         self.performance_plots_loader = PerformancePlotsLoader(Input.get_instance().inputs['dataset_name'])
         self.file_extractor = FileExtractor()
@@ -37,4 +37,4 @@ class PerformancePlots(Job):
         dataset_type_dir = self.next_poi_category_prediction_configuration.DATASET_TYPE[1][dataset_name]
         category_type_dir = self.next_poi_category_prediction_configuration.CATEGORY_TYPE[1][categories_type]
 
-        self.performance_plots_loader.export_reports(n_splits, n_replications, output_base_dir, dataset_type_dir, category_type_dir)
+        self.performance_plots_loader.export_reports(n_splits, n_replications, output_base_dir, dataset_type_dir, category_type_dir, dataset_name)
