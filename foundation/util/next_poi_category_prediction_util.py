@@ -18,21 +18,21 @@ def sequence_to_x_y(list_events: list, step_size):
     step = []
     cont = 0
     # [location_category_id, hour, day_type, user_id]
-    for e in list_events:
-        if cont < step_size:
-            step.append(e)
-            cont = cont + 1
-        else:
-            y.append(e)
-            x.append(step)
-            step = []
-            cont = 0
-
-    #     for i in range(4, len(list_events)-1):
-    #         e = list_events[i]
-    #         step = list_events[i-4:i]
+    # for e in list_events:
+    #     if cont < step_size:
+    #         step.append(e)
+    #         cont = cont + 1
+    #     else:
+    #         y.append(e)
     #         x.append(step)
-    #         y.append(list_events[i+1])
+    #         step = []
+    #         cont = 0
+
+    for i in range(step_size, len(list_events)-1):
+        e = list_events[i]
+        step = list_events[i-step_size:i]
+        x.append(step)
+        y.append(list_events[i+1])
 
     return x, y
 

@@ -1,6 +1,7 @@
 from enum import Enum
 import pytz
 from tensorflow.keras.optimizers import Adam, Adadelta, SGD, RMSprop, Nadam, Ftrl
+from tensorflow.keras.losses import CategoricalCrossentropy, CategoricalHinge
 
 
 class NextPoiCategoryPredictionConfiguration:
@@ -16,10 +17,14 @@ class NextPoiCategoryPredictionConfiguration:
         self.N_REPLICATIONS = ("n_replications", 1)
 
         self.BATCH = ("batch", {'users_steps': {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200},
-                                'gowalla': {'mfa': 300, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200}})
+                                'gowalla': {'mfa': 400, 'serm': 400, 'map': 400, 'stf': 400, 'next': 400, 'garg': 400}})
 
-        self.OPTIMIZER = ("learning_rate", {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),
-                                            'next': Adam(), 'garg': Adam()})
+        self.OPTIMIZER = ("learning_rate", {'mfa': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'serm': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'map': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'stf': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9),
+                                            'next': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'garg': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9)})
+
+        self.LOSS = ("learning_rate", {'mfa': CategoricalCrossentropy(), 'serm': CategoricalCrossentropy(), 'map': CategoricalCrossentropy(),
+                                            'stf': CategoricalCrossentropy(),
+                                            'next': CategoricalCrossentropy(), 'garg': CategoricalCrossentropy()})
 
         self.FORMAT_MODEL_NAME = ("format_model_name", {'mfa': 'MFA-RNN', 'serm': 'SERM', 'map': 'MAP', 'stf': 'STF-RNN',
                                             'next': 'MHSA+PE', 'garg': 'GARG'})

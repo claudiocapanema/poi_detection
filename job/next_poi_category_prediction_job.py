@@ -30,6 +30,7 @@ class NextPoiCategoryPredictionJob:
         model_name_dir = self.next_poi_category_prediction_configuration.MODEL_NAME[1][model_name]
         class_weight = self.next_poi_category_prediction_configuration.CLASS_WEIGHT[1][categories_type][model_name]
         optimizer = self.next_poi_category_prediction_configuration.OPTIMIZER[1][model_name]
+        loss = self.next_poi_category_prediction_configuration.LOSS[1][model_name]
         output_dir = self.next_poi_category_prediction_domain.\
             output_dir(output_base_dir, dataset_type_dir, category_type_dir, model_name_dir)
         report_model = self.next_poi_category_prediction_configuration.REPORT_MODEL[1][categories_type]
@@ -38,7 +39,7 @@ class NextPoiCategoryPredictionJob:
 
         filename=0
         print("Modelo: ", model_name)
-
+        parameters = {'optimizer': optimizer, 'loss': loss}
         users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits, model_name)
 
         num_users +=1
@@ -60,7 +61,7 @@ class NextPoiCategoryPredictionJob:
                                                  number_of_categories,
                                                  batch,
                                                  num_users,
-                                                 optimizer,
+                                                 parameters,
                                                  output
                                                 )
 

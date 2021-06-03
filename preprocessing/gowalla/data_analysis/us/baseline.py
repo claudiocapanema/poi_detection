@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from configuration import USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME
+from configuration import CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED_US
 import json
 from sklearn.metrics import classification_report
 from sklearn.dummy import DummyClassifier
@@ -26,15 +26,11 @@ def input_fn_eval(x_test, y_test):
 
 if __name__ == "__main__":
 
-    df = pd.read_csv(USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME)
+    df = pd.read_csv(CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED_US)
     print(df)
 
-    categories_list = df['categories'].tolist()
-    categories_flatten_list = []
-
-    for e in categories_list:
-        e = json.loads(e)
-        categories_flatten_list+= e
+    categories_list = df['category'].tolist()
+    categories_flatten_list = categories_list
 
     x = [i for i in range(len(categories_flatten_list))]
     y = categories_flatten_list
@@ -56,6 +52,8 @@ if __name__ == "__main__":
 
     df = pd.DataFrame({1: [report]})
     df.to_csv("baseline.txt", header=False, index=False)
+
+
 
 
 

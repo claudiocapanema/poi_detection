@@ -2,6 +2,7 @@ from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropo
     Flatten, Reshape, Concatenate, Embedding, MultiHeadAttention, ActivityRegularization, LayerNormalization
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1, l2
+from tensorflow.keras.callbacks import EarlyStopping
 
 from configuration.next_poi_category_prediciton_configuration import NextPoiCategoryPredictionConfiguration
 from model.next_poi_category_prediction_models.neural_network_base_model import NNBase
@@ -12,7 +13,8 @@ import tensorflow as tf
 from spektral.layers.convolutional.arma_conv import ARMAConv
 
 l2_reg = 5e-5           # L2 regularization rate
-drop_out_rate = 0.5
+drop_out_rate = 0.75
+patience = 3
 
 class MFA_RNN(NNBase):
 
@@ -44,7 +46,7 @@ class MFA_RNN(NNBase):
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        gru_units = 50
+        gru_units = 20
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=5, input_length=step_size)
         emb_id = Embedding(input_dim=num_users, output_dim=5, input_length=step_size)
@@ -74,24 +76,25 @@ class MFA_RNN(NNBase):
         #concat_2 = Dropout(0.5)(concat_2)
         #print("concat_2: ", concat_2.shape)
         # , activation='elu', kernel_regularizer=tf.keras.regularizers.L2()
-        gru_1 = Dense(50)(gru_1)
+        gru_1 = Dense(20)(gru_1)
         #gru_1 = Dropout(0.4)(gru_1)
         y_mhsa = self.mhsa(input=gru_1)
 
 
-        x_categories_distance_matrix = self.graph_distances(categories_distance_matrix, adjancency_matrix)
-        x_categories_temporal_matrix = self.graph_temporal(categories_temporal_matrix, adjancency_matrix)
-        x_categories_durations_matrix = self.graph_durations(categories_durations_matrix, adjancency_matrix)
+        #x_categories_distance_matrix = self.graph_distances(categories_distance_matrix, adjancency_matrix)
+        #x_categories_temporal_matrix = self.graph_temporal(categories_temporal_matrix, adjancency_matrix)
+        #x_categories_durations_matrix = self.graph_durations(categories_durations_matrix, adjancency_matrix)
 
-        graph = Concatenate()([x_categories_temporal_matrix, x_categories_distance_matrix, x_categories_durations_matrix])
+        #graph = Concatenate()([x_categories_temporal_matrix, x_categories_distance_matrix, x_categories_durations_matrix])
         #graph = Dense(25, activation='elu')(graph)
-        graph_flatten = Flatten()(graph)
+        # graph = Dropout(0.5)(categories_temporal_matrix)
+        # graph_flatten = Flatten()(graph)
 
         final = Concatenate()([y_mhsa, gru_1])
         final = Concatenate()([final, id_embedding])
         #final = Concatenate()([final, country_embbeding])
         final = Flatten()(final)
-        final = Concatenate()([final, graph_flatten])
+        #final = Concatenate()([final, graph_flatten])
         final = Dropout(0.4)(final)
         final = Dense(location_input_dim)(final)
         final = Activation('softmax', name='ma_activation_1')(final)
@@ -116,60 +119,60 @@ class MFA_RNN(NNBase):
 
     def graph_temporal(self, x, adjacency):
 
-        x = ARMAConv(50, iterations=1,
-                        order=1,
+        x = ARMAConv(24, iterations=1,
+                        order=2,
                         share_weights=True,
                         dropout_rate=drop_out_rate,
                         activation='elu',
                         gcn_activation='selu',
                         kernel_regularizer=l2(l2_reg))([x, adjacency])
 
-        x = ARMAConv(25, iterations=1,
+        x = ARMAConv(14, iterations=1,
                      order=1,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
                      activation='elu',
-                     gcn_activation='selu',
+                     gcn_activation=None,
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
 
         return x
 
     def graph_distances(self, x, adjacency):
 
-        x = ARMAConv(50, iterations=1,
-                        order=1,
+        x = ARMAConv(24, iterations=1,
+                        order=2,
                         share_weights=True,
                         dropout_rate=drop_out_rate,
                         activation='elu',
                         gcn_activation='selu',
                         kernel_regularizer=l2(l2_reg))([x, adjacency])
 
-        x = ARMAConv(25, iterations=1,
+        x = ARMAConv(14, iterations=1,
                      order=1,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
                      activation='elu',
-                     gcn_activation='selu',
+                     gcn_activation=None,
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
 
         return x
 
     def graph_durations(self, x, adjacency):
 
-        x = ARMAConv(50, iterations=1,
-                        order=1,
+        x = ARMAConv(24, iterations=1,
+                        order=2,
                         share_weights=True,
                         dropout_rate=drop_out_rate,
                         activation='elu',
                         gcn_activation='selu',
                         kernel_regularizer=l2(l2_reg))([x, adjacency])
 
-        x = ARMAConv(25, iterations=1,
+        x = ARMAConv(14, iterations=1,
                      order=1,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
                      activation='elu',
-                     gcn_activation='selu',
+                     gcn_activation=None,
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
 
         return x

@@ -4,8 +4,11 @@ import math
 
 import numpy as np
 import json
+
+import pandas as pd
 import sklearn.metrics as skm
 import tensorflow
+from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import utils as np_utils
 from sklearn.model_selection import KFold
 from spektral.transforms.layer_preprocess import LayerPreprocess
@@ -62,7 +65,7 @@ class NextPoiCategoryPredictionDomain:
 
     def read_sequences(self, filename, n_splits, model_name):
 
-        df = self.file_extractor.read_csv(filename)
+        df = self.file_extractor.read_csv(filename).head(2400)
 
         users_trajectories = df['sequence'].to_numpy()
         # reindex ids
@@ -203,13 +206,14 @@ class NextPoiCategoryPredictionDomain:
                                              number_of_categories,
                                              batch,
                                              num_users,
-                                             optimizer,
+                                             parameters,
                                              output_dir):
 
         print("Número de replicações", n_replications)
         folds_histories = []
         histories = []
         iteration = 0
+        seeds = {0:0, 1:1, 2:28, 3:29, 4:30, 5:31}
         for i in range(k_folds):
             print("Modelo: ", model_name)
             X_train, X_test, y_train, y_test = self.extract_train_test_from_indexes_k_fold(users_list=users_list,
@@ -219,14 +223,15 @@ class NextPoiCategoryPredictionDomain:
                                                                                            users_test_index[i],
                                                                                            step_size=sequences_size,
                                                                                            number_of_categories=number_of_categories,
-                                                                                           model_name=model_name)
+                                                                                           model_name=model_name,
+                                                                                           seed=seeds[iteration])
 
             for j in range(n_replications):
                 model = self._find_model(dataset_name, model_name).build(sequences_size,
                                                            location_input_dim=number_of_categories,
                                                            num_users=num_users,
                                                            time_input_dim=48,
-                                                           seed=iteration)
+                                                           seed=seeds[iteration])
                 history, report = self._train_and_evaluate_model(model,
                                                                  X_train,
                                                                  y_train,
@@ -235,7 +240,7 @@ class NextPoiCategoryPredictionDomain:
                                                                  epochs,
                                                                  batch,
                                                                  class_weight,
-                                                                 optimizer,
+                                                                 parameters,
                                                                  output_dir)
                 base_report = self._add_location_report(base_report, report)
                 iteration+=1
@@ -251,6 +256,7 @@ class NextPoiCategoryPredictionDomain:
                                                step_size,
                                                number_of_categories,
                                                model_name,
+                                               seed,
                                                time_num_classes=48):
 
         X_train_concat = []
@@ -362,6 +368,9 @@ class NextPoiCategoryPredictionDomain:
         y_train = remove_hour_from_sequence_y(y_train)
         y_test = remove_hour_from_sequence_y(y_test)
 
+        X_train, y_train = self._shuffle(X_train, y_train, seed)
+        X_test, y_test = self._shuffle(X_test, y_test, seed)
+
         # Sequence tuples to [spatial[,step_size], temporal[,step_size]] ndarray. Use with embedding layer.
         # X_train = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_train)
         # X_test = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
@@ -426,13 +435,13 @@ class NextPoiCategoryPredictionDomain:
                                   epochs,
                                   batch,
                                   class_weight,
-                                  optimizer,
+                                  parameters,
                                   output_dir):
 
         logdir = output_dir + "logs/fit/" + dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tensorflow.keras.callbacks.TensorBoard(log_dir=logdir)
 
-        model.compile(optimizer='adam', loss=["categorical_crossentropy"],
+        model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
                       metrics=tensorflow.keras.metrics.CategoricalAccuracy(name="acc"))
         #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
         #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
@@ -440,7 +449,8 @@ class NextPoiCategoryPredictionDomain:
                        y_train,
                        validation_data=(X_test, y_test),
                        batch_size=batch,
-                       epochs=epochs)
+                       epochs=epochs,
+                       callbacks=EarlyStopping(patience=3, restore_best_weights=True))
 
         #print("summary: ", model.summary())
         # print("history: ", h)
@@ -566,3 +576,29 @@ class NextPoiCategoryPredictionDomain:
         duration = math.exp(duration)
 
         return duration
+
+    def _shuffle(self, x, y, seed):
+
+        columns = [i for i in range(len(x))]
+        data_dict = {}
+        for i in range(len(x)):
+            feature = x[i].tolist()
+            for j in range(len(feature)):
+                feature[j] = str(list(feature[j]))
+            data_dict[columns[i]] = feature
+
+        data_dict['y'] = y
+
+
+        df = pd.DataFrame(data_dict).sample(frac=1., random_state=seed)
+
+        y = df['y'].to_numpy()
+        x_new = []
+
+        for i in range(len(columns)):
+            feature = df[columns[i]].tolist()
+            for j in range(len(feature)):
+                feature[j] = json.loads(feature[j])
+            x_new.append(np.array(feature))
+
+        return x_new, y

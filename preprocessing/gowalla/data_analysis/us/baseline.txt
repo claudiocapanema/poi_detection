@@ -1,0 +1,14 @@
+"               precision    recall  f1-score   support
+
+    Community       0.16      0.15      0.15    472213
+Entertainment       0.07      0.08      0.07    213343
+         Food       0.33      0.32      0.32    999201
+    Nightlife       0.05      0.06      0.05    159704
+     Outdoors       0.05      0.06      0.05    152613
+     Shopping       0.26      0.25      0.26    785253
+       Travel       0.08      0.09      0.09    252082
+
+     accuracy                           0.21   3034409
+    macro avg       0.14      0.14      0.14   3034409
+ weighted avg       0.22      0.21      0.21   3034409
+"

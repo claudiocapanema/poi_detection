@@ -27,11 +27,11 @@ class STF:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        simple_rnn_units = 60
+        simple_rnn_units = 20
         n = 2
 
-        emb1 = Embedding(input_dim=location_input_dim, output_dim=20, input_length=step_size)
-        emb2 = Embedding(input_dim=24, output_dim=20, input_length=step_size)
+        emb1 = Embedding(input_dim=location_input_dim, output_dim=5, input_length=step_size)
+        emb2 = Embedding(input_dim=24, output_dim=5, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
         temporal_embedding = emb2(temporal_input)
@@ -41,7 +41,7 @@ class STF:
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
         srnn = SimpleRNN(simple_rnn_units)(concat_1)
-        drop_1 = Dropout(0.5)(srnn)
+        drop_1 = Dropout(0.4)(srnn)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=[y_srnn], name="STF_RNN_baseline")
