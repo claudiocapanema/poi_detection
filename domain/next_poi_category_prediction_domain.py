@@ -7,7 +7,7 @@ import json
 
 import pandas as pd
 import sklearn.metrics as skm
-import tensorflow
+import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import utils as np_utils
 from sklearn.model_selection import KFold
@@ -63,9 +63,9 @@ class NextPoiCategoryPredictionDomain:
         # new_series = np.array(new_series)
         return np.array(series)
 
-    def read_sequences(self, filename, n_splits, model_name):
-
-        df = self.file_extractor.read_csv(filename).head(2400)
+    def read_sequences(self, filename, n_splits, model_name, number_of_categories):
+        # 7000
+        df = self.file_extractor.read_csv(filename).head(2500).sample(frac=1, random_state=1)
 
         users_trajectories = df['sequence'].to_numpy()
         # reindex ids
@@ -73,19 +73,31 @@ class NextPoiCategoryPredictionDomain:
         df['sequence'] = df['sequence'].apply(lambda e: self._sequence_to_list(e))
         users_ids = df['id'].tolist()
         sequences = df['sequence'].tolist()
+        categories_list = df['categories'].tolist()
         new_sequences = []
         countries = {}
         max_country = 0
         max_distance = 0
         max_duration = 0
+        minimum = 40
         for i in range(len(users_ids)):
 
             user_id = users_ids[i]
             sequence = sequences[i]
+            categories = json.loads(categories_list[i])
             new_sequence = []
-            if len(sequence) < 40:
+
+            if len(sequence) < minimum:
                 new_sequences.append([])
                 continue
+            # # verify if user visited all categories
+            # categories_size = len(categories)
+            # part = int(categories_size/5)
+            # first = pd.Series(categories[:int(categories_size/2)]).unique().tolist()
+            # second = pd.Series(categories[int(categories_size/2):]).unique().tolist()
+            # if len(first) != number_of_categories and len(second) != number_of_categories:
+            #     new_sequences.append([])
+            #     continue
 
             for j in range(len(sequence)):
                 location_category_id = sequence[j][0]
@@ -168,7 +180,7 @@ class NextPoiCategoryPredictionDomain:
         for i in range(df.shape[0]):
             user = sequences_list[i]
             j = 0
-            if len(user) < n_splits or len(user) < 40:
+            if len(user) < n_splits or len(user) < minimum:
                 ids_remove_users.append(ids_[i])
                 continue
             for train_indexes, test_indexes in kf.split(user):
@@ -181,11 +193,33 @@ class NextPoiCategoryPredictionDomain:
                 j+=1
 
 
-        print("treino", len(users_train_indexes), len(users_train_indexes[0]), len(users_train_indexes[1]))
+        print("treino", len(users_train_indexes))
+        print("fold 0: ", len(users_train_indexes[0][0]), len(users_test_indexes[0][0]))
+        print("fold 1: ", len(users_train_indexes[1][0]), len(users_test_indexes[1][0]))
+        print("fold 2: ", len(users_train_indexes[2][0]), len(users_test_indexes[2][0]))
+        print("fold 3: ", len(users_train_indexes[3][0]), len(users_test_indexes[3][0]))
+        print("fold 4: ", len(users_train_indexes[4][0]), len(users_test_indexes[4][0]))
 
-        max_userid = len(df)
+
+
         # remove users that have few samples
         df = df[['id', 'sequence']].query("id not in " + str(ids_remove_users))
+        max_userid = len(df)
+        print("Quantidade de usuários: ", len(df))
+        # update users id
+        df['id'] = np.array([i for i in range(len(df))])
+        ids_list = df['id'].tolist()
+        sequences_list = df['sequence'].tolist()
+        for i in range(len(sequences_list)):
+            sequence = sequences_list[i]
+
+            for j in range(len(sequence)):
+                sequence[j][-1] = ids_list[i]
+
+            sequences_list[i] = sequence
+
+        df['sequence'] = np.array(sequences_list)
+
         users_trajectories = df.to_numpy()
         #users_trajectories = df
         return users_trajectories, users_train_indexes, users_test_indexes, max_userid
@@ -213,9 +247,10 @@ class NextPoiCategoryPredictionDomain:
         folds_histories = []
         histories = []
         iteration = 0
-        seeds = {0:0, 1:1, 2:28, 3:29, 4:30, 5:31}
+        seeds = {0:0, 1:1, 2:0, 3:1, 4:0, 5:1}
         for i in range(k_folds):
             print("Modelo: ", model_name)
+            tf.random.set_seed(seeds[iteration])
             X_train, X_test, y_train, y_test = self.extract_train_test_from_indexes_k_fold(users_list=users_list,
                                                                                            users_train_indexes=
                                                                                            users_train_index[i],
@@ -310,17 +345,17 @@ class NextPoiCategoryPredictionDomain:
             if model_name in ['garg', 'mfa']:
                 x = [spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train]
                 adjacency_matrix_train, distances_matrix_train, temporal_matrix_train, durations_matrix_train = self._generate_graph_matrices(x, number_of_categories, model_name)
-                x = [spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test]
-                adjacency_matrix_test, distances_matrix_test, temporal_matrix_test, durations_matrix_test = self._generate_graph_matrices(x, number_of_categories, model_name)
+                #x = [spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test]
+                #adjacency_matrix_test, distances_matrix_test, temporal_matrix_test, durations_matrix_test = self._generate_graph_matrices(x, number_of_categories, model_name)
 
                 x_train_adjacency += adjacency_matrix_train
                 x_train_distances_matrix += distances_matrix_train
                 x_train_temporal_matrix += temporal_matrix_train
                 x_train_durations_matrix += durations_matrix_train
-                x_test_adjacency += [adjacency_matrix_train[0]]*len(adjacency_matrix_test)
-                x_test_distances_matrix += [distances_matrix_train[0]]*len(adjacency_matrix_test)
-                x_test_temporal_matrix += [temporal_matrix_train[0]]*len(adjacency_matrix_test)
-                x_test_durations_matrix += [durations_matrix_train[0]]*len(adjacency_matrix_test)
+                x_test_adjacency += [adjacency_matrix_train[0]]*len(spatial_test)
+                x_test_distances_matrix += [distances_matrix_train[0]]*len(spatial_test)
+                x_test_temporal_matrix += [temporal_matrix_train[0]]*len(spatial_test)
+                x_test_durations_matrix += [durations_matrix_train[0]]*len(spatial_test)
 
             x_train_spatial += spatial_train
             x_train_temporal += temporal_train
@@ -439,10 +474,10 @@ class NextPoiCategoryPredictionDomain:
                                   output_dir):
 
         logdir = output_dir + "logs/fit/" + dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard_callback = tensorflow.keras.callbacks.TensorBoard(log_dir=logdir)
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
         model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
-                      metrics=tensorflow.keras.metrics.CategoricalAccuracy(name="acc"))
+                      metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
         #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
         #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
         hi = model.fit(X_train,

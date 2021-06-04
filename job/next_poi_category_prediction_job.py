@@ -40,7 +40,7 @@ class NextPoiCategoryPredictionJob:
         filename=0
         print("Modelo: ", model_name)
         parameters = {'optimizer': optimizer, 'loss': loss}
-        users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits, model_name)
+        users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits, model_name, number_of_categories)
 
         num_users +=1
         print("numero usuarios: ", num_users)

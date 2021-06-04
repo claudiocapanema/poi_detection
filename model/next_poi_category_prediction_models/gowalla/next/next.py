@@ -29,9 +29,9 @@ class NEXT:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        emb1 = Embedding(input_dim=location_input_dim, output_dim=20, input_length=step_size)
-        emb2 = Embedding(input_dim=48, output_dim=20, input_length=step_size)
-        emb3 = Embedding(input_dim=num_users, output_dim=20, input_length=step_size)
+        emb1 = Embedding(input_dim=location_input_dim, output_dim=3, input_length=step_size)
+        emb2 = Embedding(input_dim=48, output_dim=3, input_length=step_size)
+        emb3 = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
         temporal_embedding = emb2(temporal_input)
@@ -44,7 +44,7 @@ class NEXT:
         # spatial_embedding = Dropout(0.5)(spatial_embedding)
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
         concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
-        srnn = GRU(60, return_sequences=True)(concat_1)
+        srnn = GRU(20, return_sequences=True)(concat_1)
         srnn = Dropout(0.6)(srnn)
         concat_2 = Concatenate()([srnn, id_embbeding])
 
@@ -59,7 +59,7 @@ class NEXT:
 
         att = Concatenate()([att, pos])
         att = Flatten()(att)
-        drop_1 = Dropout(0.6)(att)
+        drop_1 = Dropout(0.4)(att)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
 
