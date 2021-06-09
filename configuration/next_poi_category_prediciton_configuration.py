@@ -1,6 +1,7 @@
 from enum import Enum
 import pytz
 from tensorflow.keras.optimizers import Adam, Adadelta, SGD, RMSprop, Nadam, Ftrl
+from tensorflow.keras.optimizers.schedules import InverseTimeDecay
 from tensorflow.keras.losses import CategoricalCrossentropy, CategoricalHinge
 
 
@@ -8,7 +9,7 @@ class NextPoiCategoryPredictionConfiguration:
 
     # Radius for the nearestneighbors algorithm - 100m
     def __init__(self):
-        self.SEQUENCES_SIZE = ("sequences_size", {'users_step': 4, 'gowalla': 3})
+        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 4, 'gowalla': 3})
 
         self.N_SPLITS = ("n_splits", 5)
 
@@ -53,7 +54,8 @@ class NextPoiCategoryPredictionConfiguration:
                                            'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
-                                          'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1}},
+                                          'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
+                                          'garg': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1}},
                          '7_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},

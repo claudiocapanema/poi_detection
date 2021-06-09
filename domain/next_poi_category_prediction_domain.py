@@ -32,6 +32,7 @@ from model.next_poi_category_prediction_models.gowalla.stf.stf import STF
 from model.next_poi_category_prediction_models.gowalla.mfa_rnn import MFA_RNN
 from model.next_poi_category_prediction_models.gowalla.next.next import NEXT
 from model.next_poi_category_prediction_models.gowalla.garg.garg import GARG
+from model.next_poi_category_prediction_models.users_steps.garg.garg import GARGUsersSteps
 
 
 class NextPoiCategoryPredictionDomain:
@@ -63,14 +64,30 @@ class NextPoiCategoryPredictionDomain:
         # new_series = np.array(new_series)
         return np.array(series)
 
+    def _add_total(self, user):
+
+        total = []
+        user = user.tolist()
+        for i in range(len(user)):
+            total.append(len(user[i]))
+
+        return np.array(total)
+
     def read_sequences(self, filename, n_splits, model_name, number_of_categories):
         # 7000
-        df = self.file_extractor.read_csv(filename).head(2500).sample(frac=1, random_state=1)
+        minimum = 70
+        df = self.file_extractor.read_csv(filename)
+        df['sequence'] = df['sequence'].apply(lambda e: self._sequence_to_list(e))
+        df['total'] = self._add_total(df['sequence'])
+        df = df.sort_values(by='total', ascending=False).query("total >= " + str(minimum))
+        print("usuarios com mais de " + str(minimum), len(df))
+        df = df.sample(n=1400, random_state=2)
+        print(df)
 
         users_trajectories = df['sequence'].to_numpy()
         # reindex ids
         df['id'] = np.array([i for i in range(len(df))])
-        df['sequence'] = df['sequence'].apply(lambda e: self._sequence_to_list(e))
+
         users_ids = df['id'].tolist()
         sequences = df['sequence'].tolist()
         categories_list = df['categories'].tolist()
@@ -79,7 +96,7 @@ class NextPoiCategoryPredictionDomain:
         max_country = 0
         max_distance = 0
         max_duration = 0
-        minimum = 40
+
         for i in range(len(users_ids)):
 
             user_id = users_ids[i]
@@ -247,7 +264,7 @@ class NextPoiCategoryPredictionDomain:
         folds_histories = []
         histories = []
         iteration = 0
-        seeds = {0:0, 1:1, 2:0, 3:1, 4:0, 5:1}
+        seeds = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0}
         for i in range(k_folds):
             print("Modelo: ", model_name)
             tf.random.set_seed(seeds[iteration])
@@ -447,6 +464,8 @@ class NextPoiCategoryPredictionDomain:
                 return MFA_RNNUsersSteps()
             elif model_name == "next":
                 return NEXTUsersSteps()
+            elif model_name == "garg":
+                return GARGUsersSteps()
         elif dataset_name == "gowalla":
             if model_name == "serm":
                 return SERM()

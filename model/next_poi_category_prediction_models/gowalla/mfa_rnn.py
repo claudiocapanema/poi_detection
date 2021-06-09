@@ -10,10 +10,10 @@ from model.next_poi_category_prediction_models.neural_network_base_model import 
 import numpy as np
 import tensorflow as tf
 
-from spektral.layers.convolutional.arma_conv import ARMAConv
+from spektral.layers.convolutional import ARMAConv, GCNConv
 
 l2_reg = 5e-5           # L2 regularization rate
-drop_out_rate = 0.75
+drop_out_rate = 0
 patience = 3
 
 class MFA_RNN(NNBase):
@@ -46,7 +46,7 @@ class MFA_RNN(NNBase):
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        gru_units = 30
+        gru_units = 40
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=5, input_length=step_size)
         emb_id = Embedding(input_dim=num_users, output_dim=5, input_length=step_size)
@@ -63,40 +63,36 @@ class MFA_RNN(NNBase):
         duration_embbeding = emb_duration(duration_input)
         week_day_embbeding = emb_week_day(week_day_input)
 
-        concat_1 = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding])
+        embeddings = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding])
 
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
-        concat_1 = Dense(20)(concat_1)
-        gru_1 = GRU(gru_units, return_sequences=True)(concat_1)
+        gru_1 = GRU(gru_units, return_sequences=True)(embeddings)
         gru_1 = Dropout(0.5)(gru_1)
+        #gru_1 = Dense(20, activation='relu')(gru_1)
         print("gru_1: ", gru_1.shape, "id_embedding: ", id_embedding.shape)
 
-        #concat_2 = concatenate(inputs=[gru_1, id_embedding])
-        #concat_2 = concatenate(inputs=[concat_2, daytype_embedding])
-        #concat_2 = Dropout(0.5)(concat_2)
-        #print("concat_2: ", concat_2.shape)
-        # , activation='elu', kernel_regularizer=tf.keras.regularizers.L2()
-        #gru_1 = Dense(20)(gru_1)
-        #gru_1 = Dropout(0.4)(gru_1)
         y_mhsa = self.mhsa(input=gru_1)
-
+        final = Concatenate()([y_mhsa, gru_1])
+        final = Dropout(0.5)(final)
+        final = Flatten()(final)
+        # y_mhsa = Flatten()(y_mhsa)
+        # gru_1 = Flatten()(gru_1)
 
         x_categories_distance_matrix = self.graph_distances(categories_distance_matrix, adjancency_matrix)
         x_categories_temporal_matrix = self.graph_temporal(categories_temporal_matrix, adjancency_matrix)
         x_categories_durations_matrix = self.graph_durations(categories_durations_matrix, adjancency_matrix)
 
         graph = Concatenate()([x_categories_temporal_matrix, x_categories_distance_matrix, x_categories_durations_matrix])
-        graph = Dense(20)(graph)
-        # graph = Dropout(0.5)(categories_temporal_matrix)
+        graph = Dense(2, activation='relu')(graph)
+        #graph = Dropout(0.5)(graph)
         graph_flatten = Flatten()(graph)
+        #graph_flatten = Dense(4, activation='relu')(graph_flatten)
 
-        final = Concatenate()([y_mhsa, gru_1])
-        final = Concatenate()([final, id_embedding])
-        #final = Concatenate()([final, country_embbeding])
-        final = Flatten()(final)
+
         final = Concatenate()([final, graph_flatten])
-        final = Dropout(0.4)(final)
+        # final = Dense(10)(final)
+        #final = Concatenate()([gru_1, final])
         final = Dense(location_input_dim)(final)
         final = Activation('softmax', name='ma_activation_1')(final)
 
@@ -118,62 +114,90 @@ class MFA_RNN(NNBase):
 
         return att_layer
 
-    def graph_temporal(self, x, adjacency):
+    def graph_temporal_arma(self, x, adjacency):
+        x = ARMAConv(22, iterations=1,
+                     order=2,
+                     share_weights=True,
+                     dropout_rate=0.4,
+                     activation='relu',
+                     gcn_activation='relu',
+                     kernel_regularizer=l2(l2_reg))([x, adjacency])
 
-        x = ARMAConv(14, iterations=1,
-                        order=2,
-                        share_weights=True,
-                        dropout_rate=drop_out_rate,
-                        activation='elu',
-                        gcn_activation='selu',
-                        kernel_regularizer=l2(l2_reg))([x, adjacency])
-
-        x = ARMAConv(7, iterations=1,
+        x = ARMAConv(10, iterations=1,
                      order=1,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
-                     activation='elu',
-                     gcn_activation=None,
+                     activation='relu',
+                     gcn_activation='relu')([x, adjacency])
+
+        x = Dropout(0.5)(x)
+
+        return x
+
+    def graph_distances_a(self, x, adjacency):
+        x = ARMAConv(22, iterations=1,
+                     order=2,
+                     share_weights=True,
+                     dropout_rate=0.4,
+                     activation='relu',
+                     gcn_activation='relu',
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
+
+        x = ARMAConv(10, iterations=1,
+                     order=1,
+                     share_weights=True,
+                     dropout_rate=drop_out_rate,
+                     activation='relu',
+                     gcn_activation='relu')([x, adjacency])
+        x = Dropout(0.5)(x)
+
+        return x
+
+    def graph_durations_a(self, x, adjacency):
+
+        x = ARMAConv(22, iterations=1,
+                        order=2,
+                        share_weights=True,
+                        dropout_rate=0.4,
+                        activation='relu',
+                        gcn_activation='relu',
+                        kernel_regularizer=l2(l2_reg))([x, adjacency])
+
+        x = ARMAConv(10, iterations=1,
+                     order=1,
+                     share_weights=True,
+                     dropout_rate=drop_out_rate,
+                     activation='relu',
+                     gcn_activation='relu')([x, adjacency])
+
+        x = Dropout(0.5)(x)
+
+        return x
+
+    def graph_temporal(self, x, adjacency):
+
+        x = GCNConv(22, activation='relu')([x, adjacency])
+
+        x = GCNConv(10, activation='relu')([x, adjacency])
+
+        x = Dropout(0.5)(x)
 
         return x
 
     def graph_distances(self, x, adjacency):
+        x = GCNConv(22, activation='relu')([x, adjacency])
 
-        x = ARMAConv(14, iterations=1,
-                        order=2,
-                        share_weights=True,
-                        dropout_rate=drop_out_rate,
-                        activation='elu',
-                        gcn_activation='selu',
-                        kernel_regularizer=l2(l2_reg))([x, adjacency])
+        x = GCNConv(10, activation='relu')([x, adjacency])
 
-        x = ARMAConv(7, iterations=1,
-                     order=1,
-                     share_weights=True,
-                     dropout_rate=drop_out_rate,
-                     activation='elu',
-                     gcn_activation=None,
-                     kernel_regularizer=l2(l2_reg))([x, adjacency])
+        x = Dropout(0.5)(x)
 
         return x
 
     def graph_durations(self, x, adjacency):
+        x = GCNConv(22, activation='relu')([x, adjacency])
 
-        x = ARMAConv(14, iterations=1,
-                        order=2,
-                        share_weights=True,
-                        dropout_rate=drop_out_rate,
-                        activation='elu',
-                        gcn_activation='selu',
-                        kernel_regularizer=l2(l2_reg))([x, adjacency])
+        x = GCNConv(10, activation='relu')([x, adjacency])
 
-        x = ARMAConv(7, iterations=1,
-                     order=1,
-                     share_weights=True,
-                     dropout_rate=drop_out_rate,
-                     activation='elu',
-                     gcn_activation=None,
-                     kernel_regularizer=l2(l2_reg))([x, adjacency])
+        x = Dropout(0.5)(x)
 
         return x

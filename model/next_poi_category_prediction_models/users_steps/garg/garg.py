@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class GARG:
+class GARGUsersSteps:
 
     def __init__(self):
         self.name = "garg"
@@ -75,8 +75,8 @@ class GARG:
                                  num_heads=1,
                                  name='Attention')(srnn, srnn)
 
-        x = GCNConv(14, activation='relu')([categories_distance_matrix, adjancency_matrix])
-        x = GCNConv(7, activation='relu')([x, adjancency_matrix])
+        x = GCNConv(14)([categories_distance_matrix, adjancency_matrix])
+        x = GCNConv(7)([x, adjancency_matrix])
         x = Flatten()(x)
 
         print("at", att.shape)

@@ -42,7 +42,7 @@ class PerformancePlotsLoader:
             weighted_fscore_list.append(weighted_fscore)
 
         metrics = pd.DataFrame({'Solution': model_name_list, 'Accuracy': accuracy_list,
-                                'Macro f-score': macro_fscore_list, 'Weighted f-score': weighted_fscore_list})
+                                'Macro f1-score': macro_fscore_list, 'Weighted f1-score': weighted_fscore_list})
 
         print(metrics)
         title = ''
@@ -51,11 +51,11 @@ class PerformancePlotsLoader:
 
         #title = 'Macro average fscore'
         filename = 'barplot_macro_avg_fscore'
-        self.barplot_with_values(metrics, 'Solution', 'Macro f-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title)
 
         #title = 'Weighted average fscore'
         filename = 'barplot_weighted_avg_fscore'
-        self.barplot_with_values(metrics, 'Solution', 'Weighted f-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title)
 
         # columns = list(metrics.columns)
         # print("antigas: ", columns)
@@ -94,7 +94,7 @@ class PerformancePlotsLoader:
             weighted_fscore_list += weighted_fscore
 
         metrics = pd.DataFrame({'Solution': model_name_list, 'Accuracy': accuracy_list,
-                                'Macro f-score': macro_fscore_list, 'Weighted f-score': weighted_fscore_list})
+                                'Macro f1-score': macro_fscore_list, 'Weighted f1-score': weighted_fscore_list})
 
         print(metrics)
         title = ''
@@ -103,11 +103,11 @@ class PerformancePlotsLoader:
 
         #title = 'Macro average fscore'
         filename = 'barplot_macro_avg_fscore_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Macro f-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title)
 
         #title = 'Weighted average fscore'
         filename = 'barplot_weighted_avg_fscore_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Weighted f-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title)
 
         # columns = list(metrics.columns)
         # print("antigas: ", columns)
@@ -246,5 +246,5 @@ class PerformancePlotsLoader:
         latex = df.to_latex().replace("\}", "}").replace("\{", "{").replace("\\\nRecall", "\\\n\hline\nRecall").replace("\\\nF-score", "\\\n\hline\nF-score")
         pd.DataFrame({'latex': [latex]}).to_csv(output + "latex.txt", header=False, index=False)
 
-        self.plot_general_metrics_with_confidential_interval(model_report, columns, output)
+        self.plot_general_metrics_with_confidential_interval(model_report, columns, output+dataset_name)
 
