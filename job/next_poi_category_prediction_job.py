@@ -20,7 +20,7 @@ class NextPoiCategoryPredictionJob:
 
         sequences_size = self.next_poi_category_prediction_configuration.SEQUENCES_SIZE[1][dataset_name]
         n_splits = self.next_poi_category_prediction_configuration.N_SPLITS[1]
-        epochs = self.next_poi_category_prediction_configuration.EPOCHS[1]
+        epochs = self.next_poi_category_prediction_configuration.EPOCHS[1][dataset_name][model_name]
         n_replications = self.next_poi_category_prediction_configuration.N_REPLICATIONS[1]
         batch = self.next_poi_category_prediction_configuration.BATCH[1][dataset_name][model_name]
 

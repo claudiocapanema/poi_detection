@@ -10,7 +10,7 @@ from model.next_poi_category_prediction_models.neural_network_base_model import 
 import numpy as np
 import tensorflow as tf
 
-from spektral.layers.convolutional import ARMAConv, GCNConv
+from spektral.layers.convolutional import ARMAConv, GCNConv, GATConv
 
 l2_reg = 5e-5           # L2 regularization rate
 drop_out_rate = 0
