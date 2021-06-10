@@ -75,7 +75,7 @@ class NextPoiCategoryPredictionDomain:
 
     def read_sequences(self, filename, n_splits, model_name, number_of_categories, step_size):
         # 7000
-        minimum = 60
+        minimum = 40
         max_size = 4000
         df = self.file_extractor.read_csv(filename)
         df['sequence'] = df['sequence'].apply(lambda e: self._sequence_to_list(e))
@@ -84,7 +84,7 @@ class NextPoiCategoryPredictionDomain:
         print(df['total'].describe())
         df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))
-        df = df.sample(n=900, random_state=0)
+        df = df.sample(n=1500, random_state=1)
         print(df)
 
         users_trajectories = df['sequence'].to_numpy()
@@ -100,6 +100,7 @@ class NextPoiCategoryPredictionDomain:
         max_country = 0
         max_distance = 0
         max_duration = 0
+        ids_remove = []
 
         for i in range(len(users_ids)):
 
@@ -114,11 +115,22 @@ class NextPoiCategoryPredictionDomain:
             # # verify if user visited all categories
             # categories_size = len(categories)
             # part = int(categories_size/5)
-            # first = pd.Series(categories[:int(categories_size/2)]).unique().tolist()
-            # second = pd.Series(categories[int(categories_size/2):]).unique().tolist()
-            # if len(first) != number_of_categories and len(second) != number_of_categories:
-            #     new_sequences.append([])
+            # first_index = part
+            # second_index = part*2
+            # third_index = part*3
+            # fourth_index = part*4
+            # fifth_index = categories_size
+            # first = pd.Series(categories[:first_index]).unique().tolist()
+            # second = pd.Series(categories[first_index:second_index]).unique().tolist()
+            # third = pd.Series(categories[second_index:third_index]).unique().tolist()
+            # fourth = pd.Series(categories[third_index:fourth_index]).unique().tolist()
+            # fifth = pd.Series(categories[fourth_index:fifth_index]).unique().tolist()
+            # if len(first) != number_of_categories or len(second) != number_of_categories or len(third) != number_of_categories \
+            #         or len(fourth) != number_of_categories or len(fifth) != number_of_categories:
+            #     x_list.append([])
+            #     y_list.append([])
             #     continue
+
             size = len(sequence)
             for j in range(size):
                 location_category_id = sequence[j][0]
@@ -137,8 +149,8 @@ class NextPoiCategoryPredictionDomain:
 
                 if distance > 50:
                     distance = 50
-                if duration > 48:
-                    duration = 48
+                if duration > 72:
+                    duration = 72
                 countries[country] = 0
                 if country > max_country:
                     max_country = country
@@ -170,40 +182,7 @@ class NextPoiCategoryPredictionDomain:
         df = df[['id', 'x', 'y']]
         df = df.sample(frac=1, random_state=1)
 
-        # df = self.file_extractor.read_csv(
-        #     "/media/claudio/Data/backup_linux/Documentos/pycharmprojects/masters_research/location_sequence_48hours_10mil_usuarios.csv")
-        # print("Colunas")
-        # print(df)
-        # # reindex ids
-        # df['id'] = np.array([i for i in range(len(df))])
-        # df['sequence'] = df['location_sequence'].apply(lambda e: self._sequence_to_list(e))
-        # users_ids = df['user_id'].tolist()
-        # sequences = df['sequence'].tolist()
-        # new_users_sequences = []
-        # for i in range(len(users_ids)):
-        #
-        #     user_id = users_ids[i]
-        #     sequence = sequences[i]
-        #     new_sequence = []
-        #     for j in range(len(sequence)):
-        #         hour = int(sequence[j][1])
-        #         location = int(sequence[j][2])
-        #         datatime_str = sequence[j][0]
-        #         datetime = dt.datetime.strptime(datatime_str, '%Y-%m-%d %H:%M:%S')
-        #         if datetime.weekday() < 5:
-        #             day_type = 0
-        #         else:
-        #             day_type = 1
-        #         new_sequence.append([location, hour, day_type, user_id])
-        #     new_users_sequences.append(new_sequence)
-        #
-        # df['sequence'] = np.array(new_users_sequences)
-
         print("paises: ", len(list(countries.keys())))
-
-        kf = KFold(n_splits=n_splits)
-        users_train_indexes = [None] * n_splits
-        users_test_indexes = [None] * n_splits
 
         # remove users that have few samples
         ids_remove_users = []
@@ -212,10 +191,22 @@ class NextPoiCategoryPredictionDomain:
         #x_list = [json.loads(x_list[i]) for i in range(len(x_list))]
         for i in range(df.shape[0]):
             user = x_list[i]
-            j = 0
             if len(user) < n_splits or len(user) < int(minimum/step_size):
                 ids_remove_users.append(ids_[i])
                 continue
+
+        # remove users that have few samples
+        df = df[['id', 'x', 'y']].query("id not in " + str(ids_remove_users))
+
+        x_users = df['x'].tolist()
+        kf = KFold(n_splits=n_splits)
+        users_train_indexes = [None] * n_splits
+        users_test_indexes = [None] * n_splits
+        for i in range(len(x_users)):
+            user = x_users[i]
+
+            j = 0
+
             for train_indexes, test_indexes in kf.split(user):
                 if users_train_indexes[j] is None:
                     users_train_indexes[j] = [train_indexes]
@@ -223,32 +214,25 @@ class NextPoiCategoryPredictionDomain:
                 else:
                     users_train_indexes[j].append(train_indexes)
                     users_test_indexes[j].append(test_indexes)
-                j+=1
-
+                j += 1
 
         print("treino", len(users_train_indexes))
-        print("fold 0: ", len(users_train_indexes[0][0]), len(users_test_indexes[0][0]))
-        print("fold 1: ", len(users_train_indexes[1][0]), len(users_test_indexes[1][0]))
-        print("fold 2: ", len(users_train_indexes[2][0]), len(users_test_indexes[2][0]))
-        print("fold 3: ", len(users_train_indexes[3][0]), len(users_test_indexes[3][0]))
-        print("fold 4: ", len(users_train_indexes[4][0]), len(users_test_indexes[4][0]))
+        print("fold 0: ", len(users_train_indexes[0][1]), len(users_test_indexes[0][1]))
+        print("fold 1: ", len(users_train_indexes[1][1]), len(users_test_indexes[1][1]))
+        print("fold 2: ", len(users_train_indexes[2][1]), len(users_test_indexes[2][1]))
+        print("fold 3: ", len(users_train_indexes[3][1]), len(users_test_indexes[3][1]))
+        print("fold 4: ", len(users_train_indexes[4][1]), len(users_test_indexes[4][1]))
 
-
-
-        # remove users that have few samples
-        df = df[['id', 'x', 'y']].query("id not in " + str(ids_remove_users))
         max_userid = len(df)
         print("Quantidade de usuários: ", len(df))
         # update users id
         df['id'] = np.array([i for i in range(len(df))])
         ids_list = df['id'].tolist()
-        x_list = df['x'].tolist()
+        x_list = x_users
         # print("ant")
         # print(x_list[0][0])
         # x_list = [json.loads(x_list[i]) for i in range(len(x_list))]
         y_list = df['y'].tolist()
-        print("ref")
-        print(y_list[0])
         #y_list = [json.loads(y_list[i]) for i in range(len(y_list))]
         for i in range(len(x_list)):
             sequences_list = x_list[i]
@@ -267,10 +251,6 @@ class NextPoiCategoryPredictionDomain:
         ids = df['id'].tolist()
         x = x_list
         y = y_list
-
-        print("final")
-        print(x[0])
-        print(df)
 
         users_trajectories = df.to_numpy()
         #users_trajectories = df
@@ -492,8 +472,8 @@ class NextPoiCategoryPredictionDomain:
         y_test_concat = []
         #users_list = users_list[:, 1]
         ids = users_list['ids']
-        x = users_list['x']
-        y = users_list['y']
+        x_list = users_list['x']
+        y_list = users_list['y']
 
         x_train_spatial = []
         x_train_temporal = []
@@ -524,10 +504,12 @@ class NextPoiCategoryPredictionDomain:
         for i in range(len(ids)):
             usuario_n +=1
             #print("usuario: ", usuario_n)
-            user_x = np.asarray(x[i])
-            user_y = np.asarray(y[i])
-            print("sgr")
-            print(user_x)
+            user_x = np.array(x_list[i])
+            user_y = np.array(y_list[i])
+            # print("sgr")
+            # print(user_x)
+            # print("train inde")
+            # print(users_train_indexes[i])
             X_train = list(user_x[users_train_indexes[i]])
             X_test = list(user_x[users_test_indexes[i]])
             y_train = list(user_y[users_train_indexes[i]])
@@ -598,8 +580,8 @@ class NextPoiCategoryPredictionDomain:
         # y_test = df_test['y_test'].tolist()
 
         # Remove hours. Currently training without events hour
-        y_train = remove_hour_from_sequence_y(y_train)
-        y_test = remove_hour_from_sequence_y(y_test)
+        # y_train = remove_hour_from_sequence_y(y_train)
+        # y_test = remove_hour_from_sequence_y(y_test)
 
         X_train, y_train = self._shuffle(X_train, y_train, seed)
         X_test, y_test = self._shuffle(X_test, y_test, seed)
