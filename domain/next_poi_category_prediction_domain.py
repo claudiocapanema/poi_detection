@@ -73,15 +73,18 @@ class NextPoiCategoryPredictionDomain:
 
         return np.array(total)
 
-    def read_sequences(self, filename, n_splits, model_name, number_of_categories):
+    def read_sequences(self, filename, n_splits, model_name, number_of_categories, step_size):
         # 7000
-        minimum = 70
+        minimum = 60
+        max_size = 4000
         df = self.file_extractor.read_csv(filename)
         df['sequence'] = df['sequence'].apply(lambda e: self._sequence_to_list(e))
         df['total'] = self._add_total(df['sequence'])
-        df = df.sort_values(by='total', ascending=False).query("total >= " + str(minimum))
+        df = df.sort_values(by='total', ascending=False)
+        print(df['total'].describe())
+        df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))
-        df = df.sample(n=1400, random_state=2)
+        df = df.sample(n=900, random_state=0)
         print(df)
 
         users_trajectories = df['sequence'].to_numpy()
@@ -91,7 +94,8 @@ class NextPoiCategoryPredictionDomain:
         users_ids = df['id'].tolist()
         sequences = df['sequence'].tolist()
         categories_list = df['categories'].tolist()
-        new_sequences = []
+        x_list = []
+        y_list = []
         countries = {}
         max_country = 0
         max_distance = 0
@@ -105,7 +109,7 @@ class NextPoiCategoryPredictionDomain:
             new_sequence = []
 
             if len(sequence) < minimum:
-                new_sequences.append([])
+                x_list.append([])
                 continue
             # # verify if user visited all categories
             # categories_size = len(categories)
@@ -115,8 +119,8 @@ class NextPoiCategoryPredictionDomain:
             # if len(first) != number_of_categories and len(second) != number_of_categories:
             #     new_sequences.append([])
             #     continue
-
-            for j in range(len(sequence)):
+            size = len(sequence)
+            for j in range(size):
                 location_category_id = sequence[j][0]
                 hour = sequence[j][1]
                 if model_name in ['map', 'stf'] and hour >= 24:
@@ -146,14 +150,25 @@ class NextPoiCategoryPredictionDomain:
                 duration = self._duration_importance(duration)
                 new_sequence.append([location_category_id, hour, country, distance, duration, week_day, user_id])
 
-            new_sequences.append(new_sequence)
+            x, y = sequence_to_x_y(new_sequence, step_size)
+            y = remove_hour_from_sequence_y(y)
+
+            user_df = pd.DataFrame({'x': x, 'y': y}).sample(frac=1, random_state=1)
+            x = user_df['x'].tolist()
+            y = user_df['y'].tolist()
+
+            x_list.append(x)
+            y_list.append(y)
 
         print("quantidade usuarios: ", len(users_ids))
-        print("quantidade se: ", len(new_sequences))
+        print("quantidade se: ", len(x_list))
         print("maior pais: ", max_country)
         print("maior distancia: ", max_distance)
         print("maior duracao: ", max_duration)
-        df['sequence'] = np.array(new_sequences)
+        df['x'] = np.array(x_list)
+        df['y'] = np.array(y_list)
+        df = df[['id', 'x', 'y']]
+        df = df.sample(frac=1, random_state=1)
 
         # df = self.file_extractor.read_csv(
         #     "/media/claudio/Data/backup_linux/Documentos/pycharmprojects/masters_research/location_sequence_48hours_10mil_usuarios.csv")
@@ -193,11 +208,12 @@ class NextPoiCategoryPredictionDomain:
         # remove users that have few samples
         ids_remove_users = []
         ids_ = df['id'].tolist()
-        sequences_list = df['sequence'].tolist()
+        x_list = df['x'].tolist()
+        #x_list = [json.loads(x_list[i]) for i in range(len(x_list))]
         for i in range(df.shape[0]):
-            user = sequences_list[i]
+            user = x_list[i]
             j = 0
-            if len(user) < n_splits or len(user) < minimum:
+            if len(user) < n_splits or len(user) < int(minimum/step_size):
                 ids_remove_users.append(ids_[i])
                 continue
             for train_indexes, test_indexes in kf.split(user):
@@ -220,26 +236,45 @@ class NextPoiCategoryPredictionDomain:
 
 
         # remove users that have few samples
-        df = df[['id', 'sequence']].query("id not in " + str(ids_remove_users))
+        df = df[['id', 'x', 'y']].query("id not in " + str(ids_remove_users))
         max_userid = len(df)
         print("Quantidade de usuários: ", len(df))
         # update users id
         df['id'] = np.array([i for i in range(len(df))])
         ids_list = df['id'].tolist()
-        sequences_list = df['sequence'].tolist()
-        for i in range(len(sequences_list)):
-            sequence = sequences_list[i]
+        x_list = df['x'].tolist()
+        # print("ant")
+        # print(x_list[0][0])
+        # x_list = [json.loads(x_list[i]) for i in range(len(x_list))]
+        y_list = df['y'].tolist()
+        print("ref")
+        print(y_list[0])
+        #y_list = [json.loads(y_list[i]) for i in range(len(y_list))]
+        for i in range(len(x_list)):
+            sequences_list = x_list[i]
 
-            for j in range(len(sequence)):
-                sequence[j][-1] = ids_list[i]
 
-            sequences_list[i] = sequence
+            for j in range(len(sequences_list)):
+                sequence = sequences_list[j]
+                for k in range(len(sequence)):
 
-        df['sequence'] = np.array(sequences_list)
+                    sequence[k][-1] = ids_list[i]
+
+
+                sequences_list[j] = sequence
+            x_list[i] = sequences_list
+
+        ids = df['id'].tolist()
+        x = x_list
+        y = y_list
+
+        print("final")
+        print(x[0])
+        print(df)
 
         users_trajectories = df.to_numpy()
         #users_trajectories = df
-        return users_trajectories, users_train_indexes, users_test_indexes, max_userid
+        return {'ids': ids, 'x': x, 'y': y}, users_train_indexes, users_test_indexes, max_userid
 
     def run_tests_one_location_output_k_fold(self,
                                              dataset_name,
@@ -268,7 +303,7 @@ class NextPoiCategoryPredictionDomain:
         for i in range(k_folds):
             print("Modelo: ", model_name)
             tf.random.set_seed(seeds[iteration])
-            X_train, X_test, y_train, y_test = self.extract_train_test_from_indexes_k_fold(users_list=users_list,
+            X_train, X_test, y_train, y_test = self.extract_train_test_from_indexes_k_fold_v2(users_list=users_list,
                                                                                            users_train_indexes=
                                                                                            users_train_index[i],
                                                                                            users_test_indexes=
@@ -351,6 +386,152 @@ class NextPoiCategoryPredictionDomain:
             test = user[users_test_indexes[i]]
             X_train, y_train = sequence_to_x_y(train, step_size)
             X_test, y_test = sequence_to_x_y(test, step_size)
+            if len(y_train) == 0 or len(y_test) == 0:
+                continue
+
+            # x train
+            spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_train)
+            # x_test
+            spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
+
+            if model_name in ['garg', 'mfa']:
+                x = [spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train]
+                adjacency_matrix_train, distances_matrix_train, temporal_matrix_train, durations_matrix_train = self._generate_graph_matrices(x, number_of_categories, model_name)
+                #x = [spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test]
+                #adjacency_matrix_test, distances_matrix_test, temporal_matrix_test, durations_matrix_test = self._generate_graph_matrices(x, number_of_categories, model_name)
+
+                x_train_adjacency += adjacency_matrix_train
+                x_train_distances_matrix += distances_matrix_train
+                x_train_temporal_matrix += temporal_matrix_train
+                x_train_durations_matrix += durations_matrix_train
+                x_test_adjacency += [adjacency_matrix_train[0]]*len(spatial_test)
+                x_test_distances_matrix += [distances_matrix_train[0]]*len(spatial_test)
+                x_test_temporal_matrix += [temporal_matrix_train[0]]*len(spatial_test)
+                x_test_durations_matrix += [durations_matrix_train[0]]*len(spatial_test)
+
+            x_train_spatial += spatial_train
+            x_train_temporal += temporal_train
+            x_train_country += country_train
+            x_train_distance += distance_train
+            x_train_duration += duration_train
+            x_train_week_day += duration_train
+            x_train_ids += ids_train
+            # x test
+            #spatial, temporal, country, distance, duration, week_day, ids = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
+            x_test_spatial += spatial_test
+            x_test_temporal += temporal_test
+            x_test_country += country_test
+            x_test_distance += distance_test
+            x_test_duration += duration_test
+            x_test_week_day += week_day_test
+            x_test_ids += ids_test
+
+            if len(y_train) == 0:
+                continue
+            # X_train_concat = X_train_concat + X_train
+            # X_test_concat = X_test_concat + X_test
+            y_train_concat = y_train_concat + y_train
+            y_test_concat = y_test_concat + y_test
+
+        if model_name in ['garg', 'mfa']:
+            X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids), np.array(x_train_adjacency), np.array(x_train_distances_matrix), np.array(x_train_temporal_matrix), np.array(x_train_durations_matrix)]
+            X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids), np.array(x_test_adjacency), np.array(x_test_distances_matrix), np.array(x_test_temporal_matrix), np.array(x_test_durations_matrix)]
+        else:
+            X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids)]
+            X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids)]
+
+        y_train = y_train_concat
+        y_test = y_test_concat
+
+        # df = pd.DataFrame({'x_train': X_train, 'y_train': y_train}).sample(frac=1, random_state=2)
+        #
+        # df_test = pd.DataFrame({'x_test': X_test, 'y_test': y_test}).sample(frac=1, random_state=2)
+        # X_train = df['x_train'].tolist()
+        # X_test = df_test['x_test'].tolist()
+        # y_train = df['y_train'].tolist()
+        # y_test = df_test['y_test'].tolist()
+
+        # Remove hours. Currently training without events hour
+        y_train = remove_hour_from_sequence_y(y_train)
+        y_test = remove_hour_from_sequence_y(y_test)
+
+        X_train, y_train = self._shuffle(X_train, y_train, seed)
+        X_test, y_test = self._shuffle(X_test, y_test, seed)
+
+        # Sequence tuples to [spatial[,step_size], temporal[,step_size]] ndarray. Use with embedding layer.
+        # X_train = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_train)
+        # X_test = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
+
+        y_train = np.asarray(y_train)
+        y_test = np.asarray(y_test)
+
+        # Convert integers to one-hot-encoding. It is important to convert the y (labels) to that.
+        #print(y_train.tolist())
+        y_train = np_utils.to_categorical(y_train, num_classes=number_of_categories)
+        y_test = np_utils.to_categorical(y_test, num_classes=number_of_categories)
+
+        # when using multiple output [location, hour]
+        y_train = [y_train]
+        y_test = [y_test]
+
+        return X_train, X_test, y_train, y_test
+
+    def extract_train_test_from_indexes_k_fold_v2(self,
+                                               users_list,
+                                               users_train_indexes,
+                                               users_test_indexes,
+                                               step_size,
+                                               number_of_categories,
+                                               model_name,
+                                               seed,
+                                               time_num_classes=48):
+
+        X_train_concat = []
+        X_test_concat = []
+        y_train_concat = []
+        y_test_concat = []
+        #users_list = users_list[:, 1]
+        ids = users_list['ids']
+        x = users_list['x']
+        y = users_list['y']
+
+        x_train_spatial = []
+        x_train_temporal = []
+        x_train_country = []
+        x_train_distance = []
+        x_train_duration = []
+        x_train_week_day = []
+        x_train_ids = []
+        # garg and mfa
+        x_train_adjacency = []
+        x_train_distances_matrix = []
+        x_train_temporal_matrix = []
+        x_train_durations_matrix = []
+
+        x_test_spatial = []
+        x_test_temporal = []
+        x_test_country = []
+        x_test_distance = []
+        x_test_duration = []
+        x_test_week_day = []
+        x_test_ids = []
+        # garg and mfa
+        x_test_adjacency = []
+        x_test_distances_matrix = []
+        x_test_temporal_matrix = []
+        x_test_durations_matrix = []
+        usuario_n = 0
+        for i in range(len(ids)):
+            usuario_n +=1
+            #print("usuario: ", usuario_n)
+            user_x = np.asarray(x[i])
+            user_y = np.asarray(y[i])
+            print("sgr")
+            print(user_x)
+            X_train = list(user_x[users_train_indexes[i]])
+            X_test = list(user_x[users_test_indexes[i]])
+            y_train = list(user_y[users_train_indexes[i]])
+            y_test = list(user_y[users_test_indexes[i]])
             if len(y_train) == 0 or len(y_test) == 0:
                 continue
 

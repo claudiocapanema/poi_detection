@@ -20,15 +20,17 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
         total.append(hour_frequency_dict[day] / total_frequency)
     df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage of records': total})
 
-    barplot(dir, 'Category', 'Percentage of records', df, "barplot_category_total_" + week + title,
+    barplot(dir, 'Category', 'Percentage of records', df, "gowalla_barplot_category_total_" + week + title,
                  "Percentage of records per category" + title)
 
 def barplot(dir, x, y, df, filename, title, save=True):
 
     plt.figure()
-    fig = sns.barplot(x=x, y=y, data=df, color='cornflowerblue')
+    fig = sns.barplot(x=y, y=x, data=df, color='cornflowerblue', order=['Food', 'Shopping', 'Community', 'Travel', 'Entertainment', 'Outdoors', 'Nightlife'])
+    fig.set_ylabel("")
     fig = fig.set_title(title).get_figure()
-    plt.xticks(rotation=35)
+    #plt.xticks(rotation=35)
+
     save_fig(dir, filename, fig)
 
 if __name__ == "__main__":

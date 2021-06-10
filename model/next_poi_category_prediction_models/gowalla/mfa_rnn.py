@@ -46,14 +46,14 @@ class MFA_RNN(NNBase):
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        gru_units = 40
+        gru_units = 30
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
-        emb_time = Embedding(input_dim=time_input_dim, output_dim=5, input_length=step_size)
-        emb_id = Embedding(input_dim=num_users, output_dim=5, input_length=step_size)
+        emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
+        emb_id = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=2, input_length=step_size)
-        emb_distance = Embedding(input_dim=51, output_dim=5, input_length=step_size)
-        emb_duration = Embedding(input_dim=49, output_dim=5, input_length=step_size)
-        emb_week_day = Embedding(input_dim=7, output_dim=5, input_length=step_size)
+        emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
+        emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
+        emb_week_day = Embedding(input_dim=7, output_dim=3, input_length=step_size)
 
         spatial_embedding = emb_category(location_category_input)
         temporal_embedding = emb_time(temporal_input)
@@ -73,26 +73,31 @@ class MFA_RNN(NNBase):
         print("gru_1: ", gru_1.shape, "id_embedding: ", id_embedding.shape)
 
         y_mhsa = self.mhsa(input=gru_1)
-        final = Concatenate()([y_mhsa, gru_1])
-        final = Dropout(0.5)(final)
-        final = Flatten()(final)
-        # y_mhsa = Flatten()(y_mhsa)
+        y_mhsa = Flatten()(y_mhsa)
+        #final = Concatenate()([y_mhsa, gru_1])
+        #final = Dropout(0.5)(final)
+        #final = Flatten()(final)
         # gru_1 = Flatten()(gru_1)
+        id_embedding = Flatten()(id_embedding)
+        gru_1 = Flatten()(gru_1)
+        gru_1 = Concatenate()([gru_1, id_embedding])
 
-        x_categories_distance_matrix = self.graph_distances(categories_distance_matrix, adjancency_matrix)
-        x_categories_temporal_matrix = self.graph_temporal(categories_temporal_matrix, adjancency_matrix)
-        x_categories_durations_matrix = self.graph_durations(categories_durations_matrix, adjancency_matrix)
 
-        graph = Concatenate()([x_categories_temporal_matrix, x_categories_distance_matrix, x_categories_durations_matrix])
-        graph = Dense(2, activation='relu')(graph)
-        #graph = Dropout(0.5)(graph)
+        x_categories_distance_matrix = self.graph_distances_a(categories_distance_matrix, adjancency_matrix)
+        #x_categories_temporal_matrix = self.graph_temporal(categories_temporal_matrix, adjancency_matrix)
+        x_categories_durations_matrix = self.graph_durations_a(categories_durations_matrix, adjancency_matrix)
+        graph = Concatenate()([x_categories_distance_matrix, x_categories_durations_matrix])
+
+        # graph = Dense(4, activation='relu')(graph)
+        # graph = Dropout(0.5)(graph)
         graph_flatten = Flatten()(graph)
         #graph_flatten = Dense(4, activation='relu')(graph_flatten)
 
 
-        final = Concatenate()([final, graph_flatten])
+        final = Concatenate()([y_mhsa, graph_flatten])
         # final = Dense(10)(final)
-        #final = Concatenate()([gru_1, final])
+        final = Concatenate()([gru_1, final])
+        final = Dropout(0.5)(final)
         final = Dense(location_input_dim)(final)
         final = Activation('softmax', name='ma_activation_1')(final)
 
@@ -116,12 +121,14 @@ class MFA_RNN(NNBase):
 
     def graph_temporal_arma(self, x, adjacency):
         x = ARMAConv(22, iterations=1,
-                     order=2,
+                     order=3,
                      share_weights=True,
-                     dropout_rate=0.4,
+                     dropout_rate=0,
                      activation='relu',
                      gcn_activation='relu',
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
+
+        x = Dropout(0.5)(x)
 
         x = ARMAConv(10, iterations=1,
                      order=1,
@@ -129,7 +136,6 @@ class MFA_RNN(NNBase):
                      dropout_rate=drop_out_rate,
                      activation='relu',
                      gcn_activation='relu')([x, adjacency])
-
         x = Dropout(0.5)(x)
 
         return x
@@ -138,10 +144,12 @@ class MFA_RNN(NNBase):
         x = ARMAConv(22, iterations=1,
                      order=2,
                      share_weights=True,
-                     dropout_rate=0.4,
+                     dropout_rate=0,
                      activation='relu',
                      gcn_activation='relu',
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
+
+        x = Dropout(0.5)(x)
 
         x = ARMAConv(10, iterations=1,
                      order=1,
@@ -154,14 +162,15 @@ class MFA_RNN(NNBase):
         return x
 
     def graph_durations_a(self, x, adjacency):
-
         x = ARMAConv(22, iterations=1,
-                        order=2,
-                        share_weights=True,
-                        dropout_rate=0.4,
-                        activation='relu',
-                        gcn_activation='relu',
-                        kernel_regularizer=l2(l2_reg))([x, adjacency])
+                     order=3,
+                     share_weights=True,
+                     dropout_rate=0,
+                     activation='relu',
+                     gcn_activation='relu',
+                     kernel_regularizer=l2(l2_reg))([x, adjacency])
+
+        x = Dropout(0.5)(x)
 
         x = ARMAConv(10, iterations=1,
                      order=1,
@@ -169,7 +178,6 @@ class MFA_RNN(NNBase):
                      dropout_rate=drop_out_rate,
                      activation='relu',
                      gcn_activation='relu')([x, adjacency])
-
         x = Dropout(0.5)(x)
 
         return x
@@ -177,6 +185,8 @@ class MFA_RNN(NNBase):
     def graph_temporal(self, x, adjacency):
 
         x = GCNConv(22, activation='relu')([x, adjacency])
+
+        x = Dropout(0.5)(x)
 
         x = GCNConv(10, activation='relu')([x, adjacency])
 
@@ -187,6 +197,8 @@ class MFA_RNN(NNBase):
     def graph_distances(self, x, adjacency):
         x = GCNConv(22, activation='relu')([x, adjacency])
 
+        x = Dropout(0.5)(x)
+
         x = GCNConv(10, activation='relu')([x, adjacency])
 
         x = Dropout(0.5)(x)
@@ -195,6 +207,8 @@ class MFA_RNN(NNBase):
 
     def graph_durations(self, x, adjacency):
         x = GCNConv(22, activation='relu')([x, adjacency])
+
+        x = Dropout(0.5)(x)
 
         x = GCNConv(10, activation='relu')([x, adjacency])
 

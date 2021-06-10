@@ -36,7 +36,7 @@ class GARG:
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
         units = 30
-        emb_category = Embedding(input_dim=location_input_dim, output_dim=3, input_length=step_size)
+        emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
         emb_id = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=3, input_length=step_size)
@@ -75,8 +75,10 @@ class GARG:
                                  num_heads=1,
                                  name='Attention')(srnn, srnn)
 
-        x = GCNConv(14, activation='relu')([categories_distance_matrix, adjancency_matrix])
-        x = GCNConv(7, activation='relu')([x, adjancency_matrix])
+        x = GCNConv(22, activation='relu')([categories_distance_matrix, adjancency_matrix])
+        x = Dropout(0.5)(x)
+        x = GCNConv(10, activation='relu')([x, adjancency_matrix])
+        x = Dropout(0.5)(x)
         x = Flatten()(x)
 
         print("at", att.shape)
@@ -88,6 +90,7 @@ class GARG:
         #y_up = tf.matmul(att, x)
         y_sup = Concatenate()([att, x])
         y_sup = Dense(10)(y_sup)
+        y_sup = Dropout(0.5)(y_sup)
         print("y cup", y_cup.shape)
         print("y sup", y_sup.shape)
 
