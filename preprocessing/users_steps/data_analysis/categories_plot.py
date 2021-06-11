@@ -4,7 +4,7 @@ import seaborn as sns
 from pathlib import Path
 
 from configuration import USERS_10_MIL_MAX_500_POINTS_LOCAL_DATETIME, USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME
-sns.set_theme()
+sns.set_theme(style='whitegrid')
 
 def save_fig(dir, filename, fig):
     Path(dir).mkdir(parents=True, exist_ok=True)
@@ -18,9 +18,9 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     #total_frequency = 1
     for day in hour_frequency_dict:
         total.append(hour_frequency_dict[day] / total_frequency)
-    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage of records': total})
+    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Records (%)': total})
 
-    barplot(dir, 'Category', 'Percentage of records', df, "users_steps_barplot_category_total_" + week + title,
+    barplot(dir, 'Category', 'Records (%)', df, "users_steps_barplot_category_total_" + week + title,
                  "Percentage of records per category" + title)
 
 def barplot(dir, x, y, df, filename, title, save=True):

@@ -29,9 +29,9 @@ class SERM:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        units = 10
+        units = 30
 
-        emb3 = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
+        emb3 = Embedding(input_dim=num_users, output_dim=7, input_length=step_size)
         emb1 = Embedding(input_dim=location_input_dim, output_dim=3, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=3, input_length=step_size)
 

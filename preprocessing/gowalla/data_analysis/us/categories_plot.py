@@ -4,7 +4,7 @@ import seaborn as sns
 from pathlib import Path
 
 from configuration import BASE_DIR, CHECKINS, CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED_US
-sns.set_theme()
+sns.set_theme(style='whitegrid')
 
 def save_fig(dir, filename, fig):
     Path(dir).mkdir(parents=True, exist_ok=True)
@@ -18,9 +18,9 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     #total_frequency = 1
     for day in hour_frequency_dict:
         total.append(hour_frequency_dict[day] / total_frequency)
-    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage of records': total})
+    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Records (%)': total})
 
-    barplot(dir, 'Category', 'Percentage of records', df, "gowalla_barplot_category_total_" + week + title,
+    barplot(dir, 'Category', 'Records (%)', df, "gowalla_barplot_category_total_" + week + title,
                  "Percentage of records per category" + title)
 
 def barplot(dir, x, y, df, filename, title, save=True):

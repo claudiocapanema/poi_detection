@@ -31,7 +31,7 @@ class MAP:
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
         simple_rnn_units = 10
-        emb1 = Embedding(input_dim=location_input_dim, output_dim=3, input_length=step_size)
+        emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=3, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
@@ -43,8 +43,8 @@ class MAP:
         # separated by longer times (bigger sentences)
         # spatial_embedding = Dropout(0.5)(spatial_embedding)
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
-        srnn = SimpleRNN(20, return_sequences=True)(spatial_embedding)
-        srnn = Dropout(0.4)(srnn)
+        srnn = SimpleRNN(30, return_sequences=True)(spatial_embedding)
+        srnn = Dropout(0.5)(srnn)
         concat_1 = Concatenate()([srnn, temporal_embedding])
 
         att = MultiHeadAttention(key_dim=2,
@@ -53,7 +53,7 @@ class MAP:
 
         att = Concatenate()([srnn, att])
         att = Flatten()(att)
-        drop_1 = Dropout(0.4)(att)
+        drop_1 = Dropout(0.5)(att)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
 

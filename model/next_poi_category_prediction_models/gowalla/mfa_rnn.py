@@ -152,7 +152,7 @@ class MFA_RNN(NNBase):
         x = Dropout(0.5)(x)
 
         x = ARMAConv(10, iterations=1,
-                     order=1,
+                     order=2,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
                      activation='relu',
@@ -173,7 +173,7 @@ class MFA_RNN(NNBase):
         x = Dropout(0.5)(x)
 
         x = ARMAConv(10, iterations=1,
-                     order=1,
+                     order=2,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
                      activation='relu',

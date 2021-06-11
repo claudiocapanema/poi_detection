@@ -29,7 +29,7 @@ class NEXT:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        emb1 = Embedding(input_dim=location_input_dim, output_dim=3, input_length=step_size)
+        emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=3, input_length=step_size)
         emb3 = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
 
@@ -45,7 +45,7 @@ class NEXT:
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
         concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
         srnn = GRU(20, return_sequences=True)(concat_1)
-        srnn = Dropout(0.6)(srnn)
+        srnn = Dropout(0.5)(srnn)
         concat_2 = Concatenate()([srnn, id_embbeding])
 
         att = MultiHeadAttention(

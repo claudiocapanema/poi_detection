@@ -27,11 +27,11 @@ class STF:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        simple_rnn_units = 10
+        simple_rnn_units = 30
         n = 2
 
         emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
-        emb2 = Embedding(input_dim=24, output_dim=5, input_length=step_size)
+        emb2 = Embedding(input_dim=24, output_dim=3, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
         temporal_embedding = emb2(temporal_input)

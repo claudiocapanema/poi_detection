@@ -21,7 +21,7 @@ class PerformancePlotsLoader:
 
     def plot_general_metrics(self, report, columns, base_dir):
 
-        sns.set_theme()
+        sns.set_theme('whitegrid')
         macro_fscore_list = []
         model_name_list = []
         accuracy_list = []
@@ -71,7 +71,7 @@ class PerformancePlotsLoader:
 
     def plot_general_metrics_with_confidential_interval(self, report, columns, base_dir):
 
-        sns.set_theme()
+        sns.set_theme(style='whitegrid')
         macro_fscore_list = []
         model_name_list = []
         accuracy_list = []
