@@ -14,7 +14,7 @@ class NextPoiCategoryPredictionConfiguration:
         self.N_SPLITS = ("n_splits", 5)
 
         self.EPOCHS = ("epochs", {'users_steps': {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200},
-                                'gowalla': {'mfa': 20, 'serm': 12, 'map': 12, 'stf': 12, 'next': 12, 'garg': 12}})
+                                'gowalla': {'mfa': 20, 'serm': 12, 'map': 12, 'stf': 12, 'next': 12, 'garg': 20}})
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
@@ -22,7 +22,7 @@ class NextPoiCategoryPredictionConfiguration:
                                 'gowalla': {'mfa': 400, 'serm': 400, 'map': 400, 'stf': 400, 'next': 400, 'garg': 400}})
 
         self.OPTIMIZER = ("learning_rate", {'mfa': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'serm': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'map': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'stf': Adam(learning_rate=0.0008, beta_1=0.8, beta_2=0.9),
-                                            'next': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'garg': Adam(learning_rate=0.0008, beta_1=0.8, beta_2=0.9)})
+                                            'next': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'garg': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9)})
 
         self.LOSS = ("learning_rate", {'mfa': CategoricalCrossentropy(), 'serm': CategoricalCrossentropy(), 'map': CategoricalCrossentropy(),
                                             'stf': CategoricalCrossentropy(),
