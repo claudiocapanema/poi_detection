@@ -63,45 +63,59 @@ class MFA_RNN(NNBase):
         duration_embbeding = emb_duration(duration_input)
         week_day_embbeding = emb_week_day(week_day_input)
 
-        embeddings = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding])
+        spatial_flatten = Flatten()(spatial_embedding)
+        temporal_flatten = Flatten()(temporal_embedding)
+        distance_flatten = Flatten()(distance_embbeding)
+        duration_flatten = Flatten()(duration_embbeding)
+        id_flatten = Flatten()(id_embedding)
 
-        # Unlike LSTM, the GRU can find correlations between location/events
-        # separated by longer times (bigger sentences)
-        gru_1 = GRU(gru_units, return_sequences=True)(embeddings)
-        gru_1 = Dropout(0.5)(gru_1)
-        #gru_1 = Dense(20, activation='relu')(gru_1)
-        print("gru_1: ", gru_1.shape, "id_embedding: ", id_embedding.shape)
+        l_p_flatten = Concatenate()([spatial_flatten, temporal_flatten, distance_flatten, duration_flatten])
+        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding])
 
-        y_mhsa = self.mhsa(input=gru_1)
-        y_mhsa = Flatten()(y_mhsa)
-        #final = Concatenate()([y_mhsa, gru_1])
-        #final = Dropout(0.5)(final)
-        #final = Flatten()(final)
-        # gru_1 = Flatten()(gru_1)
-        id_embedding = Flatten()(id_embedding)
-        gru_1 = Flatten()(gru_1)
-        gru_1 = Concatenate()([gru_1, id_embedding])
+        # l_p_flatten = Flatten()(l_p)
+        # ids_flatten = Flatten()(id_flatten)
 
+        # y_cup = tf.matmul(id_flatten, l_p_flatten)
+        y_cup = Concatenate()([id_embedding, l_p])
+        y_cup = Flatten()(y_cup)
+        # y_cup = Dense(20)(y_cup)
 
-        x_categories_distance_matrix = self.graph_distances_a(categories_distance_matrix, adjancency_matrix)
-        #x_categories_temporal_matrix = self.graph_temporal(categories_temporal_matrix, adjancency_matrix)
-        x_categories_durations_matrix = self.graph_durations_a(categories_durations_matrix, adjancency_matrix)
-        graph = Concatenate()([x_categories_distance_matrix, x_categories_durations_matrix])
+        srnn = GRU(gru_units, return_sequences=True)(l_p)
+        srnn = Dropout(0.5)(srnn)
 
-        # graph = Dense(4, activation='relu')(graph)
-        # graph = Dropout(0.5)(graph)
-        graph_flatten = Flatten()(graph)
-        #graph_flatten = Dense(4, activation='relu')(graph_flatten)
+        att = MultiHeadAttention(key_dim=2,
+                                 num_heads=4,
+                                 name='Attention')(srnn, srnn)
 
+        x_distances = GCNConv(22, activation='relu')([categories_distance_matrix, adjancency_matrix])
+        x_distances = Dropout(0.5)(x_distances)
+        x_distances = GCNConv(10, activation='relu')([x_distances, adjancency_matrix])
+        x_distances = Dropout(0.5)(x_distances)
+        x_distances = Flatten()(x_distances)
 
-        final = Concatenate()([y_mhsa, graph_flatten])
-        # final = Dense(10)(final)
-        final = Concatenate()([gru_1, final])
-        final = Dropout(0.5)(final)
-        final = Dense(location_input_dim)(final)
-        final = Activation('softmax', name='ma_activation_1')(final)
+        x_durations = GCNConv(22, activation='relu')([categories_durations_matrix, adjancency_matrix])
+        x_durations = Dropout(0.5)(x_durations)
+        x_durations = GCNConv(10, activation='relu')([x_durations, adjancency_matrix])
+        x_durations = Dropout(0.5)(x_durations)
+        x_durations = Flatten()(x_durations)
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[final], name="MFA-RNN")
+        print("at", att.shape)
+        # att = Concatenate()([srnn, att])
+        att = Flatten()(att)
+        print("att", att.shape)
+        print("transposto", tf.transpose(att).shape)
+        print("gc", x_distances.shape)
+        # y_up = tf.matmul(att, x)
+        y_sup = Concatenate()([att, x_distances, x_durations])
+        y_sup = Dropout(0.5)(y_sup)
+        y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
+        y_cup = Dropout(0.5)(y_cup)
+        y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
+        print("y cup", y_cup.shape)
+        print("y sup", y_sup.shape)
+        y_up = y_cup + tf.Variable(initial_value=1.) * y_sup
+
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_up], name="MFA-RNN")
 
         return model
 

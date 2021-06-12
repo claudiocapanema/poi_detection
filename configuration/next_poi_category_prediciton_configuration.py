@@ -14,7 +14,7 @@ class NextPoiCategoryPredictionConfiguration:
         self.N_SPLITS = ("n_splits", 5)
 
         self.EPOCHS = ("epochs", {'users_steps': {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200},
-                                'gowalla': {'mfa': 20, 'serm': 12, 'map': 12, 'stf': 12, 'next': 12, 'garg': 20}})
+                                'gowalla': {'mfa': 20, 'serm': 20, 'map': 20, 'stf': 20, 'next': 11, 'garg': 20}})
 
         self.N_REPLICATIONS = ("n_replications", 1)
 

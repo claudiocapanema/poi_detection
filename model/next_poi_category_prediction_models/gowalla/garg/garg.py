@@ -64,11 +64,11 @@ class GARG:
         # l_p_flatten = Flatten()(l_p)
         # ids_flatten = Flatten()(id_flatten)
 
-        #y_cup = tf.matmul(id_flatten, l_p_flatten)
-        y_cup = Concatenate()([id_embedding, l_p])
-        y_cup = Flatten()(y_cup)
-        #y_cup = Dense(20)(y_cup)
-
+        id_flatten = Dense(location_input_dim)(id_flatten)
+        l_p_flatten = Dense(location_input_dim)(l_p_flatten)
+        print("idd", id_flatten.shape)
+        print("lpp", l_p_flatten.shape)
+        y_cup = tf.math.multiply(id_flatten, l_p_flatten)
         srnn = GRU(units, return_sequences=True)(l_p)
         srnn = Dropout(0.5)(srnn)
 
@@ -82,22 +82,15 @@ class GARG:
         x = Dropout(0.5)(x)
         x = Flatten()(x)
 
-        print("at", att.shape)
-        #att = Concatenate()([srnn, att])
         att = Flatten()(att)
-        print("att", att.shape)
-        print("transposto", tf.transpose(att).shape)
-        print("gc", x.shape)
-        #y_up = tf.matmul(att, x)
-        y_sup = Concatenate()([att, x])
+        att = Dense(location_input_dim)(att)
+        x = Dense(location_input_dim)(x)
+        y_sup = tf.math.multiply(att, x)
         y_sup = Dropout(0.5)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
-        print("y cup", y_cup.shape)
-        print("y sup", y_sup.shape)
         y_up = y_cup + tf.Variable(initial_value=1.)*y_sup
-        #y_srnn = Dense(location_input_dim, activation='softmax')(y_up)
 
         print("saa: ", y_up.shape)
 
