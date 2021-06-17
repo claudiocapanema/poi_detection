@@ -315,7 +315,8 @@ class NextPoiCategoryPredictionDomain:
                                                            num_users=num_users,
                                                            time_input_dim=48,
                                                            seed=seeds[iteration])
-                history, report = self._train_and_evaluate_model(model,
+                history, report = self._train_and_evaluate_model(model_name,
+                                                                 model,
                                                                  X_train,
                                                                  y_train,
                                                                  X_test,
@@ -660,6 +661,7 @@ class NextPoiCategoryPredictionDomain:
                 return GARG()
 
     def _train_and_evaluate_model(self,
+                                  model_name,
                                   model,
                                   X_train,
                                   y_train,
@@ -674,16 +676,30 @@ class NextPoiCategoryPredictionDomain:
         logdir = output_dir + "logs/fit/" + dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
-        model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
-                      metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
-        #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
-        #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
-        hi = model.fit(X_train,
-                       y_train,
-                       validation_data=(X_test, y_test),
-                       batch_size=batch,
-                       epochs=epochs,
-                       callbacks=EarlyStopping(patience=3, restore_best_weights=True))
+        if model_name not in ['garg']:
+            model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
+                          metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
+            #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
+            #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
+            hi = model.fit(X_train,
+                           y_train,
+                           validation_data=(X_test, y_test),
+                           batch_size=batch,
+                           epochs=epochs,
+                           callbacks=EarlyStopping(patience=3, restore_best_weights=True))
+        else:
+            loss_fn = tf.keras.losses.CategoricalCrossentropy()
+
+            # Training step
+            @tf.function
+            def train():
+                with tf.GradientTape() as tape:
+                    predictions = model(X_train, training=True)
+                    loss = loss_fn(y_train, predictions)
+                    loss += sum(model.losses)
+                gradients = tape.gradient(loss, model.trainable_variables)
+                parameters['optimizer'].apply_gradients(zip(gradients, model.trainable_variables))
+                return loss
 
         #print("summary: ", model.summary())
         # print("history: ", h)
