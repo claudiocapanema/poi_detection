@@ -29,11 +29,11 @@ class SERMUsersSteps:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        units = 300
+        units = 50
 
-        emb3 = Embedding(input_dim=num_users, output_dim=5, input_length=step_size)
-        emb1 = Embedding(input_dim=location_input_dim, output_dim=10, input_length=step_size)
-        emb2 = Embedding(input_dim=48, output_dim=2, input_length=step_size)
+        emb3 = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
+        emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
+        emb2 = Embedding(input_dim=48, output_dim=3, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
         temporal_embedding = emb2(temporal_input)
@@ -43,11 +43,11 @@ class SERMUsersSteps:
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
         lstm_1 = LSTM(units, return_sequences=True)(concat_1)
-        lstm_1 = Dropout(0.6)(lstm_1)
-        lstm_1 = Dense(24)(lstm_1)
+        # lstm_1 = Dropout(0.5)(lstm_1)
+        # lstm_1 = Dense(24)(lstm_1)
         lstm_1 = Concatenate()([lstm_1, id_embedding])
-        lstm_1 = Dropout(0.6)(lstm_1)
         flatten_1 = Flatten(name="ma_flatten_1")(lstm_1)
+        flatten_1 = Dropout(0.5)(flatten_1)
         dense_1 = Dense(location_input_dim)(flatten_1)
         pred_location = Activation('softmax')(dense_1)
 

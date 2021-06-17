@@ -51,34 +51,34 @@ VALIDATION_CONFIG='{
           "ground_truth": "'$GROUND_TRUTH'"
           }'
 
-#SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
-#          "job": "next_poi_category_prediction_sequences_generation_job",
-#          "users_steps_filename": "'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
-#          "base_dir":"'$USERS_STEPS_BASE_DIR'",
-#          "users_sequences_folder":"'$USERS_STEPS_OUTPUT_BASE_DIR'sequences/",
-#          "8_categories_filename":"'$USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
-#          "categories_type":"8_categories",
-#          "ground_truth": "'$GROUND_TRUTH'",
-#          "to_8_categories":"yes",
-#          "dataset_name":"users_steps"
-#          }'
-
 SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
           "job": "next_poi_category_prediction_sequences_generation_job",
-          "users_steps_filename": "'$GOWALLA_US'",
-          "base_dir":"'$GOWALLA_BASE_DIR'",
-          "users_sequences_folder":"'$GOWALLA_BASE_DIR'sequences/",
-          "8_categories_filename":"'$GOWALLA_US'",
-          "categories_type":"7_categories",
+          "users_steps_filename": "'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
+          "base_dir":"'$USERS_STEPS_BASE_DIR'",
+          "users_sequences_folder":"'$USERS_STEPS_OUTPUT_BASE_DIR'sequences/",
+          "8_categories_filename":"'$USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
+          "categories_type":"8_categories",
           "ground_truth": "'$GROUND_TRUTH'",
-          "to_8_categories":"no",
-          "dataset_name":"gowalla"
+          "to_8_categories":"yes",
+          "dataset_name":"users_steps"
           }'
+
+#SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
+#          "job": "next_poi_category_prediction_sequences_generation_job",
+#          "users_steps_filename": "'$GOWALLA_US'",
+#          "base_dir":"'$GOWALLA_BASE_DIR'",
+#          "users_sequences_folder":"'$GOWALLA_BASE_DIR'sequences/",
+#          "8_categories_filename":"'$GOWALLA_US'",
+#          "categories_type":"7_categories",
+#          "ground_truth": "'$GROUND_TRUTH'",
+#          "to_8_categories":"no",
+#          "dataset_name":"gowalla"
+#          }'
 
 #NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
 #          "job": "next_poi_category_prediction_job",
 #          "users_sequences": "'$USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME'",
-#          "baseline": "mfa",
+#          "baseline": "serm",
 #          "dataset_name":"users_steps",
 #          "categories_type":"8_categories"
 #          }'

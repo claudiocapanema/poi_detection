@@ -18,13 +18,13 @@ from spektral.layers.convolutional.arma_conv import ARMAConv
 from extractor.file_extractor import FileExtractor
 from foundation.util.next_poi_category_prediction_util import sequence_to_x_y, \
     sequence_tuples_to_spatial_temporal_and_feature6_ndarrays, \
-    remove_hour_from_sequence_y
+    remove_hour_from_sequence_y, sequence_to_x_y_v1
 from foundation.util.nn_preprocessing import one_hot_decoding
 
 from model.next_poi_category_prediction_models.users_steps.serm.model import SERMUsersSteps
 from model.next_poi_category_prediction_models.users_steps.map.model import MAPUsersSteps
 from model.next_poi_category_prediction_models.users_steps.stf.model import STFUsersSteps
-from model.next_poi_category_prediction_models.users_steps.mfa_rnnuserssteps import MFA_RNNUsersSteps
+from model.next_poi_category_prediction_models.users_steps.mfarnnuserssteps import MFARNNUsersSteps
 from model.next_poi_category_prediction_models.users_steps.next.model import NEXTUsersSteps
 from model.next_poi_category_prediction_models.gowalla.serm.serm import SERM
 from model.next_poi_category_prediction_models.gowalla.map.map import MAP
@@ -73,21 +73,35 @@ class NextPoiCategoryPredictionDomain:
 
         return np.array(total)
 
-    def read_sequences(self, filename, n_splits, model_name, number_of_categories, step_size):
+    def read_sequences(self, filename, n_splits, model_name, number_of_categories, step_size, dataset_name):
         # 7000
-        minimum = 40
+
         max_size = 4000
         df = self.file_extractor.read_csv(filename)
         df['sequence'] = df['sequence'].apply(lambda e: self._sequence_to_list(e))
         df['total'] = self._add_total(df['sequence'])
         df = df.sort_values(by='total', ascending=False)
         print(df['total'].describe())
+
+        if dataset_name == "gowalla":
+            minimum = 40
+            n = 1500
+
+            #minimum = 40
+            #n = 1500
+            #bom
+        else:
+            #n = 4650
+
+            #razoavel
+            minimum = 200
+            n = 2200
+
         df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))
-        df = df.sample(n=1500, random_state=1)
+        df = df.sample(n=n, random_state=1)
         print(df)
 
-        users_trajectories = df['sequence'].to_numpy()
         # reindex ids
         df['id'] = np.array([i for i in range(len(df))])
 
@@ -162,7 +176,10 @@ class NextPoiCategoryPredictionDomain:
                 duration = self._duration_importance(duration)
                 new_sequence.append([location_category_id, hour, country, distance, duration, week_day, user_id])
 
-            x, y = sequence_to_x_y(new_sequence, step_size)
+            if dataset_name == "gowalla":
+                x, y = sequence_to_x_y(new_sequence, step_size)
+            elif dataset_name == "users_steps":
+                x, y = sequence_to_x_y(new_sequence, step_size)
             y = remove_hour_from_sequence_y(y)
 
             user_df = pd.DataFrame({'x': x, 'y': y}).sample(frac=1, random_state=1)
@@ -180,7 +197,6 @@ class NextPoiCategoryPredictionDomain:
         df['x'] = np.array(x_list)
         df['y'] = np.array(y_list)
         df = df[['id', 'x', 'y']]
-        df = df.sample(frac=1, random_state=1)
 
         print("paises: ", len(list(countries.keys())))
 
@@ -624,7 +640,7 @@ class NextPoiCategoryPredictionDomain:
             elif model_name == "stf":
                 return STFUsersSteps()
             elif model_name == "mfa":
-                return MFA_RNNUsersSteps()
+                return MFARNNUsersSteps()
             elif model_name == "next":
                 return NEXTUsersSteps()
             elif model_name == "garg":

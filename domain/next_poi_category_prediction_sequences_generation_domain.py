@@ -38,12 +38,14 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                            state_column,
                            categories_to_int,
                            countries_to_int,
-                           states_to_int):
+                           states_to_int,
+                           dataset_name):
 
         df = df.sort_values(by=datetime_column)
 
         categories_names = df[category_column].tolist()
-        locationid_list = df[locationid_column].tolist()
+        if dataset_name == "gowalla":
+            locationid_list = df[locationid_column].tolist()
         datetime_list = df[datetime_column].tolist()
         categories_id = []
         for i in range(len(categories_names)):
@@ -66,13 +68,15 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
         user_categories_ids = categories_id
         days_types = []
 
-        locationid_before = locationid_list[0]
+        if dataset_name == "gowalla":
+            locationid_before = locationid_list[0]
 
         for i in range(len(df)):
             category = categories_id[i]
-            locationid = locationid_list[i]
-            if locationid_before == locationid:
-                continue
+            if dataset_name == "gowalla":
+                locationid = locationid_list[i]
+                if locationid_before == locationid:
+                    continue
             date = datetime_list[i]
             week_day = date.weekday()
             country = countries_to_int[countries_list[i]]
@@ -122,7 +126,8 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                            datetime_column,
                            country_column,
                            state_column,
-                           categories_to_int):
+                           categories_to_int,
+                           dataset_name):
 
         #users_checkins = users_checkins.head(10000)
         #df = users_checkins.query(str(userid_column)+" == '"+str(user_id) + "'")
@@ -139,7 +144,8 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                                                                                           state_column,
                                                                                           categories_to_int,
                                                                                           countries_to_int,
-                                                                                          states_to_int))
+                                                                                          states_to_int,
+                                                                                          dataset_name))
 
         #df = self._flatten_df(df, userid_column)
 

@@ -17,10 +17,10 @@ l2_reg = 5e-5           # L2 regularization rate
 drop_out_rate = 0
 patience = 3
 
-class MFA_RNN(NNBase):
+class MFARNNUsersSteps(NNBase):
 
     def __init__(self):
-        super().__init__("GRUenhaced original 10mil")
+        super().__init__("mfa users steps")
 
     def build(self, step_size, location_input_dim, time_input_dim, num_users, seed=None):
         if seed is not None:
@@ -47,10 +47,10 @@ class MFA_RNN(NNBase):
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        gru_units = 30
-        emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
+        gru_units = 70
+        emb_category= Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
-        emb_id = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
+        emb_id = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=2, input_length=step_size)
         emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
@@ -69,10 +69,6 @@ class MFA_RNN(NNBase):
         distance_flatten = Flatten()(distance_embbeding)
         duration_flatten = Flatten()(duration_embbeding)
         id_flatten = Flatten()(id_embedding)
-        id_flatten = Dense(49)(id_flatten)
-        print("1  ", id_flatten.shape)
-        id_unit = tf.keras.layers.Reshape((7, 7))(id_flatten)
-        print("ttt", id_unit.shape)
 
         l_p_flatten = Concatenate()([spatial_flatten, temporal_flatten, distance_flatten, duration_flatten])
         l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding])
@@ -92,37 +88,28 @@ class MFA_RNN(NNBase):
                                  num_heads=4,
                                  name='Attention')(srnn, srnn)
 
-        distance_matrix = tf.math.multiply(id_unit, categories_distance_matrix)
-        #distance_matrix = categories_distance_matrix
-        x_distances = GCNConv(22, activation='relu')([distance_matrix, adjancency_matrix])
-        x_distances = Dropout(0.5)(x_distances)
-        x_distances = GCNConv(10, activation='relu')([x_distances, adjancency_matrix])
-        x_distances = Dropout(0.5)(x_distances)
-        x_distances = Flatten()(x_distances)
-
-        durations_matrix = tf.math.multiply(id_unit, categories_durations_matrix)
-        #durations_matrix = categories_durations_matrix
-        x_durations = GCNConv(22, activation='relu')([durations_matrix, adjancency_matrix])
-        x_durations = Dropout(0.5)(x_durations)
-        x_durations = GCNConv(10, activation='relu')([x_durations, adjancency_matrix])
-        x_durations = Dropout(0.5)(x_durations)
-        x_durations = Flatten()(x_durations)
+        # x_distances = GCNConv(22, activation='relu')([categories_distance_matrix, adjancency_matrix])
+        # x_distances = Dropout(0.5)(x_distances)
+        # x_distances = GCNConv(10, activation='relu')([x_distances, adjancency_matrix])
+        # x_distances = Dropout(0.5)(x_distances)
+        # x_distances = Flatten()(x_distances)
+        #
+        # x_durations = GCNConv(22, activation='relu')([categories_durations_matrix, adjancency_matrix])
+        # x_durations = Dropout(0.5)(x_durations)
+        # x_durations = GCNConv(10, activation='relu')([x_durations, adjancency_matrix])
+        # x_durations = Dropout(0.5)(x_durations)
+        # x_durations = Flatten()(x_durations)
 
         print("at", att.shape)
-        # att = Concatenate()([srnn, att])
         att = Flatten()(att)
-        print("att", att.shape)
-        print("transposto", tf.transpose(att).shape)
-        print("gc", x_distances.shape)
-        # y_up = tf.matmul(att, x)
-        y_sup = Concatenate()([att, x_distances, x_durations])
+        y_sup = att
         y_sup = Dropout(0.5)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         print("y cup", y_cup.shape)
         print("y sup", y_sup.shape)
-        y_up = y_cup + tf.Variable(initial_value=1.) * y_sup
+        y_up = y_sup
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_up], name="MFA-RNN")
 

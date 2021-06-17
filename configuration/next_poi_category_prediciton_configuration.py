@@ -9,20 +9,23 @@ class NextPoiCategoryPredictionConfiguration:
 
     # Radius for the nearestneighbors algorithm - 100m
     def __init__(self):
-        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 4, 'gowalla': 3})
+        # 7
+        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 10, 'gowalla': 3})
 
         self.N_SPLITS = ("n_splits", 5)
 
-        self.EPOCHS = ("epochs", {'users_steps': {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200},
+        self.EPOCHS = ("epochs", {'users_steps': {'mfa': 10, 'serm': 10, 'map': 10, 'stf': 10, 'next': 10, 'garg': 10},
                                 'gowalla': {'mfa': 20, 'serm': 20, 'map': 20, 'stf': 20, 'next': 11, 'garg': 20}})
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
-        self.BATCH = ("batch", {'users_steps': {'mfa': 200, 'serm': 200, 'map': 200, 'stf': 200, 'next': 200, 'garg': 200},
+        self.BATCH = ("batch", {'users_steps': {'mfa': 400, 'serm': 400, 'map': 750, 'stf': 400, 'next': 750, 'garg': 750},
                                 'gowalla': {'mfa': 400, 'serm': 400, 'map': 400, 'stf': 400, 'next': 400, 'garg': 400}})
 
-        self.OPTIMIZER = ("learning_rate", {'mfa': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'serm': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'map': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'stf': Adam(learning_rate=0.0008, beta_1=0.8, beta_2=0.9),
-                                            'next': Adam(learning_rate=0.0001, beta_1=0.8, beta_2=0.9), 'garg': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9)})
+        self.OPTIMIZER = ("learning_rate", {'users_steps': {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),
+                                            'next': Adam(), 'garg': Adam()},
+                                            'gowalla': {'mfa': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'serm': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'map': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'stf': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9),
+                                            'next': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'garg': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9)}})
 
         self.LOSS = ("learning_rate", {'mfa': CategoricalCrossentropy(), 'serm': CategoricalCrossentropy(), 'map': CategoricalCrossentropy(),
                                             'stf': CategoricalCrossentropy(),

@@ -29,7 +29,7 @@ class NextPoiCategoryPredictionJob:
         category_type_dir = self.next_poi_category_prediction_configuration.CATEGORY_TYPE[1][categories_type]
         model_name_dir = self.next_poi_category_prediction_configuration.MODEL_NAME[1][model_name]
         class_weight = self.next_poi_category_prediction_configuration.CLASS_WEIGHT[1][categories_type][model_name]
-        optimizer = self.next_poi_category_prediction_configuration.OPTIMIZER[1][model_name]
+        optimizer = self.next_poi_category_prediction_configuration.OPTIMIZER[1][dataset_name][model_name]
         loss = self.next_poi_category_prediction_configuration.LOSS[1][model_name]
         output_dir = self.next_poi_category_prediction_domain.\
             output_dir(output_base_dir, dataset_type_dir, category_type_dir, model_name_dir)
@@ -40,7 +40,7 @@ class NextPoiCategoryPredictionJob:
         filename=0
         print("Modelo: ", model_name)
         parameters = {'optimizer': optimizer, 'loss': loss}
-        users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits, model_name, number_of_categories, sequences_size)
+        users_trajectories, users_train_indexes, users_test_indexes, num_users = self.next_poi_category_prediction_domain.read_sequences(users_sequences_filename, n_splits, model_name, number_of_categories, sequences_size, dataset_name)
 
         num_users +=1
         print("numero usuarios: ", num_users)

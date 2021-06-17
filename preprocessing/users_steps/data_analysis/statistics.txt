@@ -1,0 +1,248 @@
+"Número de linhas:
+649731
+----
+Número de usuários:
+3216
+----
+Categorias:
+['Other', 'Home', 'Work', 'Commuting', 'Amenity', 'Leisure', 'Tourism', 'Shop', nan]
+----
+Número de estados:
+57
+----
+    
+Estados com mais eventos:
+                     state_name   total
+0                     São Paulo  109993
+1                Rio de Janeiro   99751
+2                  Minas Gerais   64892
+3                          Pará   37327
+4                         Bahia   35526
+5                         Ceará   33739
+6                    Pernambuco   28817
+7                      Amazonas   26270
+8              Distrito Federal   20910
+9                   Mato Grosso   17424
+10          Rio Grande do Norte   17170
+11                       Paraná   15333
+12            Rio Grande do Sul   14421
+13                     Maranhão   14111
+14                      Paraíba   12643
+15               Espírito Santo   12233
+16                        Piauí   11831
+17           Mato Grosso do Sul   10090
+18                        Goiás   10086
+19                     Rondônia    9029
+20                        Amapá    7791
+21                         Acre    6822
+22                    Tocantins    6615
+23                      Roraima    6379
+24               Santa Catarina    5390
+25                      Alagoas    3862
+26              exterior_Brazil    3352
+27                      Sergipe    2962
+28           exterior_Argentina     872
+29       exterior_United States     797
+30             exterior_Uruguay     504
+31            exterior_Portugal     414
+32               exterior_Chile     378
+33               exterior_Spain     292
+34              exterior_France     259
+35               exterior_Italy     223
+36            exterior_Colombia     178
+37               exterior_Egypt     121
+38          exterior_Luxembourg     113
+39             exterior_Germany     106
+40              exterior_Canada     104
+41      exterior_United Kingdom      92
+42         exterior_Netherlands      81
+43             exterior_Ireland      80
+44             exterior_Bolivia      69
+45      exterior_Czech Republic      52
+46            exterior_Paraguay      48
+47               exterior_Japan      46
+48             exterior_Romania      41
+49  exterior_Dominican Republic      39
+50              exterior_Serbia      18
+51              exterior_Panama      15
+52               exterior_Malta       9
+53              exterior_Taiwan       8
+54             exterior_Morocco       1
+55               exterior_Kenya       1
+-----
+    
+Estados com mais usuários:
+                     state_name  total_users
+0                     São Paulo          704
+1                Rio de Janeiro          607
+2                  Minas Gerais          402
+3               exterior_Brazil          326
+4                         Bahia          251
+5                          Pará          208
+6                         Ceará          189
+7                    Pernambuco          176
+8              Distrito Federal          166
+9                      Amazonas          145
+10                  Mato Grosso          129
+11                       Paraná          110
+12                        Goiás          109
+13                     Maranhão          107
+14          Rio Grande do Norte          104
+15               Espírito Santo          101
+16                      Paraíba           92
+17            Rio Grande do Sul           91
+18                        Piauí           68
+19               Santa Catarina           66
+20           Mato Grosso do Sul           62
+21                     Rondônia           52
+22                        Amapá           45
+23                      Alagoas           37
+24                      Sergipe           37
+25                    Tocantins           37
+26                      Roraima           32
+27                         Acre           29
+28           exterior_Argentina           16
+29       exterior_United States           12
+30               exterior_Chile            8
+31            exterior_Portugal            8
+32              exterior_France            7
+33             exterior_Uruguay            3
+34            exterior_Colombia            3
+35         exterior_Netherlands            2
+36               exterior_Italy            2
+37               exterior_Spain            2
+38             exterior_Bolivia            2
+39             exterior_Ireland            2
+40             exterior_Germany            2
+41              exterior_Canada            1
+42      exterior_United Kingdom            1
+43              exterior_Taiwan            1
+44      exterior_Czech Republic            1
+45              exterior_Serbia            1
+46             exterior_Romania            1
+47            exterior_Paraguay            1
+48               exterior_Japan            1
+49              exterior_Panama            1
+50               exterior_Egypt            1
+51             exterior_Morocco            1
+52               exterior_Malta            1
+53          exterior_Luxembourg            1
+54               exterior_Kenya            1
+55  exterior_Dominican Republic            1
+----
+Duração (horas) entre checkins por estado:
+                     state_name  mean_duration  median_duration  mean_total  \
+0                          Acre       3.448276              3.0  235.241379   
+1                       Roraima       4.000000              3.0  199.343750   
+2                     Tocantins       4.228571              3.0  188.942857   
+3                         Amapá       5.886364              4.0  177.045455   
+4                         Ceará       6.712766              3.0  179.457447   
+5                      Rondônia       7.137255              3.0  177.019608   
+6              exterior_Uruguay       1.000000              1.0  168.000000   
+7                      Amazonas       5.250000              3.0  182.423611   
+8                         Piauí       4.573529              3.0  173.985294   
+9           Rio Grande do Norte       5.942308              3.0  165.096154   
+10           Mato Grosso do Sul       5.114754              3.0  165.393443   
+11               Rio de Janeiro       7.489185              4.0  165.965058   
+12                 Minas Gerais       7.573604              3.0  164.680203   
+13                         Pará       6.086957              3.0  180.318841   
+14               exterior_Spain       2.500000              2.5  146.000000   
+15                   Pernambuco       7.388571              4.0  164.662857   
+16                    São Paulo       7.934688              4.0  159.619739   
+17            Rio Grande do Sul       7.142857              4.0  158.472527   
+18                       Paraná       6.915094              4.0  144.613208   
+19                      Paraíba       8.337209              3.0  146.941860   
+20               exterior_Italy       2.500000              2.5  111.500000   
+21                        Bahia       8.733871              4.0  143.237903   
+22             Distrito Federal       9.149068              5.0  129.844720   
+23                  Mato Grosso      13.259843              5.0  137.181102   
+24                     Maranhão      14.029412              4.0  138.294118   
+25               Espírito Santo       8.958763              6.0  126.072165   
+26                      Sergipe      10.942857              7.0   84.571429   
+27                      Alagoas      11.405405              5.0  104.378378   
+28                        Goiás      10.275510              4.5  102.806122   
+29       exterior_United States      18.083333              3.0   66.416667   
+30             exterior_Germany       5.500000              5.5   53.000000   
+31               Santa Catarina       9.000000              5.0   86.870968   
+32            exterior_Portugal       3.125000              1.5   51.750000   
+33         exterior_Netherlands       1.500000              1.5   40.500000   
+34            exterior_Colombia       3.000000              4.0   59.333333   
+35           exterior_Argentina       4.750000              4.0   54.500000   
+36              exterior_France       7.666667              1.0   43.000000   
+37             exterior_Bolivia       7.500000              7.5   34.500000   
+38               exterior_Chile       3.875000              3.5   47.250000   
+39              exterior_Brazil      62.482759             39.0   14.043103   
+40              exterior_Canada            NaN              NaN         NaN   
+41      exterior_Czech Republic            NaN              NaN         NaN   
+42  exterior_Dominican Republic            NaN              NaN         NaN   
+43               exterior_Egypt            NaN              NaN         NaN   
+44             exterior_Ireland            NaN              NaN         NaN   
+45               exterior_Japan            NaN              NaN         NaN   
+46               exterior_Kenya            NaN              NaN         NaN   
+47          exterior_Luxembourg            NaN              NaN         NaN   
+48               exterior_Malta            NaN              NaN         NaN   
+49             exterior_Morocco            NaN              NaN         NaN   
+50              exterior_Panama            NaN              NaN         NaN   
+51            exterior_Paraguay            NaN              NaN         NaN   
+52             exterior_Romania            NaN              NaN         NaN   
+53              exterior_Serbia            NaN              NaN         NaN   
+54              exterior_Taiwan            NaN              NaN         NaN   
+55      exterior_United Kingdom            NaN              NaN         NaN   
+
+    median_total  
+0          209.0  
+1          192.0  
+2          187.0  
+3          173.0  
+4          173.0  
+5          171.0  
+6          169.0  
+7          168.5  
+8          159.5  
+9          149.0  
+10         147.0  
+11         147.0  
+12         146.5  
+13         146.0  
+14         146.0  
+15         146.0  
+16         145.0  
+17         140.0  
+18         128.0  
+19         123.5  
+20         111.5  
+21         108.5  
+22         107.0  
+23          90.0  
+24          89.0  
+25          88.0  
+26          70.0  
+27          67.0  
+28          59.0  
+29          55.0  
+30          53.0  
+31          48.5  
+32          45.5  
+33          40.5  
+34          40.0  
+35          36.5  
+36          35.0  
+37          34.5  
+38          31.0  
+39           6.0  
+40           NaN  
+41           NaN  
+42           NaN  
+43           NaN  
+44           NaN  
+45           NaN  
+46           NaN  
+47           NaN  
+48           NaN  
+49           NaN  
+50           NaN  
+51           NaN  
+52           NaN  
+53           NaN  
+54           NaN  
+55           NaN  "

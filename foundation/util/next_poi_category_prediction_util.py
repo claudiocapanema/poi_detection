@@ -36,6 +36,24 @@ def sequence_to_x_y(list_events: list, step_size):
 
     return x, y
 
+def sequence_to_x_y_v1(list_events: list, step_size):
+    x = []
+    y = []
+    step = []
+    cont = 0
+    # [location_category_id, hour, day_type, user_id]
+    for e in list_events:
+        if cont < step_size:
+            step.append(e)
+            cont = cont + 1
+        else:
+            y.append(e)
+            x.append(step)
+            step = []
+            cont = 0
+
+    return x, y
+
 def remove_hour_from_sequence_x(list_events: list):
 
     locations = []

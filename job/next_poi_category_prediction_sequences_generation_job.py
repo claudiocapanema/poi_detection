@@ -35,7 +35,8 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
 
         users_checkin = self.sequences_generation_for_poi_categorization_sequential_baselines_domain.read_csv(users_checkin_filename, datetime_column)
 
-        users_checkin = users_checkin.query("state_name == 'TEXAS'")
+        if dataset_name == "gowalla":
+            users_checkin = users_checkin.query("state_name == 'TEXAS'")
 
         if to_8_categories == "yes":
             users_checkin = self.join_work_and_office_join_sport_leisure(users_checkin, category_column)
@@ -51,7 +52,8 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
                                                                                                                           datetime_column,
                                                                                                                           country_column,
                                                                                                                           state_column,
-                                                                                                                          categories_to_int_osm)
+                                                                                                                          categories_to_int_osm,
+                                                                                                                          dataset_name)
 
         self.sequences_generation_for_poi_categorization_sequential_baselines_domain.sequences_to_csv(users_sequences, users_sequences_folder, dataset_name, categories_type)
 
