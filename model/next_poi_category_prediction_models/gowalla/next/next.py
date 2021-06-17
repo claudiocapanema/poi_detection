@@ -31,7 +31,7 @@ class NEXT:
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
         emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb2 = Embedding(input_dim=48, output_dim=3, input_length=step_size)
-        emb3 = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
+        emb3 = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
 
         spatial_embedding = emb1(location_category_input)
         temporal_embedding = emb2(temporal_input)

@@ -38,7 +38,7 @@ class GARG:
         units = 30
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
-        emb_id = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
+        emb_id = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=3, input_length=step_size)
         emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
@@ -73,7 +73,7 @@ class GARG:
         srnn = Dropout(0.5)(srnn)
 
         att = MultiHeadAttention(key_dim=2,
-                                 num_heads=1,
+                                 num_heads=4,
                                  name='Attention')(srnn, srnn)
 
         x = GCNConv(22, activation='relu')([categories_distance_matrix, adjancency_matrix])

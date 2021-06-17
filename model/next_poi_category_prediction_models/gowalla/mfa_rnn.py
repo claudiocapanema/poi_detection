@@ -94,17 +94,17 @@ class MFA_RNN(NNBase):
 
         distance_matrix = tf.math.multiply(id_unit, categories_distance_matrix)
         #distance_matrix = categories_distance_matrix
-        x_distances = GCNConv(22, activation='relu')([distance_matrix, adjancency_matrix])
+        x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
-        x_distances = GCNConv(10, activation='relu')([x_distances, adjancency_matrix])
+        x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = Flatten()(x_distances)
 
         durations_matrix = tf.math.multiply(id_unit, categories_durations_matrix)
         #durations_matrix = categories_durations_matrix
-        x_durations = GCNConv(22, activation='relu')([durations_matrix, adjancency_matrix])
+        x_durations = GCNConv(22, activation='swish')([durations_matrix, adjancency_matrix])
         x_durations = Dropout(0.5)(x_durations)
-        x_durations = GCNConv(10, activation='relu')([x_durations, adjancency_matrix])
+        x_durations = GCNConv(10, activation='swish')([x_durations, adjancency_matrix])
         x_durations = Dropout(0.5)(x_durations)
         x_durations = Flatten()(x_durations)
 
@@ -122,7 +122,7 @@ class MFA_RNN(NNBase):
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         print("y cup", y_cup.shape)
         print("y sup", y_sup.shape)
-        y_up = y_cup + tf.Variable(initial_value=1.) * y_sup
+        y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_up], name="MFA-RNN")
 

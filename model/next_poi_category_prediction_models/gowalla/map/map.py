@@ -48,7 +48,7 @@ class MAP:
         concat_1 = Concatenate()([srnn, temporal_embedding])
 
         att = MultiHeadAttention(key_dim=2,
-                                 num_heads=1,
+                                 num_heads=4,
                                  name='Attention')(concat_1, concat_1)
 
         att = Concatenate()([srnn, att])

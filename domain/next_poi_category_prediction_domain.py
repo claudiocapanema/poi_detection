@@ -86,7 +86,7 @@ class NextPoiCategoryPredictionDomain:
         if dataset_name == "gowalla":
             minimum = 40
             n = 1500
-
+            #n = 100
             #minimum = 40
             #n = 1500
             #bom
@@ -676,7 +676,7 @@ class NextPoiCategoryPredictionDomain:
         logdir = output_dir + "logs/fit/" + dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
-        if model_name not in ['garg']:
+        if model_name not in ['gargs']:
             model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
                           metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
             #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
