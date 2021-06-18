@@ -94,6 +94,7 @@ class MFA_RNN(NNBase):
 
         distance_matrix = tf.math.multiply(id_unit, categories_distance_matrix)
         #distance_matrix = categories_distance_matrix
+        #x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
@@ -102,10 +103,11 @@ class MFA_RNN(NNBase):
 
         durations_matrix = tf.math.multiply(id_unit, categories_durations_matrix)
         #durations_matrix = categories_durations_matrix
+        #x_durations = self.graph_temporal_arma(durations_matrix, adjancency_matrix)
         x_durations = GCNConv(22, activation='swish')([durations_matrix, adjancency_matrix])
-        x_durations = Dropout(0.5)(x_durations)
+        #x_durations = Dropout(0.5)(x_durations)
         x_durations = GCNConv(10, activation='swish')([x_durations, adjancency_matrix])
-        x_durations = Dropout(0.5)(x_durations)
+        x_durations = Dropout(0.3)(x_durations)
         x_durations = Flatten()(x_durations)
 
         print("at", att.shape)
@@ -116,7 +118,7 @@ class MFA_RNN(NNBase):
         print("gc", x_distances.shape)
         # y_up = tf.matmul(att, x)
         y_sup = Concatenate()([att, x_distances, x_durations])
-        y_sup = Dropout(0.5)(y_sup)
+        y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
@@ -168,18 +170,18 @@ class MFA_RNN(NNBase):
                      order=2,
                      share_weights=True,
                      dropout_rate=0,
-                     activation='relu',
-                     gcn_activation='relu',
+                     activation='swish',
+                     gcn_activation='swish',
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
 
-        x = Dropout(0.5)(x)
+        #x = Dropout(0.5)(x)
 
         x = ARMAConv(10, iterations=1,
                      order=2,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
-                     activation='relu',
-                     gcn_activation='relu')([x, adjacency])
+                     activation='swish',
+                     gcn_activation='swish')([x, adjacency])
         x = Dropout(0.5)(x)
 
         return x
@@ -189,18 +191,18 @@ class MFA_RNN(NNBase):
                      order=3,
                      share_weights=True,
                      dropout_rate=0,
-                     activation='relu',
-                     gcn_activation='relu',
+                     activation='swish',
+                     gcn_activation='swish',
                      kernel_regularizer=l2(l2_reg))([x, adjacency])
 
-        x = Dropout(0.5)(x)
+        #x = Dropout(0.5)(x)
 
         x = ARMAConv(10, iterations=1,
                      order=2,
                      share_weights=True,
                      dropout_rate=drop_out_rate,
-                     activation='relu',
-                     gcn_activation='relu')([x, adjacency])
+                     activation='swish',
+                     gcn_activation='swish')([x, adjacency])
         x = Dropout(0.5)(x)
 
         return x

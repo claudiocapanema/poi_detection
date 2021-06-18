@@ -73,7 +73,7 @@ class GARG:
         srnn = Dropout(0.5)(srnn)
 
         att = MultiHeadAttention(key_dim=2,
-                                 num_heads=4,
+                                 num_heads=1,
                                  name='Attention')(srnn, srnn)
 
         x = GCNConv(22, activation='relu')([categories_distance_matrix, adjancency_matrix])
@@ -86,7 +86,7 @@ class GARG:
         att = Dense(location_input_dim)(att)
         x = Dense(location_input_dim)(x)
         y_sup = tf.math.multiply(att, x)
-        y_sup = Dropout(0.5)(y_sup)
+        y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
