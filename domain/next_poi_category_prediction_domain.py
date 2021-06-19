@@ -92,10 +92,12 @@ class NextPoiCategoryPredictionDomain:
             #bom
         else:
             #n = 4650
+            minimum = 200
+            n = 1300
 
             #razoavel
-            minimum = 200
-            n = 2200
+            # minimum = 200
+            # n = 2200
 
         df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))

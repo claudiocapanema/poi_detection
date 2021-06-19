@@ -10,7 +10,7 @@ class NextPoiCategoryPredictionConfiguration:
     # Radius for the nearestneighbors algorithm - 100m
     def __init__(self):
         # 7
-        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 10, 'gowalla': 3})
+        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 4, 'gowalla': 3})
 
         self.N_SPLITS = ("n_splits", 5)
 

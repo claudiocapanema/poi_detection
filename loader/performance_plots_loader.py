@@ -131,6 +131,13 @@ class PerformancePlotsLoader:
     def barplot_with_values(self, metrics, x_column, y_column, base_dir, file_name, title):
         Path(base_dir).mkdir(parents=True, exist_ok=True)
         plt.figure()
+        # if y_column == 'Macro f1-score':
+        #     order = ['MAP', 'STF-RNN', 'MHSA+PE', 'SERM', 'GARG', 'MFA-RNN']
+        # elif y_column == 'Accuracy':
+        #     order = ['STF-RNN', 'MAP', 'MHSA+PE', 'SERM', 'GARG', 'MFA-RNN']
+        # else:
+        #     order = ['MAP', 'STF-RNN', 'MHSA+PE', 'SERM', 'GARG', 'MFA-RNN']
+        # order = list(reversed(order))
         figure = sns.barplot(x=x_column, y=y_column, data=metrics)
 
         # figure.set_ylabel(x_column, fontsize=15)

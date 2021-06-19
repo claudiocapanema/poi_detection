@@ -117,13 +117,13 @@ class MFA_RNN(NNBase):
         print("transposto", tf.transpose(att).shape)
         print("gc", x_distances.shape)
         # y_up = tf.matmul(att, x)
-        y_sup = Concatenate()([att, x_distances, x_durations])
+        srnn = Flatten()(srnn)
+        y_sup = Concatenate()([srnn, att, x_distances, x_durations])
         y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
-        print("y cup", y_cup.shape)
-        print("y sup", y_sup.shape)
+
         y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_up], name="MFA-RNN")
