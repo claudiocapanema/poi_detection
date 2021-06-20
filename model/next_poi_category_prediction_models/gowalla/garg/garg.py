@@ -35,13 +35,13 @@ class GARG:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        units = 30
+        units = 60
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
         emb_id = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=3, input_length=step_size)
-        emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
-        emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
+        emb_distance = Embedding(input_dim=2, output_dim=3, input_length=step_size)
+        emb_duration = Embedding(input_dim=2, output_dim=3, input_length=step_size)
         emb_week_day = Embedding(input_dim=7, output_dim=3, input_length=step_size)
 
         spatial_embedding = emb_category(location_category_input)
@@ -90,7 +90,7 @@ class GARG:
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
-        y_up = y_cup + tf.Variable(initial_value=1.)*y_sup
+        y_up = y_cup + tf.Variable(initial_value=0.)*y_sup
 
         print("saa: ", y_up.shape)
 

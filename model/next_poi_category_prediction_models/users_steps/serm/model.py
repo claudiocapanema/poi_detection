@@ -29,7 +29,7 @@ class SERMUsersSteps:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        units = 50
+        units = 60
 
         emb3 = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
         emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
@@ -42,7 +42,7 @@ class SERMUsersSteps:
         concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
-        lstm_1 = LSTM(units, return_sequences=True)(concat_1)
+        lstm_1 = SimpleRNN(units, return_sequences=True)(concat_1)
         # lstm_1 = Dropout(0.5)(lstm_1)
         # lstm_1 = Dense(24)(lstm_1)
         lstm_1 = Concatenate()([lstm_1, id_embedding])

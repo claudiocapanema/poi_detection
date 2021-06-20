@@ -43,13 +43,15 @@ class MAPUsersSteps:
         # separated by longer times (bigger sentences)
         # spatial_embedding = Dropout(0.5)(spatial_embedding)
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
-        srnn = SimpleRNN(70, return_sequences=True)(spatial_embedding)
+        srnn = SimpleRNN(60, return_sequences=True)(spatial_embedding)
         srnn = Dropout(0.3)(srnn)
         concat_1 = Concatenate()([srnn, temporal_embedding])
 
-        att = MultiHeadAttention(key_dim=2,
+        att = MultiHeadAttention(key_dim=1,
                                  num_heads=1,
                                  name='Attention')(concat_1, concat_1)
+
+        att = Dense(5)(att)
 
         att = Concatenate()([srnn, att])
         att = Flatten()(att)

@@ -77,7 +77,7 @@ class MFARNNUsersSteps(NNBase):
 
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
-        srnn = SimpleRNN(60, return_sequences=True)(l_p)
+        srnn = SimpleRNN(70, return_sequences=True)(l_p)
         srnn = Dropout(0.5)(srnn)
 
         att = MultiHeadAttention(key_dim=2,
@@ -105,11 +105,11 @@ class MFARNNUsersSteps(NNBase):
         y_r = Dense(location_input_dim, activation='softmax')(srnn)
 
         y_sup = Concatenate()([att, x_distances, x_durations])
-        y_sup = Dropout(0.3)(y_sup)
+        y_sup = Dropout(0.5)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
-        y = y_r + tf.Variable(initial_value=0.)*y_sup + tf.Variable(initial_value=1.) * y_cup
+        y = tf.Variable(initial_value=1.) * y_r + tf.Variable(initial_value=0.)*y_sup + tf.Variable(initial_value=1.) * y_cup
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y], name="MFA-RNN")
 

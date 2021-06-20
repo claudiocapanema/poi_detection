@@ -35,10 +35,10 @@ class GARGUsersSteps:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        units = 30
-        emb_category = Embedding(input_dim=location_input_dim, output_dim=3, input_length=step_size)
+        units = 60
+        emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
-        emb_id = Embedding(input_dim=num_users, output_dim=3, input_length=step_size)
+        emb_id = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=3, input_length=step_size)
         emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
@@ -64,10 +64,11 @@ class GARGUsersSteps:
         # l_p_flatten = Flatten()(l_p)
         # ids_flatten = Flatten()(id_flatten)
 
-        #y_cup = tf.matmul(id_flatten, l_p_flatten)
-        y_cup = Concatenate()([id_flatten, l_p_flatten])
-        y_cup = Dense(20)(y_cup)
-
+        id_flatten = Dense(location_input_dim)(id_flatten)
+        l_p_flatten = Dense(location_input_dim)(l_p_flatten)
+        print("idd", id_flatten.shape)
+        print("lpp", l_p_flatten.shape)
+        y_cup = tf.math.multiply(id_flatten, l_p_flatten)
         srnn = GRU(units, return_sequences=True)(l_p)
         srnn = Dropout(0.5)(srnn)
 
@@ -75,28 +76,21 @@ class GARGUsersSteps:
                                  num_heads=1,
                                  name='Attention')(srnn, srnn)
 
-        x = GCNConv(14)([categories_distance_matrix, adjancency_matrix])
-        x = GCNConv(7)([x, adjancency_matrix])
+        x = GCNConv(22, activation='relu')([categories_distance_matrix, adjancency_matrix])
+        x = Dropout(0.5)(x)
+        x = GCNConv(10, activation='relu')([x, adjancency_matrix])
+        x = Dropout(0.5)(x)
         x = Flatten()(x)
 
-        print("at", att.shape)
-        #att = Concatenate()([srnn, att])
         att = Flatten()(att)
-        print("att", att.shape)
-        print("transposto", tf.transpose(att).shape)
-        print("gc", x.shape)
-        #y_up = tf.matmul(att, x)
-        y_sup = Concatenate()([att, x])
-        y_sup = Dense(10)(y_sup)
-        print("y cup", y_cup.shape)
-        print("y sup", y_sup.shape)
-
-        y_up = Concatenate()([y_cup, y_sup])
-        print("y up", y_up.shape)
-        y_up = Dropout(0.5)(y_up)
-        y_srnn = Dense(location_input_dim, activation='softmax')(y_up)
-
-        print("saa: ", y_srnn.shape)
+        att = Dense(location_input_dim)(att)
+        x = Dense(location_input_dim)(x)
+        y_sup = tf.math.multiply(att, x)
+        y_sup = Dropout(0.3)(y_sup)
+        y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
+        y_cup = Dropout(0.5)(y_cup)
+        y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
+        y_up = y_cup + tf.Variable(initial_value=1.) * y_sup
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_srnn], name="GARG_baseline")
 
