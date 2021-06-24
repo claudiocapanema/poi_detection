@@ -92,7 +92,7 @@ class NextPoiCategoryPredictionDomain:
             #bom
             random = 1
         else:
-            n = 1450
+            n = 1850
             minimum = 300
             #n = 1300
 
@@ -107,7 +107,13 @@ class NextPoiCategoryPredictionDomain:
             # n = 1050
 #            minimum = 300
             #random = 2
-            random = 3
+            # melhor 2
+            #n = 1450
+            #minimum = 300
+            # melhor 3
+            #n = 1650
+            #minimum = 300
+            random = 4
 
         df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))
@@ -194,7 +200,7 @@ class NextPoiCategoryPredictionDomain:
                 x, y = sequence_to_x_y(new_sequence, step_size)
             y = remove_hour_from_sequence_y(y)
 
-            user_df = pd.DataFrame({'x': x, 'y': y}).sample(frac=1, random_state=1)
+            user_df = pd.DataFrame({'x': x, 'y': y}).sample(frac=1, random_state=random)
             x = user_df['x'].tolist()
             y = user_df['y'].tolist()
 
