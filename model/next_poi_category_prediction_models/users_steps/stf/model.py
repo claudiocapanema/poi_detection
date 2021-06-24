@@ -27,7 +27,7 @@ class STFUsersSteps:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        simple_rnn_units = 60
+        simple_rnn_units = 40
         n = 2
 
         emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)

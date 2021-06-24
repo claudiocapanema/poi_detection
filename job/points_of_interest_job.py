@@ -28,7 +28,7 @@ class PointOfInterest(Job):
         # max_datetime = pd.Timestamp(year=2018, month=9, day=1)
         # users_steps = users_steps[users_steps.datetime < max_datetime]
         users_steps = users_steps[users_steps.datetime >= min_datetime]
-        users_steps = self.select_article_users(users_steps)
+        #users_steps = self.select_article_users(users_steps)
         print("Filtrado")
         print(users_steps['datetime'].describe())
         # ----------------------------------------
@@ -52,8 +52,13 @@ class PointOfInterest(Job):
             print("ca", users_detected_pois['poi_osm'].unique().tolist())
             users_steps['id'] = users_steps['id'].astype('int')
             users_steps_ids = users_steps['id'].unique().tolist()
-            first_half = int(len(users_steps_ids)/3)
+            first_half = int(len(users_steps_ids)/7)
             second_half = first_half*2
+            third_half = first_half*3
+            fourth_half = first_half*4
+            fifth_half = first_half*5
+            sixth_half = first_half*6
+
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(users_steps.query("id in " + str(users_steps_ids[:first_half])),
                                                                                                    users_detected_pois.query("id in " + str(users_steps_ids[:first_half])))
             print("Salvar 1")
@@ -68,9 +73,41 @@ class PointOfInterest(Job):
                                             users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
 
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
-                users_steps.query("id in " + str(users_steps_ids[second_half:])),
-                users_detected_pois.query("id in " + str(users_steps_ids[second_half:])))
+                users_steps.query("id in " + str(users_steps_ids[second_half:third_half])),
+                users_detected_pois.query("id in " + str(users_steps_ids[second_half:third_half])))
             print("Salvar 3")
+            print(users_steps_with_pois)
+            self.file_loader.save_df_to_csv(users_steps_with_pois,
+                                            users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
+
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
+                users_steps.query("id in " + str(users_steps_ids[third_half:fourth_half])),
+                users_detected_pois.query("id in " + str(users_steps_ids[third_half:fourth_half])))
+            print("Salvar 4")
+            print(users_steps_with_pois)
+            self.file_loader.save_df_to_csv(users_steps_with_pois,
+                                            users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
+
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
+                users_steps.query("id in " + str(users_steps_ids[fourth_half:fifth_half])),
+                users_detected_pois.query("id in " + str(users_steps_ids[fourth_half:fifth_half])))
+            print("Salvar 5")
+            print(users_steps_with_pois)
+            self.file_loader.save_df_to_csv(users_steps_with_pois,
+                                            users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
+
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
+                users_steps.query("id in " + str(users_steps_ids[fifth_half:sixth_half])),
+                users_detected_pois.query("id in " + str(users_steps_ids[first_half:sixth_half])))
+            print("Salvar 6")
+            print(users_steps_with_pois)
+            self.file_loader.save_df_to_csv(users_steps_with_pois,
+                                            users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
+
+            users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
+                users_steps.query("id in " + str(users_steps_ids[sixth_half:])),
+                users_detected_pois.query("id in " + str(users_steps_ids[sixth_half:])))
+            print("Salvar 6")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
                                             users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)

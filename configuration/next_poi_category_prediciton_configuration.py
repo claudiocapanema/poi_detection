@@ -181,10 +181,10 @@ class NextPoiCategoryPredictionConfiguration:
 
         self.STEP_SIZE = ("step_size", 8)
 
-        self.DISTANCE_SIGMA = ("distance_sigma", {'users_steps': 0.5,
+        self.DISTANCE_SIGMA = ("distance_sigma", {'users_steps': 5,
                                                   'gowalla': 10})
 
-        self.DURATION_SIGMA = ("duration_sigma", {'users_steps': 0.5,
+        self.DURATION_SIGMA = ("duration_sigma", {'users_steps': 5,
                                                   'gowalla': 10})
 
     def __str__(self):

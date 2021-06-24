@@ -42,7 +42,7 @@ class SERMUsersSteps:
         concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
-        lstm_1 = SimpleRNN(units, return_sequences=True)(concat_1)
+        lstm_1 = LSTM(units, return_sequences=True)(concat_1)
         # lstm_1 = Dropout(0.5)(lstm_1)
         # lstm_1 = Dense(24)(lstm_1)
         lstm_1 = Concatenate()([lstm_1, id_embedding])

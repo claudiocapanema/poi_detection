@@ -82,6 +82,9 @@ class GARGUsersSteps:
         x = Dropout(0.5)(x)
         x = Flatten()(x)
 
+        srnn = Flatten()(srnn)
+        y_r = Dense(location_input_dim, activation='softmax')(srnn)
+
         att = Flatten()(att)
         att = Dense(location_input_dim)(att)
         x = Dense(location_input_dim)(x)
@@ -90,9 +93,9 @@ class GARGUsersSteps:
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
-        y_up = y_cup + tf.Variable(initial_value=1.) * y_sup
+        y_up = y_cup + tf.Variable(initial_value=0.) * y_sup + y_r * tf.Variable(initial_value=1.)
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_srnn], name="GARG_baseline")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_up], name="GARG_baseline")
 
         return model
 
