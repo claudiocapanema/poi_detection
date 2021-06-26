@@ -1,5 +1,5 @@
 from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropout, SimpleRNN, Input, Lambda, \
-    Flatten, Reshape, Concatenate, Embedding, MultiHeadAttention, ActivityRegularization, LayerNormalization
+    Flatten, Reshape, Concatenate, Embedding, MultiHeadAttention, ActivityRegularization, LayerNormalization, Layer
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras.callbacks import EarlyStopping
@@ -16,6 +16,57 @@ from spektral.layers.pooling import GlobalAvgPool, GlobalAttentionPool, GlobalAt
 l2_reg = 5e-5           # L2 regularization rate
 drop_out_rate = 0
 patience = 3
+
+# class AdaptativeGCN(Layer):
+#     def __init__(self, main_channel,
+#                  secondary_channel,
+#                  kernel_initializer='glorot_uniform',
+#                  kernel_regularizer=None,
+#                  bias_initializer='zeros',
+#                  bias_regularizer=None,
+#                  bias_constraint=None,
+#                  kernel_constraint=None):
+#
+#         super(AdaptativeGCN, self).__init__(dynamic=True)
+#         self.main_channel = main_channel
+#
+#     def get_config(self):
+#         config = {
+#             # 'bias_regularizer': self.bias_regularizer,
+#             # 'bias_constraint': self.bias_constraint,
+#                 'main_layer': self.main_layer,
+#                 'secondary_layer': self.secondary_layer,
+#                 'main2_layer': self.main2_layer
+#                 # 'main_use_bias': self.main_use_bias,
+#                 # 'secondary_use_bias': self.secondary_use_bias,
+#                 # 'main_activation': self.main_activation,
+#                 # 'secondary_activation': self.secondary_activation,
+#                 # 'bias_initializer': self.bias_initializer,
+#                 # 'kernel_initializer': self.kernel_initializer,
+#                 # 'kernel_regularizer': self.kernel_regularizer,
+#                 # 'kernel_constraint': self.kernel_constraint,
+#                 }
+#         base_config = super().get_config()
+#         return dict(list(base_config.items()) + list(config.items()))
+#
+#     def build(self, input_shape):
+#         assert len(input_shape) >= 2
+#         input_dim = input_shape[0][-1]
+#
+#
+#         self.v_bias_out = tf.Variable(1., trainable=True)
+#         self.v_bias_out2 = tf.Variable(0., trainable=True)
+#
+#     def compute_output_shape(self, input_shape):
+#         features_shape = input_shape[0]
+#         output_shape = features_shape[:-1] + (self.main_channel,)
+#         return output_shape
+#
+#     def call(self, inputs):
+#
+#
+#
+#         return output
 
 class MFA_RNN(NNBase):
 
@@ -56,6 +107,8 @@ class MFA_RNN(NNBase):
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
         emb_week_day = Embedding(input_dim=7, output_dim=3, input_length=step_size)
 
+
+        locais = location_input_dim
         spatial_embedding = emb_category(location_category_input)
         temporal_embedding = emb_time(temporal_input)
         id_embedding = emb_id(user_id_input)
@@ -92,7 +145,7 @@ class MFA_RNN(NNBase):
                                  num_heads=4,
                                  name='Attention')(srnn, srnn)
 
-        distance_matrix = tf.math.multiply(id_unit, categories_distance_matrix)
+        distance_matrix = categories_distance_matrix
         #distance_matrix = categories_distance_matrix
         #x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
@@ -101,7 +154,7 @@ class MFA_RNN(NNBase):
         x_distances = Dropout(0.5)(x_distances)
         x_distances = Flatten()(x_distances)
 
-        durations_matrix = tf.math.multiply(id_unit, categories_durations_matrix)
+        durations_matrix = categories_durations_matrix
         #durations_matrix = categories_durations_matrix
         #x_durations = self.graph_temporal_arma(durations_matrix, adjancency_matrix)
         x_durations = GCNConv(22, activation='swish')([durations_matrix, adjancency_matrix])
@@ -123,8 +176,9 @@ class MFA_RNN(NNBase):
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
+        spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
 
-        y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup
+        y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(initial_value=-0.2) * spatial_flatten
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_up], name="MFA-RNN")
 

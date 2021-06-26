@@ -19,7 +19,7 @@ class NextPoiCategoryPredictionConfiguration:
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
-        self.BATCH = ("batch", {'users_steps': {'mfa': 350, 'serm': 400, 'map': 750, 'stf': 400, 'next': 400, 'garg': 750},
+        self.BATCH = ("batch", {'users_steps': {'mfa': 350, 'serm': 400, 'map': 400, 'stf': 400, 'next': 300, 'garg': 400},
                                 'gowalla': {'mfa': 400, 'serm': 400, 'map': 400, 'stf': 400, 'next': 400, 'garg': 400}})
 
         self.OPTIMIZER = ("learning_rate", {'users_steps': {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),

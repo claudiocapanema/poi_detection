@@ -44,7 +44,7 @@ class NEXTUsersSteps:
         # spatial_embedding = Dropout(0.5)(spatial_embedding)
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
         concat_1 = Concatenate()([spatial_embedding, temporal_embedding])
-        srnn = GRU(60, return_sequences=True)(concat_1)
+        srnn = GRU(100, return_sequences=True)(concat_1)
         srnn = Dropout(0.5)(srnn)
         concat_2 = Concatenate()([srnn, id_embbeding])
 

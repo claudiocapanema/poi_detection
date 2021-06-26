@@ -80,8 +80,8 @@ class MFARNNUsersSteps(NNBase):
         srnn = SimpleRNN(70, return_sequences=True)(l_p)
         srnn = Dropout(0.5)(srnn)
 
-        att = MultiHeadAttention(key_dim=2,
-                                 num_heads=1,
+        att = MultiHeadAttention(key_dim=1,
+                                 num_heads=4,
                                  name='Attention')(srnn, srnn)
         att = Flatten()(att)
 
@@ -101,7 +101,9 @@ class MFARNNUsersSteps(NNBase):
         x_durations = Dropout(0.3)(x_durations)
         x_durations = Flatten()(x_durations)
 
+        srnn = Concatenate()([srnn, id_embedding])
         srnn = Flatten()(srnn)
+        srnn = Dropout(0.5)(srnn)
         y_r = Dense(location_input_dim, activation='softmax')(srnn)
 
         y_sup = Concatenate()([att, x_distances, x_durations])

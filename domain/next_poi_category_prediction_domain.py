@@ -92,7 +92,7 @@ class NextPoiCategoryPredictionDomain:
             #bom
             random = 1
         else:
-            n = 1850
+            n = 1650
             minimum = 300
             #n = 1300
 
@@ -113,6 +113,7 @@ class NextPoiCategoryPredictionDomain:
             # melhor 3
             #n = 1650
             #minimum = 300
+            #random = 4
             random = 4
 
         df = df.query("total >= " + str(minimum))

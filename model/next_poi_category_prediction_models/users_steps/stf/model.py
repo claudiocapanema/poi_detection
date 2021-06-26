@@ -41,7 +41,7 @@ class STFUsersSteps:
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
         srnn = SimpleRNN(simple_rnn_units)(concat_1)
-        drop_1 = Dropout(0.5)(srnn)
+        drop_1 = Dropout(0.7)(srnn)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=[y_srnn], name="STF_RNN_baseline")

@@ -55,7 +55,7 @@ class MAPUsersSteps:
 
         att = Concatenate()([srnn, att])
         att = Flatten()(att)
-        drop_1 = Dropout(0.3)(att)
+        drop_1 = Dropout(0.5)(att)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
 
