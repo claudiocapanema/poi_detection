@@ -64,13 +64,17 @@ class MFARNNUsersSteps(NNBase):
         duration_embbeding = emb_duration(duration_input)
         week_day_embbeding = emb_week_day(week_day_input)
 
+        spatial_flatten = Flatten()(spatial_embedding)
+
         id_flatten = Flatten()(id_embedding)
         id_flatten = Dense(location_input_dim*location_input_dim)(id_flatten)
 
         id_unit = tf.keras.layers.Reshape((location_input_dim, location_input_dim))(id_flatten)
 
+        distance_duration = tf.multiply(distance_embbeding, duration_embbeding)
 
-        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding])
+
+        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration])
 
         y_cup = Concatenate()([id_embedding, l_p])
         y_cup = Flatten()(y_cup)
@@ -80,12 +84,12 @@ class MFARNNUsersSteps(NNBase):
         srnn = SimpleRNN(70, return_sequences=True)(l_p)
         srnn = Dropout(0.5)(srnn)
 
-        att = MultiHeadAttention(key_dim=1,
-                                 num_heads=4,
+        att = MultiHeadAttention(key_dim=2,
+                                 num_heads=1,
                                  name='Attention')(srnn, srnn)
         att = Flatten()(att)
 
-        distance_matrix = tf.math.multiply(id_unit, categories_distance_matrix)
+        distance_matrix = categories_distance_matrix
         # distance_matrix = categories_distance_matrix
         # x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
@@ -94,7 +98,7 @@ class MFARNNUsersSteps(NNBase):
         x_distances = Dropout(0.5)(x_distances)
         x_distances = Flatten()(x_distances)
 
-        durations_matrix = tf.math.multiply(id_unit, categories_durations_matrix)
+        durations_matrix = categories_durations_matrix
         x_durations = GCNConv(22, activation='swish')([durations_matrix, adjancency_matrix])
         # x_durations = Dropout(0.5)(x_durations)
         x_durations = GCNConv(10, activation='swish')([x_durations, adjancency_matrix])
@@ -103,7 +107,7 @@ class MFARNNUsersSteps(NNBase):
 
         srnn = Concatenate()([srnn, id_embedding])
         srnn = Flatten()(srnn)
-        srnn = Dropout(0.5)(srnn)
+        srnn = Dropout(0.3)(srnn)
         y_r = Dense(location_input_dim, activation='softmax')(srnn)
 
         y_sup = Concatenate()([att, x_distances, x_durations])
@@ -111,7 +115,13 @@ class MFARNNUsersSteps(NNBase):
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
-        y = tf.Variable(initial_value=1.) * y_r + tf.Variable(initial_value=0.)*y_sup + tf.Variable(initial_value=1.) * y_cup
+        #spatial_flatten = Dense(location_input_dim, activation='relu')(spatial_flatten)
+
+        y_r = tf.Variable(initial_value=1.) * y_r
+        y_sup = tf.Variable(initial_value=0.)*y_sup
+        y_cup = tf.Variable(initial_value=1.) * y_cup
+
+        y = y_r + y_sup + y_cup
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y], name="MFA-RNN")
 
