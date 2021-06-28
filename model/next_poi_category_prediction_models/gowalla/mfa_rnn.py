@@ -121,14 +121,12 @@ class MFA_RNN(NNBase):
         temporal_flatten = Flatten()(temporal_embedding)
         distance_flatten = Flatten()(distance_embbeding)
         duration_flatten = Flatten()(duration_embbeding)
-        id_flatten = Flatten()(id_embedding)
-        id_flatten = Dense(49)(id_flatten)
-        print("1  ", id_flatten.shape)
-        id_unit = tf.keras.layers.Reshape((7, 7))(id_flatten)
-        print("ttt", id_unit.shape)
+
+        # melhor -
+        distance_duration = tf.Variable(initial_value=0.1) * tf.multiply(distance_embbeding, duration_embbeding)
 
         l_p_flatten = Concatenate()([spatial_flatten, temporal_flatten, distance_flatten, duration_flatten])
-        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding])
+        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration])
 
         # l_p_flatten = Flatten()(l_p)
         # ids_flatten = Flatten()(id_flatten)
