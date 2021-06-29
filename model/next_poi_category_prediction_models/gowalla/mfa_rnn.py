@@ -143,6 +143,8 @@ class MFA_RNN(NNBase):
                                  num_heads=4,
                                  name='Attention')(srnn, srnn)
 
+        distance_duration_matrix = tf.multiply(categories_distance_matrix, categories_durations_matrix)
+
         distance_matrix = categories_distance_matrix
         #distance_matrix = categories_distance_matrix
         #x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
@@ -161,6 +163,12 @@ class MFA_RNN(NNBase):
         x_durations = Dropout(0.3)(x_durations)
         x_durations = Flatten()(x_durations)
 
+        distance_duration_matrix = GCNConv(22, activation='swish')([distance_duration_matrix, adjancency_matrix])
+        # x_durations = Dropout(0.5)(x_durations)
+        distance_duration_matrix = GCNConv(10, activation='swish')([distance_duration_matrix, adjancency_matrix])
+        distance_duration_matrix = Dropout(0.3)(distance_duration_matrix)
+        distance_duration_matrix = Flatten()(distance_duration_matrix)
+
         print("at", att.shape)
         # att = Concatenate()([srnn, att])
         att = Flatten()(att)
@@ -169,7 +177,7 @@ class MFA_RNN(NNBase):
         print("gc", x_distances.shape)
         # y_up = tf.matmul(att, x)
         srnn = Flatten()(srnn)
-        y_sup = Concatenate()([srnn, att, x_distances, x_durations])
+        y_sup = Concatenate()([srnn, att, x_distances, x_durations, distance_duration_matrix])
         y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)

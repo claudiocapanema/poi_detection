@@ -19,6 +19,16 @@ class PerformancePlotsLoader:
         self.columns = {'users_steps': ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Shop', 'Tourism'],
                         'gowalla': ['Shopping', 'Community', 'Food', 'Entertainment', 'Travel', 'Outdoors', 'Nightlife']}
 
+    def _convert_names(self, names):
+
+        convert_dict = {'mfa': 'POI-RGNN', 'stf': 'STF', 'map': 'MAP', 'serm': 'SERM', 'next': 'MHA+PE', 'garg': 'GARG'}
+
+        for i in range(len(names)):
+
+            names[i] = convert_dict[names[i]]
+
+        return names
+
     def plot_general_metrics(self, report, columns, base_dir):
 
         sns.set_theme('whitegrid')
