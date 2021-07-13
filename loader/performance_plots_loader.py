@@ -142,7 +142,8 @@ class PerformancePlotsLoader:
 
     def barplot_with_values(self, metrics, x_column, y_column, base_dir, file_name, title, dataset):
         Path(base_dir).mkdir(parents=True, exist_ok=True)
-        plt.figure()
+        plt.figure(figsize=(8, 5))
+        sns.set(font_scale=1.2, style='whitegrid')
         # if y_column == 'Macro f1-score':
         #     order = ['MAP', 'STF-RNN', 'MHSA+PE', 'SERM', 'GARG', 'MFA-RNN']
         # elif y_column == 'Accuracy':
@@ -172,8 +173,9 @@ class PerformancePlotsLoader:
         figure = figure.get_figure()
         # plt.legend(bbox_to_anchor=(0.65, 0.74),
         #            borderaxespad=0)
-        maximum_value = metrics[y_column].max()
-        plt.ylim(0, maximum_value + 0.06)
+        sorted_values = sorted(metrics[y_column].tolist())
+        maximum = sorted_values[-1]
+        plt.ylim(0, maximum*1.2)
         # ax.yticks(labels=[df['Precision'].tolist()])
         figure.savefig(base_dir + file_name + ".png", bbox_inches='tight', dpi=400)
         plt.figure()

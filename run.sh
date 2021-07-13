@@ -93,8 +93,8 @@ NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
 
 PERFORMANCE_PLOTS_CONFIG='{
           "job": "performance_plots_job",
-          "categories_type":"8_categories",
-          "dataset_name":"users_steps"
+          "categories_type":"7_categories",
+          "dataset_name":"gowalla"
         }'
 
 #PERFORMANCE_PLOTS_CONFIG='{
