@@ -18,6 +18,8 @@ class PerformancePlotsLoader:
         self.file_extractor = FileExtractor()
         self.columns = {'users_steps': ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Shop', 'Tourism'],
                         'gowalla': ['Shopping', 'Community', 'Food', 'Entertainment', 'Travel', 'Outdoors', 'Nightlife']}
+        self.y_limits = {'users_steps': {'Accuracy': 0.68, 'Macro f1-score': 0.33, 'Weighted f1-score': 0.6},
+                         'gowalla': {'Accuracy': 0.48, 'Macro f1-score': 0.4, 'Weighted f1-score': 0.46}}
 
     def _convert_names(self, names):
 
@@ -29,7 +31,7 @@ class PerformancePlotsLoader:
 
         return names
 
-    def plot_general_metrics(self, report, columns, base_dir):
+    def plot_general_metrics(self, report, columns, base_dir, dataset):
 
         sns.set_theme('whitegrid')
         macro_fscore_list = []
@@ -79,7 +81,7 @@ class PerformancePlotsLoader:
         #     filename = folds_replications_filename + '_barplot_' + columns[i] + "_fscore"
         #     self.barplot(metrics, 'Method', columns[i], base_dir, filename, title)
 
-    def plot_general_metrics_with_confidential_interval(self, report, columns, base_dir):
+    def plot_general_metrics_with_confidential_interval(self, report, columns, base_dir, dataset):
 
         sns.set_theme(style='whitegrid')
         macro_fscore_list = []
@@ -109,15 +111,15 @@ class PerformancePlotsLoader:
         print(metrics)
         title = ''
         filename = 'barplot_accuracy_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Accuracy', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Accuracy', base_dir, filename, title, dataset)
 
         #title = 'Macro average fscore'
         filename = 'barplot_macro_avg_fscore_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title, dataset)
 
         #title = 'Weighted average fscore'
         filename = 'barplot_weighted_avg_fscore_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title, dataset)
 
         # columns = list(metrics.columns)
         # print("antigas: ", columns)
@@ -138,7 +140,7 @@ class PerformancePlotsLoader:
         figure = figure.get_figure()
         figure.savefig(base_dir + file_name + ".png", bbox_inches='tight', dpi=400)
 
-    def barplot_with_values(self, metrics, x_column, y_column, base_dir, file_name, title):
+    def barplot_with_values(self, metrics, x_column, y_column, base_dir, file_name, title, dataset):
         Path(base_dir).mkdir(parents=True, exist_ok=True)
         plt.figure()
         # if y_column == 'Macro f1-score':
@@ -171,7 +173,7 @@ class PerformancePlotsLoader:
         # plt.legend(bbox_to_anchor=(0.65, 0.74),
         #            borderaxespad=0)
         maximum_value = metrics[y_column].max()
-        plt.ylim(0, maximum_value + 0.1)
+        plt.ylim(0, maximum_value + 0.06)
         # ax.yticks(labels=[df['Precision'].tolist()])
         figure.savefig(base_dir + file_name + ".png", bbox_inches='tight', dpi=400)
         plt.figure()
@@ -263,5 +265,5 @@ class PerformancePlotsLoader:
         latex = df.to_latex().replace("\}", "}").replace("\{", "{").replace("\\\nRecall", "\\\n\hline\nRecall").replace("\\\nF-score", "\\\n\hline\nF-score")
         pd.DataFrame({'latex': [latex]}).to_csv(output + "latex.txt", header=False, index=False)
 
-        self.plot_general_metrics_with_confidential_interval(model_report, columns, output+dataset_name)
+        self.plot_general_metrics_with_confidential_interval(model_report, columns, output+dataset_name, dataset_name)
 

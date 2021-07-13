@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+import numpy as np
 
 from configuration import BASE_DIR, CHECKINS, CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED_US
 sns.set_theme(style='whitegrid')
@@ -23,12 +24,47 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     barplot(dir, 'Category', 'Records (%)', df, "gowalla_barplot_category_total_" + week + title,
                  "Percentage of records per category" + title)
 
+def change_width(ax, new_value) :
+    for patch in ax.patches :
+        current_width = patch.get_width()
+        diff = current_width - new_value
+
+        # we change the bar width
+        patch.set_width(new_value)
+
+        # we recenter the bar
+        patch.set_x(patch.get_x() + diff * .5)
+
+def normaliseCounts(widths,maxwidth):
+    widths = np.array(widths)/float(maxwidth)
+    return widths
+
 def barplot(dir, x, y, df, filename, title, save=True):
 
-    plt.figure()
-    fig = sns.barplot(x=y, y=x, data=df, color='cornflowerblue', order=['Food', 'Shopping', 'Community', 'Travel', 'Entertainment', 'Outdoors', 'Nightlife'])
+    sns.set(font_scale=1.6, style='whitegrid')
+
+    #plt.figure()
+    fig = plt.figure(figsize=(8, 4))
+    #ax2 = ax.twinx()
+    fig = sns.barplot(x=y, y=x, data=df, color='cornflowerblue',
+                      order=['Food', 'Shopping', 'Community', 'Travel', 'Entertainment', 'Outdoors', 'Nightlife'])
+
+    # widthbars = [1,1,1,1,1,1,1]
+    #
+    # widthbars = normaliseCounts(widthbars, 100)
+    #
+    # for bar, newwidth in zip(ax.patches, widthbars):
+    #     x = bar.get_x()
+    #     width = bar.get_height()
+    #     centre = x + width / 2.
+    #
+    #     bar.set_y(centre - newwidth / 2.)
+    #     bar.set_height(newwidth)
+    #
     fig.set_ylabel("")
+    #change_width(ax, .15)
     fig = fig.set_title(title).get_figure()
+
     #plt.xticks(rotation=35)
 
     save_fig(dir, filename, fig)

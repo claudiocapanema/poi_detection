@@ -25,7 +25,9 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
 
 def barplot(dir, x, y, df, filename, title, save=True):
 
-    plt.figure()
+    #plt.figure()
+    sns.set(font_scale=1.6, style='whitegrid')
+    fig = plt.figure(figsize=(8, 4))
     fig = sns.barplot(x=y, y=x, data=df, color='cornflowerblue', order=['Commuting', 'Home', 'Work', 'Other', 'Amenity', 'Leisure', 'Shop', 'Tourism'])
     fig.set_ylabel("")
     fig = fig.set_title(title).get_figure()
