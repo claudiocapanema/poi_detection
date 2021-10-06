@@ -51,57 +51,72 @@ VALIDATION_CONFIG='{
           "ground_truth": "'$GROUND_TRUTH'"
           }'
 
-SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
-          "job": "next_poi_category_prediction_sequences_generation_job",
-          "users_steps_filename": "'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
-          "base_dir":"'$USERS_STEPS_BASE_DIR'",
-          "users_sequences_folder":"'$USERS_STEPS_OUTPUT_BASE_DIR'sequences/",
-          "8_categories_filename":"'$USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
-          "categories_type":"8_categories",
-          "ground_truth": "'$GROUND_TRUTH'",
-          "to_8_categories":"yes",
-          "dataset_name":"users_steps"
-          }'
-
 #SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
 #          "job": "next_poi_category_prediction_sequences_generation_job",
-#          "users_steps_filename": "'$GOWALLA_US'",
-#          "base_dir":"'$GOWALLA_BASE_DIR'",
-#          "users_sequences_folder":"'$GOWALLA_BASE_DIR'sequences/",
-#          "8_categories_filename":"'$GOWALLA_US'",
-#          "categories_type":"7_categories",
+#          "users_steps_filename": "'$USERS_STEPS_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
+#          "base_dir":"'$USERS_STEPS_BASE_DIR'",
+#          "users_sequences_folder":"'$USERS_STEPS_OUTPUT_BASE_DIR'sequences/",
+#          "8_categories_filename":"'$USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_FILENAME'",
+#          "categories_type":"8_categories",
 #          "ground_truth": "'$GROUND_TRUTH'",
-#          "to_8_categories":"no",
-#          "dataset_name":"gowalla"
+#          "to_8_categories":"yes",
+#          "dataset_name":"users_steps"
 #          }'
 
-NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
-          "job": "next_poi_category_prediction_job",
-          "users_sequences": "'$USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME'",
-          "baseline": "mfa",
-          "dataset_name":"users_steps",
-          "categories_type":"8_categories"
+SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
+          "job": "next_poi_category_prediction_sequences_generation_job",
+          "users_steps_filename": "'$GOWALLA_US'",
+          "base_dir":"'$GOWALLA_BASE_DIR'",
+          "users_sequences_folder":"'$GOWALLA_BASE_DIR'sequences/",
+          "8_categories_filename":"'$GOWALLA_US'",
+          "categories_type":"7_categories",
+          "ground_truth": "'$GROUND_TRUTH'",
+          "to_8_categories":"no",
+          "dataset_name":"gowalla"
           }'
 
 #NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
 #          "job": "next_poi_category_prediction_job",
-#          "users_sequences": "'$GOWALLA_US_SEQUENCES'",
+#          "users_sequences": "'$USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME'",
 #          "baseline": "mfa",
-#          "dataset_name":"gowalla",
-#          "categories_type":"7_categories"
+#          "dataset_name":"users_steps",
+#          "categories_type":"8_categories"
 #          }'
 
-PERFORMANCE_PLOTS_CONFIG='{
-          "job": "performance_plots_job",
-          "categories_type":"7_categories",
-          "dataset_name":"gowalla"
-        }'
+NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
+          "job": "next_poi_category_prediction_job",
+          "users_sequences": "'$GOWALLA_US_SEQUENCES'",
+          "baseline": "mfa",
+          "dataset_name":"gowalla",
+          "categories_type":"7_categories"
+          }'
 
 #PERFORMANCE_PLOTS_CONFIG='{
 #          "job": "performance_plots_job",
-#          "categories_type":"8_categories",
-#          "dataset_name":"users_steps"
+#          "categories_type":"7_categories",
+#          "dataset_name":"gowalla"
 #        }'
+
+PERFORMANCE_PLOTS_CONFIG='{
+          "job": "performance_plots_job",
+          "categories_type":"8_categories",
+          "dataset_name":"users_steps"
+        }'
+
+POI_TRANSACTIONS_ANALYSIS='{
+          "job": "poi_transactions_job",
+          "filename": "'$GOWALLA_US'",
+          "transactions_base_dir":"'$GOWALLA_BASE_DIR'transactions/",
+          "base_dir":"'$GOWALLA_BASE_DIR'matrizes/",
+          "dataset_name":"gowalla",
+          "generate_file":"no",
+          "number_of_categories":"7_categories",
+          "max_interval":"72",
+          "different_venues":"yes",
+          "country":"US",
+          "state":"",
+          "county":"",
+          }'
 
 echo $CONFIG
 
@@ -124,5 +139,8 @@ case $1 in
     ;;
   "plots")
     python main.py "${PERFORMANCE_PLOTS_CONFIG}"
+    ;;
+  "poi_transactions")
+    python3 main.py "${POI_TRANSACTIONS_ANALYSIS}"
     ;;
 esac

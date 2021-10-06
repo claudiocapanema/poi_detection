@@ -10,7 +10,7 @@ from model.next_poi_category_prediction_models.neural_network_base_model import 
 import numpy as np
 import tensorflow as tf
 
-from spektral.layers.convolutional import ARMAConv, GCNConv, GATConv
+from spektral.layers.convolutional import ARMAConv, GCNConv, GATConv, DiffusionConv
 from spektral.layers.pooling import GlobalAvgPool, GlobalAttentionPool, GlobalAttnSumPool
 
 l2_reg = 5e-5           # L2 regularization rate
@@ -83,10 +83,12 @@ class MFA_RNN(NNBase):
         duration_input = Input((step_size,), dtype='float32', name='duration')
         week_day_input = Input((step_size,), dtype='float32', name='week_day')
         user_id_input = Input((step_size,), dtype='float32', name='user')
+        pois_ids_input = Input((step_size,), dtype='float32', name='pois_ids')
         categories_distance_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='categories_distance_matrix')
         categories_temporal_matrix = Input((location_input_dim, 48), dtype='float32', name='categories_temporal_matrix')
         adjancency_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='adjacency_matrix')
         categories_durations_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='categories_durations_matrix')
+        sequence_poi_category_matrix = Input((step_size, location_input_dim), dtype='float32', name='sequence_poi_category_matrix')
 
         # adjancency_matrix = tf.cast(adjancency_matrix, dtype='float32')
         # categories_temporal_matrix = tf.cast(categories_temporal_matrix, dtype='float32')
@@ -102,6 +104,7 @@ class MFA_RNN(NNBase):
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
         emb_id = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
+        emb_pois_ids = Embedding(input_dim=1000000, output_dim=3, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=2, input_length=step_size)
         emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
@@ -112,6 +115,7 @@ class MFA_RNN(NNBase):
         spatial_embedding = emb_category(location_category_input)
         temporal_embedding = emb_time(temporal_input)
         id_embedding = emb_id(user_id_input)
+        pois_ids_embedding = emb_pois_ids(pois_ids_input)
         country_embbeding = emb_country(country_input)
         distance_embbeding = emb_distance(distance_input)
         duration_embbeding = emb_duration(duration_input)
@@ -126,7 +130,7 @@ class MFA_RNN(NNBase):
         distance_duration = tf.Variable(initial_value=0.1) * tf.multiply(distance_embbeding, duration_embbeding)
 
         l_p_flatten = Concatenate()([spatial_flatten, temporal_flatten, distance_flatten, duration_flatten])
-        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration])
+        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration, pois_ids_embedding])
 
         # l_p_flatten = Flatten()(l_p)
         # ids_flatten = Flatten()(id_flatten)
@@ -184,9 +188,13 @@ class MFA_RNN(NNBase):
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
 
-        y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(initial_value=-0.2) * spatial_flatten
+        flatten_poi_category_matrix = Flatten()(sequence_poi_category_matrix)
+        flatten_poi_category_matrix = Dropout(0.5)(flatten_poi_category_matrix)
+        y_poi_category = Dense(location_input_dim, activation='softmax')(flatten_poi_category_matrix)
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y_up], name="MFA-RNN")
+        y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(initial_value=-0.2) * spatial_flatten + tf.Variable(1.)*y_poi_category
+
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=[y_up], name="MFA-RNN")
 
         return model
 

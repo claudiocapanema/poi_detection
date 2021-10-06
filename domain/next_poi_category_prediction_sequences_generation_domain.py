@@ -111,7 +111,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
             #     print("diferente")
             #     print(country)
             #     print(countries_list[i])
-            sequence = [category, hour, country, distance, duration, week_day, user_id[i]]
+            sequence = [category, hour, country, distance, duration, week_day, user_id[i], locationid]
             user_sequence.append(sequence)
 
         # categories_distances_matrix = self.summarize_categories_distance_matrix(categories_distances_matrix)

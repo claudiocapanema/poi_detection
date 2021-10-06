@@ -31,7 +31,7 @@ class NextPoiCategoryPredictionConfiguration:
                                             'stf': CategoricalCrossentropy(),
                                             'next': CategoricalCrossentropy(), 'garg': CategoricalCrossentropy()})
 
-        self.FORMAT_MODEL_NAME = ("format_model_name", {'mfa': 'POI-RGNN', 'stf': 'STF', 'map': 'MAP', 'serm': 'SERM', 'next': 'MHA+PE', 'garg': 'GARG'})
+        self.FORMAT_MODEL_NAME = ("format_model_name", {'mfa': 'POI-RGNN', 'stf': 'STF-RNN', 'map': 'MAP', 'serm': 'SERM', 'next': 'MHA+PE', 'garg': 'GARG'})
 
         self.OUTPUT_BASE_DIR = (
         "output_dir", "output/next_poi_category_prediction/", False, "output directory for the poi_categorization")

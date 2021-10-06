@@ -3,12 +3,14 @@ import seaborn as sns
 import statistics as st
 from pathlib import Path
 from matplotlib import pyplot as plt
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 
 from configuration.next_poi_category_prediciton_configuration import NextPoiCategoryPredictionConfiguration
 from domain.next_poi_category_prediction_domain import NextPoiCategoryPredictionDomain
 from extractor.file_extractor import FileExtractor
+from foundation.util.statistics_utils import t_distribution_test
 
 class PerformancePlotsLoader:
 
@@ -23,7 +25,7 @@ class PerformancePlotsLoader:
 
     def _convert_names(self, names):
 
-        convert_dict = {'mfa': 'POI-RGNN', 'stf': 'STF', 'map': 'MAP', 'serm': 'SERM', 'next': 'MHA+PE', 'garg': 'GARG'}
+        convert_dict = {'mfa': 'POI-RGNN', 'stf': 'STF-RNN', 'map': 'MAP', 'serm': 'SERM', 'next': 'MHA+PE', 'garg': 'GARG'}
 
         for i in range(len(names)):
 
@@ -59,15 +61,15 @@ class PerformancePlotsLoader:
         print(metrics)
         title = ''
         filename = 'barplot_accuracy'
-        self.barplot_with_values(metrics, 'Solution', 'Accuracy', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Accuracy', base_dir, filename, title, ax, 0)
 
         #title = 'Macro average fscore'
         filename = 'barplot_macro_avg_fscore'
-        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title, ax, 1)
 
         #title = 'Weighted average fscore'
         filename = 'barplot_weighted_avg_fscore'
-        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title)
+        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title, ax, 2)
 
         # columns = list(metrics.columns)
         # print("antigas: ", columns)
@@ -111,15 +113,68 @@ class PerformancePlotsLoader:
         print(metrics)
         title = ''
         filename = 'barplot_accuracy_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Accuracy', base_dir, filename, title, dataset)
+        # mpl.use("pgf")
+        # mpl.rcParams.update({
+        #     "pgf.texsystem": "pdflatex",
+        #     'font.family': 'serif',
+        #     'text.usetex': True,
+        #     'pgf.rcfonts': False,
+        # })
+        sns.set(style='whitegrid')
+
+        #fig, ax = plt.subplots(ncols=1, nrows=3, sharex=True, figsize=(14,20), tight_layout=True)
+        fig, ax = plt.subplots(ncols=3, nrows=1, sharey=True, sharex=True, figsize=(35, 15), tight_layout=True)
+
+
+
+        self.barplot_with_values(metrics, 'Solution', 'Accuracy', base_dir, filename, title, dataset, ax, 2)
 
         #title = 'Macro average fscore'
         filename = 'barplot_macro_avg_fscore_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title, dataset)
+        self.barplot_with_values(metrics, 'Solution', 'Macro f1-score', base_dir, filename, title, dataset, ax, 0)
 
         #title = 'Weighted average fscore'
         filename = 'barplot_weighted_avg_fscore_ci'
-        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title, dataset)
+        self.barplot_with_values(metrics, 'Solution', 'Weighted f1-score', base_dir, filename, title, dataset, ax, 1)
+        #plt.ylim(0, 0.5)
+        #plt.tick_params(labelsize=18)
+        #plt.grid(True)
+        #fig.subplots_adjust(top=0.5, bottom=0, left=0, right=1)
+
+        #fig.tight_layout(pad=1)
+        #plt.savefig(dataset + '_metrics_horizontal_latex.pgf')
+        fig.savefig(dataset + "_metrics_horizontal.png", bbox_inches='tight', dpi=400)
+        plt.figure()
+
+        metrics_stacked = metrics[['Solution', 'Accuracy']]
+        metrics_stacked.columns = ['Solution', 'Performance']
+        metrics_stacked['Metric'] = np.array(['Accuracy'] * len(metrics_stacked))
+
+        macro_df = metrics[['Solution', 'Macro f1-score']]
+        macro = np.array(macro_df['Macro f1-score'].tolist())
+        macro_df.columns = ['Solution', 'Performance']
+        macro_df['Metric'] = np.array(['Macro f1-score'] * len(macro))
+
+        weighted_df = metrics[['Solution', 'Weighted f1-score']]
+        weighted = np.array(weighted_df['Weighted f1-score'].tolist())
+        weighted_df.columns = ['Solution', 'Performance']
+        weighted_df['Metric'] = np.array(['Weighted f1-score'] * len(weighted))
+
+        metrics_stacked = pd.DataFrame(metrics_stacked.to_dict())
+        macro_df = pd.DataFrame(macro_df.to_dict())
+        weighted_df = pd.DataFrame(weighted_df.to_dict())
+
+        solutions = metrics_stacked['Solution'].tolist() + macro_df['Solution'].tolist() + weighted_df['Solution'].tolist()
+        performance = metrics_stacked['Performance'].tolist() + macro_df['Performance'].tolist() + weighted_df['Performance'].tolist()
+        metric = metrics_stacked['Metric'].tolist() + macro_df['Metric'].tolist() + weighted_df['Metric'].tolist()
+
+        # plt.figure()
+        # sns.set(font_scale=1.2, style='whitegrid')
+        # metrics_stacked_new = pd.DataFrame({'Solution': solutions, 'Performance': performance, 'Metric': metric})
+        # print("concatenar: ", metrics_stacked_new)
+        # g = sns.FacetGrid(metrics_stacked, row="Metric")
+        # g.map(sns.barplot, 'Solution', 'Performance')
+        # g.savefig(dataset + "_metrics.png")
 
         # columns = list(metrics.columns)
         # print("antigas: ", columns)
@@ -140,10 +195,10 @@ class PerformancePlotsLoader:
         figure = figure.get_figure()
         figure.savefig(base_dir + file_name + ".png", bbox_inches='tight', dpi=400)
 
-    def barplot_with_values(self, metrics, x_column, y_column, base_dir, file_name, title, dataset):
+    def barplot_with_values(self, metrics, x_column, y_column, base_dir, file_name, title, dataset, ax, index):
         Path(base_dir).mkdir(parents=True, exist_ok=True)
-        plt.figure(figsize=(8, 5))
-        sns.set(font_scale=1.2, style='whitegrid')
+        #plt.figure(figsize=(8, 5))
+        #sns.set(font_scale=1.2, style='whitegrid')
         # if y_column == 'Macro f1-score':
         #     order = ['MAP', 'STF-RNN', 'MHSA+PE', 'SERM', 'GARG', 'MFA-RNN']
         # elif y_column == 'Accuracy':
@@ -151,14 +206,34 @@ class PerformancePlotsLoader:
         # else:
         #     order = ['MAP', 'STF-RNN', 'MHSA+PE', 'SERM', 'GARG', 'MFA-RNN']
         # order = list(reversed(order))
-        figure = sns.barplot(x=x_column, y=y_column, data=metrics)
+        #ax[index].set_ylim(0, 0.5)
+        size = 35
+        sorted_values = sorted(metrics[y_column].tolist())
+        maximum = sorted_values[-1]
+        if dataset == "users_steps":
+            #ax[index].set_ylim(0, maximum * 1.14)
+            y_labels = {'macro': [28, 38, 30, 35, 35, 45], 'weighted': [22, 22, 22, 22, 22, 22],
+                        'accuracy': [22, 22, 22, 22, 22, 22]}
+            #y_labels = {'macro': [22, 22, 22, 22, 22, 22], 'weighted': [22, 22, 22, 22, 22, 22], 'accuracy': [22, 22, 22, 22, 22, 22]}
+        else:
+            y_labels = {'macro': [30, 30, 30, 30, 30, 30], 'weighted': [30, 30, 30, 30, 30, 30],
+                        'accuracy': [30, 30, 30, 30, 30, 30]}
+            #ax[index].set_ylim(0, maximum * 1.14)
+            if 'weighted' in file_name:
+                #ax[index].set_ylim(0, maximum * 1.2)
+                pass
+        plt.ylim(0, maximum*1.2)
 
-        # figure.set_ylabel(x_column, fontsize=15)
-        # figure.set_xlabel(y_column, fontsize=15)
+        #ax[index].set_aspect(5)
+        figure = sns.barplot(x=x_column, y=y_column, data=metrics, ax=ax[index])
+
+        figure.set_ylabel(y_column, fontsize=size)
+        figure.set_xlabel(x_column, fontsize=size)
         # figure0.tick_params(labelsize=10)
         y_label = "accuracy"
         count = 0
-        y_labels = {'macro': [17, 24, 20, 17, 20, 20], 'weighted': [11, 11, 11, 11, 11, 11], 'accuracy': [11, 11, 11, 11, 11, 11]}
+
+
         if "macro" in file_name:
             y_label = "macro"
         elif "weighted" in file_name:
@@ -167,18 +242,19 @@ class PerformancePlotsLoader:
             figure.annotate(format(p.get_height(), '.2f'),
                              (p.get_x() + p.get_width() / 2., p.get_height()),
                              ha='center', va='center',
+                            size=size,
                              xytext=(0, y_labels[y_label][count]),
                              textcoords='offset points')
             count += 1
+        ax[index].tick_params(axis='x', labelsize=size - 4, rotation=40)
+        ax[index].tick_params(axis='y', labelsize=size - 4)
         figure = figure.get_figure()
         # plt.legend(bbox_to_anchor=(0.65, 0.74),
         #            borderaxespad=0)
-        sorted_values = sorted(metrics[y_column].tolist())
-        maximum = sorted_values[-1]
-        plt.ylim(0, maximum*1.2)
+
         # ax.yticks(labels=[df['Precision'].tolist()])
-        figure.savefig(base_dir + file_name + ".png", bbox_inches='tight', dpi=400)
-        plt.figure()
+        #figure.savefig(base_dir + file_name + ".png", bbox_inches='tight', dpi=400)
+        #plt.figure()
 
     def export_reports(self, n_splits, n_replications, output_base_dir, dataset_type_dir, category_type_dir, dataset_name):
 
@@ -207,9 +283,9 @@ class PerformancePlotsLoader:
             recall_means = {}
             fscore_means = {}
             for column in columns:
-                precision_means[column] = st.mean(precision[column].tolist())
-                recall_means[column] = st.mean(recall[column].tolist())
-                fscore_means[column] = st.mean(fscore[column].tolist())
+                precision_means[column] = t_distribution_test(precision[column].tolist())
+                recall_means[column] = t_distribution_test(recall[column].tolist())
+                fscore_means[column] = t_distribution_test(fscore[column].tolist())
 
             model_metrics = []
 
@@ -243,29 +319,54 @@ class PerformancePlotsLoader:
         # # Close the Pandas Excel writer and output the Excel file.
         # writer.save()
 
-        max_values = df.idxmax(axis=1)
-        max_values = max_values.tolist()
+        max_values = self.idmax(df)
         print("zzz", max_values)
         max_columns = {'mfa': [], 'stf': [], 'map': [], 'serm': [], 'next': [], 'garg': []}
-        for i in range(len(max_values)):
-            e = max_values[i]
-            max_columns[e].append(i)
 
-        for key in max_columns:
-            column_values = df[key].tolist()
+        for max_value in max_values:
+            row_index = max_value[0]
+            column = max_value[1]
+            column_values = df[column].tolist()
+            column_values[row_index] = "textbf{" + str(column_values[row_index]) + "}"
 
-            column_list = max_columns[key]
-            for j in range(len(column_list)):
-                k = column_list[j]
-                column_values[k] = "textbf{" + str(column_values[k]) + "}"
+            df[column] = np.array(column_values)
 
-            df[key] = np.array(column_values)
-        # for i in range(len(df)):
-        #     column = max_values[i]
-        #     df.at[i,column] = "'\textbf{" + str(df.iloc[i][column]) + "}"
+        df.columns = ['POI-RGNN', 'STF-RNN', 'MAP', 'SERM', 'MHA+PE', 'GARG']
 
-        latex = df.to_latex().replace("\}", "}").replace("\{", "{").replace("\\\nRecall", "\\\n\hline\nRecall").replace("\\\nF-score", "\\\n\hline\nF-score")
+        latex = df.to_latex().replace("\}", "}").replace("\{", "{").replace("\\\nRecall", "\\\n\hline\nRecall").replace("\\\nF-score", "\\\n\hline\nF1-score")
         pd.DataFrame({'latex': [latex]}).to_csv(output + "latex.txt", header=False, index=False)
 
         self.plot_general_metrics_with_confidential_interval(model_report, columns, output+dataset_name, dataset_name)
 
+    def idmax(self, df):
+
+        df_indexes = []
+        columns = df.columns.tolist()
+        print("colunas", columns)
+        for i in range(len(df)):
+
+            row = df.iloc[i].tolist()
+            print("ddd", row)
+            indexes = self.select_mean(i, row, columns)
+            df_indexes += indexes
+
+        return df_indexes
+
+    def select_mean(self, index, values, columns):
+
+        list_of_means = []
+        indexes = []
+
+        for i in range(len(values)):
+
+            value = float(values[i][:4])
+            list_of_means.append(value)
+
+        max_value = max(list_of_means)
+
+        for i in range(len(list_of_means)):
+
+            if list_of_means[i] == max_value:
+                indexes.append([index, columns[i]])
+
+        return indexes

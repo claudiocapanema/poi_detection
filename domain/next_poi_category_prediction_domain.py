@@ -1,3 +1,4 @@
+import copy
 import statistics as st
 import datetime as dt
 import math
@@ -12,12 +13,11 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import utils as np_utils
 from sklearn.model_selection import KFold
 from spektral.transforms.layer_preprocess import LayerPreprocess
-from spektral.layers.convolutional.gcn_conv import GCNConv
-from spektral.layers.convolutional.arma_conv import ARMAConv
+from spektral.layers.convolutional import GCNConv, ARMAConv, DiffusionConv
 
 from extractor.file_extractor import FileExtractor
 from foundation.util.next_poi_category_prediction_util import sequence_to_x_y, \
-    sequence_tuples_to_spatial_temporal_and_feature6_ndarrays, \
+    sequence_tuples_to_spatial_temporal_and_feature7_ndarrays, \
     remove_hour_from_sequence_y, sequence_to_x_y_v1
 from foundation.util.nn_preprocessing import one_hot_decoding
 
@@ -85,7 +85,7 @@ class NextPoiCategoryPredictionDomain:
 
         if dataset_name == "gowalla":
             minimum = 40
-            n = 1500
+            n = 1000
             #n = 100
             #minimum = 40
             #n = 1500
@@ -135,6 +135,9 @@ class NextPoiCategoryPredictionDomain:
         max_duration = 0
         ids_remove = []
 
+        distance_list = []
+        duration_list = []
+
         for i in range(len(users_ids)):
 
             user_id = users_ids[i]
@@ -179,11 +182,14 @@ class NextPoiCategoryPredictionDomain:
                     if duration > 72 and sequence[j+1][4] > 72:
                         continue
                 week_day = sequence[j][5]
+                poi_id = sequence[j][7]
 
                 if distance > 50:
                     distance = 50
                 if duration > 72:
                     duration = 72
+                distance_list.append(distance)
+                duration_list.append(duration)
                 countries[country] = 0
                 if country > max_country:
                     max_country = country
@@ -193,7 +199,7 @@ class NextPoiCategoryPredictionDomain:
                     max_duration = duration
                 distance = self._distance_importance(distance)
                 duration = self._duration_importance(duration)
-                new_sequence.append([location_category_id, hour, country, distance, duration, week_day, user_id])
+                new_sequence.append([location_category_id, hour, country, distance, duration, week_day, user_id, poi_id])
 
             if dataset_name == "gowalla":
                 x, y = sequence_to_x_y(new_sequence, step_size)
@@ -213,6 +219,8 @@ class NextPoiCategoryPredictionDomain:
         print("maior pais: ", max_country)
         print("maior distancia: ", max_distance)
         print("maior duracao: ", max_duration)
+        print("distancia mediana: ", st.median(distance_list))
+        print("duracao mediana: ", st.median(duration_list))
         df['x'] = np.array(x_list)
         df['y'] = np.array(y_list)
         df = df[['id', 'x', 'y']]
@@ -375,6 +383,7 @@ class NextPoiCategoryPredictionDomain:
         x_train_duration = []
         x_train_week_day = []
         x_train_ids = []
+        x_train_pois_ids = []
         # garg and mfa
         x_train_adjacency = []
         x_train_distances_matrix = []
@@ -388,6 +397,7 @@ class NextPoiCategoryPredictionDomain:
         x_test_duration = []
         x_test_week_day = []
         x_test_ids = []
+        x_test_pois_ids = []
         # garg and mfa
         x_test_adjacency = []
         x_test_distances_matrix = []
@@ -406,13 +416,14 @@ class NextPoiCategoryPredictionDomain:
                 continue
 
             # x train
-            spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_train)
+            spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train, pois_ids_train = sequence_tuples_to_spatial_temporal_and_feature7_ndarrays(X_train)
             # x_test
-            spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
+            spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test, pois_ids_test = sequence_tuples_to_spatial_temporal_and_feature7_ndarrays(X_test)
 
             if model_name in ['garg', 'mfa']:
-                x = [spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train]
-                adjacency_matrix_train, distances_matrix_train, temporal_matrix_train, durations_matrix_train = self._generate_graph_matrices(x, number_of_categories, model_name)
+                print("aquii", pois_ids_train)
+                x = [spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train, pois_ids_train]
+                adjacency_matrix_train, distances_matrix_train, temporal_matrix_train, durations_matrix_train = self._generate_train_graph_matrices(x, spatial_train, number_of_categories, model_name)
                 #x = [spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test]
                 #adjacency_matrix_test, distances_matrix_test, temporal_matrix_test, durations_matrix_test = self._generate_graph_matrices(x, number_of_categories, model_name)
 
@@ -432,6 +443,7 @@ class NextPoiCategoryPredictionDomain:
             x_train_duration += duration_train
             x_train_week_day += duration_train
             x_train_ids += ids_train
+            x_train_pois_ids += pois_ids_train
             # x test
             #spatial, temporal, country, distance, duration, week_day, ids = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
             x_test_spatial += spatial_test
@@ -441,6 +453,7 @@ class NextPoiCategoryPredictionDomain:
             x_test_duration += duration_test
             x_test_week_day += week_day_test
             x_test_ids += ids_test
+            x_test_pois_ids += pois_ids_test
 
             if len(y_train) == 0:
                 continue
@@ -450,8 +463,8 @@ class NextPoiCategoryPredictionDomain:
             y_test_concat = y_test_concat + y_test
 
         if model_name in ['garg', 'mfa']:
-            X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids), np.array(x_train_adjacency), np.array(x_train_distances_matrix), np.array(x_train_temporal_matrix), np.array(x_train_durations_matrix)]
-            X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids), np.array(x_test_adjacency), np.array(x_test_distances_matrix), np.array(x_test_temporal_matrix), np.array(x_test_durations_matrix)]
+            X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids), np.array(x_train_pois_ids), np.array(x_train_adjacency), np.array(x_train_distances_matrix), np.array(x_train_temporal_matrix), np.array(x_train_durations_matrix)]
+            X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids), np.array(x_test_pois_ids), np.array(x_test_adjacency), np.array(x_test_distances_matrix), np.array(x_test_temporal_matrix), np.array(x_test_durations_matrix)]
         else:
             X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids)]
             X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids)]
@@ -518,11 +531,13 @@ class NextPoiCategoryPredictionDomain:
         x_train_duration = []
         x_train_week_day = []
         x_train_ids = []
+        x_train_pois_ids = []
         # garg and mfa
         x_train_adjacency = []
         x_train_distances_matrix = []
         x_train_temporal_matrix = []
         x_train_durations_matrix = []
+        x_train_sequences_poi_category = []
 
         x_test_spatial = []
         x_test_temporal = []
@@ -531,11 +546,13 @@ class NextPoiCategoryPredictionDomain:
         x_test_duration = []
         x_test_week_day = []
         x_test_ids = []
+        x_test_pois_ids = []
         # garg and mfa
         x_test_adjacency = []
         x_test_distances_matrix = []
         x_test_temporal_matrix = []
         x_test_durations_matrix = []
+        x_test_sequences_poi_category = []
         usuario_n = 0
         for i in range(len(ids)):
             usuario_n +=1
@@ -554,13 +571,14 @@ class NextPoiCategoryPredictionDomain:
                 continue
 
             # x train
-            spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_train)
+            spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train, pois_ids_train = sequence_tuples_to_spatial_temporal_and_feature7_ndarrays(X_train)
             # x_test
-            spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
+            spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test, pois_ids_test = sequence_tuples_to_spatial_temporal_and_feature7_ndarrays(X_test)
 
             if model_name in ['garg', 'mfa']:
-                x = [spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train]
-                adjacency_matrix_train, distances_matrix_train, temporal_matrix_train, durations_matrix_train = self._generate_graph_matrices(x, number_of_categories, model_name)
+                x = [spatial_train, temporal_train, country_train, distance_train, duration_train, week_day_train, ids_train, pois_ids_train]
+                adjacency_matrix_train, distances_matrix_train, temporal_matrix_train, durations_matrix_train, sequences_poi_category_train, sequences_poi_category_test = self._generate_train_graph_matrices(x, spatial_train, pois_ids_test, number_of_categories, model_name)
+                #adjacency_matrix_test = self._generate_test_graph_matrices(unweighted_adjacency_matrix_train, spatial_test, number_of_categories, model_name)
                 #x = [spatial_test, temporal_test, country_test, distance_test, duration_test, week_day_test, ids_test]
                 #adjacency_matrix_test, distances_matrix_test, temporal_matrix_test, durations_matrix_test = self._generate_graph_matrices(x, number_of_categories, model_name)
 
@@ -568,10 +586,18 @@ class NextPoiCategoryPredictionDomain:
                 x_train_distances_matrix += distances_matrix_train
                 x_train_temporal_matrix += temporal_matrix_train
                 x_train_durations_matrix += durations_matrix_train
+                x_train_sequences_poi_category += sequences_poi_category_train
                 x_test_adjacency += [adjacency_matrix_train[0]]*len(spatial_test)
+                #x_test_adjacency += adjacency_matrix_test
                 x_test_distances_matrix += [distances_matrix_train[0]]*len(spatial_test)
                 x_test_temporal_matrix += [temporal_matrix_train[0]]*len(spatial_test)
                 x_test_durations_matrix += [durations_matrix_train[0]]*len(spatial_test)
+                x_test_sequences_poi_category += sequences_poi_category_test
+
+                # print("tamanho treino: ", len(adjacency_matrix_train), len(distances_matrix_train))
+                # print("tamanho teste: ", len(adjacency_matrix_test), len([distances_matrix_train[0]]*len(spatial_test)))
+
+
 
             x_train_spatial += spatial_train
             x_train_temporal += temporal_train
@@ -580,6 +606,7 @@ class NextPoiCategoryPredictionDomain:
             x_train_duration += duration_train
             x_train_week_day += duration_train
             x_train_ids += ids_train
+            x_train_pois_ids += pois_ids_train
             # x test
             #spatial, temporal, country, distance, duration, week_day, ids = sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(X_test)
             x_test_spatial += spatial_test
@@ -589,6 +616,7 @@ class NextPoiCategoryPredictionDomain:
             x_test_duration += duration_test
             x_test_week_day += week_day_test
             x_test_ids += ids_test
+            x_test_pois_ids += pois_ids_test
 
             if len(y_train) == 0:
                 continue
@@ -598,8 +626,8 @@ class NextPoiCategoryPredictionDomain:
             y_test_concat = y_test_concat + y_test
 
         if model_name in ['garg', 'mfa']:
-            X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids), np.array(x_train_adjacency), np.array(x_train_distances_matrix), np.array(x_train_temporal_matrix), np.array(x_train_durations_matrix)]
-            X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids), np.array(x_test_adjacency), np.array(x_test_distances_matrix), np.array(x_test_temporal_matrix), np.array(x_test_durations_matrix)]
+            X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids), np.array(x_train_pois_ids), np.array(x_train_adjacency), np.array(x_train_distances_matrix), np.array(x_train_temporal_matrix), np.array(x_train_durations_matrix), np.array(x_train_sequences_poi_category)]
+            X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids), np.array(x_test_pois_ids), np.array(x_test_adjacency), np.array(x_test_distances_matrix), np.array(x_test_temporal_matrix), np.array(x_test_durations_matrix), np.array(x_test_sequences_poi_category)]
         else:
             X_train = [np.array(x_train_spatial), np.array(x_train_temporal), np.array(x_train_country), np.array(x_train_distance), np.array(x_train_duration), np.array(x_train_week_day), np.array(x_train_ids)]
             X_test = [np.array(x_test_spatial), np.array(x_test_temporal), np.array(x_test_country), np.array(x_test_distance), np.array(x_test_duration), np.array(x_test_week_day), np.array(x_test_ids)]
@@ -614,7 +642,6 @@ class NextPoiCategoryPredictionDomain:
         # X_test = df_test['x_test'].tolist()
         # y_train = df['y_train'].tolist()
         # y_test = df_test['y_test'].tolist()
-
         # Remove hours. Currently training without events hour
         # y_train = remove_hour_from_sequence_y(y_train)
         # y_test = remove_hour_from_sequence_y(y_test)
@@ -762,17 +789,61 @@ class NextPoiCategoryPredictionDomain:
 
         return categories_distance_matrix
 
-    def _generate_graph_matrices(self, x_train, n_categories, model_name):
+    def _generate_train_graph_matrices(self, x_train, sequence_spatial_train, pois_ids_test, n_categories, model_name):
 
         minimum = 0.001
 
         # np.asarray(spatial), np.asarray(temporal), np.array(country), np.array(distance), np.array(duration), np.array(week_day), np.asarray(ids)
-        spatial, temporal, country, distance, duration, week_day, ids = x_train
+        spatial, temporal, country, distance, duration, week_day, ids, pois_ids = x_train
+
+        # PoiXCategory
+        unique_pois_ids = pd.Series(np.array(pois_ids).flatten()).unique().tolist()
+        pois_categories_matrix = {unique_pois_ids[i]: [0 for j in range(n_categories)] for i in range(len(unique_pois_ids))}
+
+        for i in range(len(pois_ids)):
+
+            categories = spatial[i]
+            pois_id = pois_ids[i]
+
+
+            for j in range(len(categories)):
+                category = int(categories[j])
+                poi_id = int(pois_id[j])
+                pois_categories_matrix[poi_id][category] += 1
+
+        for i in range(len(unique_pois_ids)):
+
+            poi_id = unique_pois_ids[i]
+            total = sum(pois_categories_matrix[poi_id])
+            pois_categories_matrix[poi_id] = list(np.array(pois_categories_matrix[poi_id])/total)
+
+        sequences_poi_category_train = []
+        for i in range(len(pois_ids)):
+
+            pois_id = pois_ids[i]
+            sequence = []
+            for j in range(len(pois_id)):
+                poi_id = int(pois_id[j])
+                sequence.append(pois_categories_matrix[poi_id])
+
+            sequences_poi_category_train.append(sequence)
+
+        sequences_poi_category_test = []
+        for i in range(len(pois_ids_test)):
+
+            pois_id = pois_ids_test[i]
+            sequence = []
+            for j in range(len(pois_id)):
+                poi_id = int(pois_id[j])
+                sequence.append(pois_categories_matrix[poi_id])
+
+            sequences_poi_category_test.append(sequence)
 
         categories_distances_matrix = [[[] for j in range(n_categories)] for i in range(n_categories)]
         categories_durations_matrix = [[[] for j in range(n_categories)] for i in range(n_categories)]
         categories_adjacency_matrix = [[0 for j in range(n_categories)] for i in range(n_categories)]
         categories_temporal_matrix = [[0 for j in range(48)] for i in range(n_categories)]
+
         step_size = len(spatial[0])
         original_size = len(spatial)
         spatial = np.array(spatial, dtype='int').flatten()
@@ -784,6 +855,7 @@ class NextPoiCategoryPredictionDomain:
             hour = temporal[i]
 
             pre_category = spatial[i - 1]
+            #print("teeee", category, pre_category)
             categories_distances_matrix[category][pre_category].append(distance[i])
             categories_distances_matrix[pre_category][category].append(distance[i])
             categories_adjacency_matrix[category][pre_category] += 1
@@ -796,17 +868,64 @@ class NextPoiCategoryPredictionDomain:
         categories_durations_matrix = self._summarize_categories_distance_matrix(categories_durations_matrix)
 
         categories_adjacency_matrix = np.array(categories_adjacency_matrix) + minimum
-        if model_name == 'garg':
-            categories_adjacency_matrix = GCNConv.preprocess(categories_adjacency_matrix)
-        elif model_name == 'mfa':
-            categories_adjacency_matrix = ARMAConv.preprocess(categories_adjacency_matrix)
+        original_categories_adjacency_matrix = categories_adjacency_matrix
 
-        adjacency_matrix = [categories_adjacency_matrix]*original_size
+        # weight adjacency matrix based on each sequence
+        list_weighted_adjacency_matrices = []
+        for i in range(0, len(sequence_spatial_train)):
+            sequence = sequence_spatial_train[i]
+
+            # for j in range(1, len(sequence)):
+            #     category = int(sequence[j])
+            #     pre_category = int(sequence[j-1])
+            #     #print("en", category, pre_category)
+            #     weighted_adjacency_matrix = copy.copy(categories_adjacency_matrix)
+            #     #weighted_adjacency_matrix[pre_category][category] -= 0
+            #     weighted_adjacency_matrix[category][pre_category] -= 0
+            # #weighted_adjacency_matrix[weighted_adjacency_matrix<0] = minimum
+            if model_name == 'garg':
+                weighted_adjacency_matrix = GCNConv.preprocess(categories_adjacency_matrix)
+            elif model_name == 'mfa':
+                #weighted_adjacency_matrix = DiffusionConv.preprocess(weighted_adjacency_matrix)
+                weighted_adjacency_matrix = GCNConv.preprocess(categories_adjacency_matrix)
+            list_weighted_adjacency_matrices.append(weighted_adjacency_matrix)
+
+        adjacency_matrix = list_weighted_adjacency_matrices
+        #adjacency_matrix = [categories_adjacency_matrix]*original_size
+
         distances_matrix = [categories_distances_matrix]*original_size
         temporal_matrix = [categories_temporal_matrix]*original_size
         durations_matrix = [categories_durations_matrix]*original_size
+        #print("compara", len(adjacency_matrix), len(distances_matrix))
 
-        return [adjacency_matrix, distances_matrix, temporal_matrix, durations_matrix]
+        return [adjacency_matrix, distances_matrix, temporal_matrix, durations_matrix, sequences_poi_category_train, sequences_poi_category_test]
+
+    def _generate_test_graph_matrices(self, categories_adjacency_matrix, sequence_spatial_test, n_categories, model_name):
+
+        list_weighted_adjacency_matrices = []
+        for i in range(0, len(sequence_spatial_test)):
+            sequence = sequence_spatial_test[i]
+
+            for j in range(len(sequence)):
+                category = int(sequence[j])
+                pre_category = int(sequence[j - 1])
+                #print("teste", category)
+                weighted_adjacency_matrix = copy.copy(categories_adjacency_matrix)
+                weighted_adjacency_matrix[pre_category][category] -= 0
+                weighted_adjacency_matrix[category][pre_category] -= 0
+            weighted_adjacency_matrix[weighted_adjacency_matrix < 0] = 0.001
+            if model_name == 'garg':
+                weighted_adjacency_matrix = GCNConv.preprocess(weighted_adjacency_matrix)
+            elif model_name == 'mfa':
+                weighted_adjacency_matrix = ARMAConv.preprocess(weighted_adjacency_matrix)
+            list_weighted_adjacency_matrices.append(weighted_adjacency_matrix)
+
+        # wight adjacency matrix based on each sequence
+
+
+        adjacency_matrix = list_weighted_adjacency_matrices
+
+        return adjacency_matrix
 
 
     def _summarize_categories_distance_matrix(self, categories_distances_matrix):

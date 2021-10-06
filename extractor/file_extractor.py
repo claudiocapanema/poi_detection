@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import geopandas as gpd
 
@@ -20,3 +22,10 @@ class FileExtractor:
         df = pd.read_csv(filename)
 
         return df
+
+    def read_json(self, filename):
+
+        with open(filename) as file:
+            data = json.loads(file.read())
+
+        return data

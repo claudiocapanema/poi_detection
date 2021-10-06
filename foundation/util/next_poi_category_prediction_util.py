@@ -446,6 +446,33 @@ def sequence_tuples_to_spatial_temporal_and_feature6_ndarrays(list_events: list)
 
     return [spatial, temporal, country, distance, duration, week_day, ids]
 
+def sequence_tuples_to_spatial_temporal_and_feature7_ndarrays(list_events: list):
+
+    spatial = []
+    temporal = []
+    ids = []
+    country = []
+    distance = []
+    duration = []
+    week_day = []
+    poi = []
+    for e in list_events:
+        spatial.append([e[j][0] for j in range(len(e))])
+        temporal.append([e[j][1] for j in range(len(e))])
+        country.append([e[j][2] for j in range(len(e))])
+        distance.append([e[j][3] for j in range(len(e))])
+        duration.append([e[j][4] for j in range(len(e))])
+        week_day.append([e[j][5] for j in range(len(e))])
+        ids.append([e[j][6] for j in range(len(e))])
+        poi.append([e[j][7] for j in range(len(e))])
+
+    # print("Maior country: ", max(np.array(country).flatten()))
+    # print("Maior distance: ", max(np.array(distance).flatten()))
+    # print("Maior duration: ", max(np.array(duration).flatten()))
+    # print("Maior week day: ", max(np.array(week_day).flatten()))
+
+    return [spatial, temporal, country, distance, duration, week_day, ids, poi]
+
 def plot_history_metrics(h: pd.DataFrame, metrics_names: list, figure_dir, show=False):
 
     for metric_name in metrics_names:
