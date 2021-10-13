@@ -84,6 +84,7 @@ class MFA_RNN(NNBase):
         week_day_input = Input((step_size,), dtype='float32', name='week_day')
         user_id_input = Input((step_size,), dtype='float32', name='user')
         pois_ids_input = Input((step_size,), dtype='float32', name='pois_ids')
+        month_input = Input((step_size,), dtype='float32', name='month')
         categories_distance_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='categories_distance_matrix')
         categories_temporal_matrix = Input((location_input_dim, 48), dtype='float32', name='categories_temporal_matrix')
         adjancency_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='adjacency_matrix')
@@ -104,22 +105,21 @@ class MFA_RNN(NNBase):
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
         emb_id = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
-        emb_pois_ids = Embedding(input_dim=1000000, output_dim=3, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=2, input_length=step_size)
         emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
         emb_week_day = Embedding(input_dim=7, output_dim=3, input_length=step_size)
-
+        emb_month = Embedding(input_dim=13, output_dim=3, input_length=step_size)
 
         locais = location_input_dim
         spatial_embedding = emb_category(location_category_input)
         temporal_embedding = emb_time(temporal_input)
         id_embedding = emb_id(user_id_input)
-        pois_ids_embedding = emb_pois_ids(pois_ids_input)
         country_embbeding = emb_country(country_input)
         distance_embbeding = emb_distance(distance_input)
         duration_embbeding = emb_duration(duration_input)
         week_day_embbeding = emb_week_day(week_day_input)
+        month_embedding = emb_month(month_input)
 
         spatial_flatten = Flatten()(spatial_embedding)
         temporal_flatten = Flatten()(temporal_embedding)
@@ -130,7 +130,8 @@ class MFA_RNN(NNBase):
         distance_duration = tf.Variable(initial_value=0.1) * tf.multiply(distance_embbeding, duration_embbeding)
 
         l_p_flatten = Concatenate()([spatial_flatten, temporal_flatten, distance_flatten, duration_flatten])
-        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration, pois_ids_embedding])
+        l_p = Concatenate()(
+            [spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration])
 
         # l_p_flatten = Flatten()(l_p)
         # ids_flatten = Flatten()(id_flatten)
@@ -150,8 +151,8 @@ class MFA_RNN(NNBase):
         distance_duration_matrix = tf.multiply(categories_distance_matrix, categories_durations_matrix)
 
         distance_matrix = categories_distance_matrix
-        #distance_matrix = categories_distance_matrix
-        #x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
+        # distance_matrix = categories_distance_matrix
+        # x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
@@ -159,10 +160,10 @@ class MFA_RNN(NNBase):
         x_distances = Flatten()(x_distances)
 
         durations_matrix = categories_durations_matrix
-        #durations_matrix = categories_durations_matrix
-        #x_durations = self.graph_temporal_arma(durations_matrix, adjancency_matrix)
+        # durations_matrix = categories_durations_matrix
+        # x_durations = self.graph_temporal_arma(durations_matrix, adjancency_matrix)
         x_durations = GCNConv(22, activation='swish')([durations_matrix, adjancency_matrix])
-        #x_durations = Dropout(0.5)(x_durations)
+        # x_durations = Dropout(0.5)(x_durations)
         x_durations = GCNConv(10, activation='swish')([x_durations, adjancency_matrix])
         x_durations = Dropout(0.3)(x_durations)
         x_durations = Flatten()(x_durations)
@@ -188,15 +189,12 @@ class MFA_RNN(NNBase):
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
 
-        flatten_poi_category_matrix = Flatten()(sequence_poi_category_matrix)
-        flatten_poi_category_matrix = Dropout(0.5)(flatten_poi_category_matrix)
-        y_poi_category = Dense(location_input_dim, activation='softmax')(flatten_poi_category_matrix)
-
-        y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(initial_value=-0.2) * spatial_flatten + tf.Variable(1.)*y_poi_category
-
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=[y_up], name="MFA-RNN")
+        y_up = tf.Variable(initial_value=1.) * y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+            initial_value=-0.2) * spatial_flatten
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, month_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=[y_up], name="MFA-RNN")
 
         return model
+
 
     def mhsa(self, input):
         print("entrada mhsa: ", input.shape)

@@ -79,6 +79,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
                     continue
             date = datetime_list[i]
             week_day = date.weekday()
+            month = date.month
             country = countries_to_int[countries_list[i]]
             state = states_to_int[states_list[i]]
             if i == 0:
@@ -111,7 +112,7 @@ class NextPoiCategoryPredictionSequencesGenerationDomain:
             #     print("diferente")
             #     print(country)
             #     print(countries_list[i])
-            sequence = [category, hour, country, distance, duration, week_day, user_id[i], locationid]
+            sequence = [category, hour, country, distance, duration, week_day, user_id[i], locationid, month]
             user_sequence.append(sequence)
 
         # categories_distances_matrix = self.summarize_categories_distance_matrix(categories_distances_matrix)

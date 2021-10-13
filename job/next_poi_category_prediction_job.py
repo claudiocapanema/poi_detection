@@ -45,7 +45,7 @@ class NextPoiCategoryPredictionJob:
         num_users +=1
         print("numero usuarios: ", num_users)
         output = output_dir + str(n_splits) + "_folds/" + str(n_replications) + "_replications/"
-        folds_histories, base_report = self.next_poi_category_prediction_domain.\
+        folds_histories, base_report, wrong_samples, y_wrong_predicted, y_right_predicted = self.next_poi_category_prediction_domain.\
             run_tests_one_location_output_k_fold(dataset_name,
                                                  users_trajectories,
                                                 users_train_indexes,
