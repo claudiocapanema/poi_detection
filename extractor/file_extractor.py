@@ -1,7 +1,6 @@
 import json
 
 import pandas as pd
-import geopandas as gpd
 
 from foundation.configuration.input import Input
 

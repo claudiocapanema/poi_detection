@@ -100,4 +100,4 @@ class NextPoiCategoryPredictionLoader:
         fscore.to_csv(output_dir + "fscore.csv", index_label=False, index=False)
 
     def wrong_predicted_samples_plots(self, output_dir, x, y_predicted, y_label):
-
+        pass

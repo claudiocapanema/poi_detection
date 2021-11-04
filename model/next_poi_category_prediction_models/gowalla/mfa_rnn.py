@@ -9,6 +9,7 @@ from model.next_poi_category_prediction_models.neural_network_base_model import 
 
 import numpy as np
 import tensorflow as tf
+import tensorflow_probability as tfp
 
 from spektral.layers.convolutional import ARMAConv, GCNConv, GATConv, DiffusionConv
 from spektral.layers.pooling import GlobalAvgPool, GlobalAttentionPool, GlobalAttnSumPool
@@ -89,7 +90,9 @@ class MFA_RNN(NNBase):
         categories_temporal_matrix = Input((location_input_dim, 48), dtype='float32', name='categories_temporal_matrix')
         adjancency_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='adjacency_matrix')
         categories_durations_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='categories_durations_matrix')
-        sequence_poi_category_matrix = Input((step_size, location_input_dim), dtype='float32', name='sequence_poi_category_matrix')
+        poi_category_probabilities = Input((step_size, location_input_dim), dtype='float32', name='poi_category_probabilities')
+        directed_adjancency_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='directed_adjacency_matrix')
+        score = Input((1), dtype='float32', name='score')
 
         # adjancency_matrix = tf.cast(adjancency_matrix, dtype='float32')
         # categories_temporal_matrix = tf.cast(categories_temporal_matrix, dtype='float32')
@@ -153,6 +156,8 @@ class MFA_RNN(NNBase):
         distance_matrix = categories_distance_matrix
         # distance_matrix = categories_distance_matrix
         # x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
+
+        adjancency_matrix_p = tf.matmul(poi_category_probabilities, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
@@ -182,16 +187,44 @@ class MFA_RNN(NNBase):
         print("gc", x_distances.shape)
         # y_up = tf.matmul(att, x)
         srnn = Flatten()(srnn)
-        y_sup = Concatenate()([srnn, att, x_distances, x_durations, distance_duration_matrix])
+        y_sup = Concatenate()([srnn, att, x_distances])
         y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
 
-        y_up = tf.Variable(initial_value=1.) * y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(
-            initial_value=-0.2) * spatial_flatten
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, month_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=[y_up], name="MFA-RNN")
+        gnn = Concatenate()([x_durations, distance_duration_matrix])
+        gnn = Dropout(0.3)(gnn)
+        gnn = Dense(location_input_dim, activation='softmax')(gnn)
+
+        # diagonal = tf.gather(directed_adjancency_matrix, location_input_dim, axis=1)
+        # diagonal = tf.linalg.normalize(diagonal)[0]
+        #diagonal = Flatten()(diagonal)
+        # print("pi", poi_category_probabilities.shape)
+        # print("cate", directed_adjancency_matrix.shape)
+        # pc = Dense(location_input_dim, activation='relu')(poi_category_probabilities)
+        # da = Dense(location_input_dim, activation='relu')(directed_adjancency_matrix)
+        # diagonal = tf.matmul(pc, da)
+        # diagonal = Flatten()(diagonal)
+        # diagonal = Dense(location_input_dim, activation='softmax')(diagonal)
+        # print("depois tensor: ", diagonal.shape)
+
+        pc = Dense(14, activation='relu')(poi_category_probabilities)
+        pc = Dropout(0.5)(pc)
+        pc = Flatten()(pc)
+        pc = Dense(location_input_dim, activation='softmax')(pc)
+
+        r_entropy = tfp.distributions.Categorical(probs=y_sup).entropy()
+        max_entropy = tf.reduce_mean(tfp.distributions.Categorical(probs=[1/location_input_dim]*location_input_dim).entropy())
+
+        g_entropy = tfp.distributions.Categorical(probs=gnn).entropy()
+        g_max_entropy = tf.reduce_mean(
+            tfp.distributions.Categorical(probs=[1 / location_input_dim] * location_input_dim).entropy())
+
+        y_up = tf.Variable(initial_value=1.) * y_cup + ((1/tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+            initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, month_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, score, poi_category_probabilities, directed_adjancency_matrix], outputs=[y_up], name="MFA-RNN")
 
         return model
 
