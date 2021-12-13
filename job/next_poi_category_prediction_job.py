@@ -45,7 +45,8 @@ class NextPoiCategoryPredictionJob:
         num_users +=1
         print("numero usuarios: ", num_users)
         output = output_dir + str(n_splits) + "_folds/" + str(n_replications) + "_replications/"
-        folds_histories, base_report, wrong_samples, y_wrong_predicted, y_right_predicted = self.next_poi_category_prediction_domain.\
+        #epochs = 5
+        folds_histories, base_report, wrong_samples, y_wrong_predicted, y_right_predicted, list_indexes = self.next_poi_category_prediction_domain.\
             run_tests_one_location_output_k_fold(dataset_name,
                                                  users_trajectories,
                                                 users_train_indexes,
@@ -67,8 +68,8 @@ class NextPoiCategoryPredictionJob:
 
         print("numero classes: ", number_of_categories)
         base_report = self.preprocess_report(base_report, int_to_categories)
-        self.next_poi_category_prediction_loader.plot_history_metrics(folds_histories, base_report, output_dir, n_splits, n_replications)
-        self.next_poi_category_prediction_loader.save_report_to_csv(output_dir, base_report, n_splits, n_replications, num_users)
+        self.next_poi_category_prediction_loader.plot_history_metrics(folds_histories, base_report, output_dir, n_splits, n_replications, list_indexes, dataset_name)
+        #self.next_poi_category_prediction_loader.save_report_to_csv(output_dir, base_report, n_splits, n_replications, num_users)
 
 
 

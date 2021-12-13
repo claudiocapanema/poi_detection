@@ -10,6 +10,7 @@ from model.next_poi_category_prediction_models.neural_network_base_model import 
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
+from tensorflow.keras.initializers import Constant
 
 from spektral.layers.convolutional import ARMAConv, GCNConv, GATConv, DiffusionConv
 from spektral.layers.pooling import GlobalAvgPool, GlobalAttentionPool, GlobalAttnSumPool
@@ -68,6 +69,120 @@ patience = 3
 #
 #
 #         return output
+
+class Capanema(Model):
+
+    def __init__(self, weights, use_entropy_flag, n_classes, activation='softmax'):
+        super(Capanema, self).__init__()
+        self.n_components = len(weights)
+        self.components_weights_names = ["component_weight_" + str(i) for i in range(self.n_components)]
+        self.components_weights = weights
+
+
+        self.n_classes = n_classes
+        self.activation = activation
+        self.use_entropy_flag = use_entropy_flag
+        self.a_variables_names = ["a_" + str(i) for i in range(int(sum(use_entropy_flag)))]
+
+
+        print(self.__dict__)
+
+    def build(self, input_shape):
+
+        #self.out_sum = tf.zeros(shape=(input_shape[0], self.n_classes))
+        self.j = tf.Variable(0, dtype=tf.int32, trainable=False)
+        # self.components_weights_array = tf.TensorArray(tf.Variable, size=0, dynamic_size=True, clear_after_read=False)
+        # self.a_variables_array = tf.TensorArray(tf.Variable, size=0, dynamic_size=True, clear_after_read=False)
+        for i in range(self.n_components):
+            #self.components_weights_array.write(i, tf.Variable(self.components_weights[i], name=self.components_weights_names[i]))
+            setattr(self, self.components_weights_names[i], self.add_weight(name=self.components_weights_names[i], shape=(1), initializer=Constant(value=self.components_weights[i]), trainable=True))
+        for i in range(len(self.a_variables_names)):
+            #self.a_variables_array.write(i, tf.Variable(1., name=self.a_variables_names[i]))
+            setattr(self, self.a_variables_names[i], self.add_weight(name=self.a_variables_names[i], shape=(1), initializer=Constant(value=1.), trainable=True))
+        assert len(input_shape) >= 2
+        #1., 0.5, -0.2, 8.
+        # self.a = tf.Variable(0.5)
+        # self.component_0 = tf.Variable(1.)
+        # self.component_1 = tf.Variable(1.)
+        # self.component_2 = tf.Variable(-0.2)
+        # self.component_3 = tf.Variable(8.)
+
+    def get_config(self):
+
+        config = self.__dict__
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    def compute_output_shape(self, input_shape):
+
+
+        features_shape = input_shape[0]
+        output_shape = features_shape[:-1] + (self.main_channel,)
+        return output_shape
+
+    def get_a_variable(self, name):
+
+        # print("a variable")
+        # print(
+        #     "nome: ", "a_" + str(name)
+        # )
+        # print("manual: ", self.a_0)
+        # #print("auto: ", getattr(self, "a_" + str(name)))
+        # #return getattr(self, "a_" + str(name))
+        return self.a_0
+        #return self.a_variables_array.read(name)
+
+    def get_component_weight(self, name):
+
+        # print("chamar component weight: ", getattr(self, "component_weight_" + str(name)))
+        return getattr(self, "component_weight_" + str(name))
+        #return self.components_weights_array.read(name)
+
+    def formula(self, component_weight_index, component_out, entropy, use_entropy_component_index):
+
+        out = (self.get_component_weight(component_weight_index) + entropy)*self.get_a_variable(use_entropy_component_index)*component_out
+
+        return out
+
+    def call(self, inputs, *args, **kwargs):
+
+        components = inputs
+
+        entropies = []
+
+        for i in range(self.n_components):
+
+            component_out = components[i]
+            entropy = 1/tf.reduce_mean(tfp.distributions.Categorical(probs=component_out).entropy())
+            entropies.append(entropy)
+
+        max_entropy = 1/tf.reduce_mean(
+            tfp.distributions.Categorical(probs=[1 / self.n_classes] * self.n_classes).entropy())
+
+        out_sum = None
+        for i in range(self.n_components):
+            entropy = entropies[i]
+            #entropy = 1/entropy
+            if tf.math.equal(self.use_entropy_flag[i], 1.):
+                out = self.formula(i, components[i], entropy, self.j.value())
+                self.j.assign_add(1)
+            else:
+                out = self.get_component_weight(i)*components[i]
+
+            if out_sum is None:
+
+                out_sum = out
+
+            else:
+
+                out_sum += out
+
+        return out_sum
+
+        #out = self.component_0*components[0] + self.component_1*(entropies[1]+self.a)*components[1]+self.component_2*components[2]+self.component_3*components[3]
+
+        #return out
+
 
 class MFA_RNN(NNBase):
 
@@ -222,8 +337,11 @@ class MFA_RNN(NNBase):
         g_max_entropy = tf.reduce_mean(
             tfp.distributions.Categorical(probs=[1 / location_input_dim] * location_input_dim).entropy())
 
-        y_up = tf.Variable(initial_value=1.) * y_cup + ((1/tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(
-            initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
+        y_up = tf.Variable(initial_value=1.) * y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+            initial_value=-0.2) * spatial_flatten
+
+        #y_up = Capanema([1.,0.5,-0.2,8.], [0.,1.,0.,0.], location_input_dim)([y_cup, y_sup, spatial_flatten, gnn])
+
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, month_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, score, poi_category_probabilities, directed_adjancency_matrix], outputs=[y_up], name="MFA-RNN")
 
         return model

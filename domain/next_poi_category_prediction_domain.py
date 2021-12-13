@@ -5,6 +5,7 @@ import math
 
 import numpy as np
 import json
+from scipy.stats import entropy
 
 import pandas as pd
 import sklearn.metrics as skm
@@ -14,6 +15,7 @@ from tensorflow.keras import utils as np_utils
 from sklearn.model_selection import KFold
 from spektral.transforms.layer_preprocess import LayerPreprocess
 from spektral.layers.convolutional import GCNConv, ARMAConv, DiffusionConv
+from sklearn.preprocessing import MinMaxScaler
 
 from extractor.file_extractor import FileExtractor
 from foundation.util.next_poi_category_prediction_util import sequence_to_x_y, \
@@ -342,6 +344,7 @@ class NextPoiCategoryPredictionDomain:
         list_wrong_samples = []
         list_y_wrong_predicted = []
         list_y_right_labels = []
+        list_indexes = []
         for i in range(k_folds):
             print("Modelo: ", model_name)
             tf.random.set_seed(seeds[iteration])
@@ -361,7 +364,7 @@ class NextPoiCategoryPredictionDomain:
                                                            num_users=num_users,
                                                            time_input_dim=48,
                                                            seed=seeds[iteration])
-                history, report, wrong_indexes, y_wrong_predicted, y_right_labels = self._train_and_evaluate_model(model_name,
+                history, report, indexes = self._train_and_evaluate_model(model_name,
                                                                  model,
                                                                  X_train,
                                                                  y_train,
@@ -379,9 +382,13 @@ class NextPoiCategoryPredictionDomain:
                 base_report = self._add_location_report(base_report, report)
                 iteration+=1
                 histories.append(history)
+                list_indexes.append(indexes)
+
+            # if i == 1:
+            #     break
         folds_histories.append(histories)
 
-        return folds_histories, base_report, list_wrong_samples, list_y_wrong_predicted, list_y_right_labels
+        return folds_histories, base_report, list_wrong_samples, list_y_wrong_predicted, list_y_right_labels, list_indexes
 
     def extract_train_test_from_indexes_k_fold_v2(self,
                                                users_list,
@@ -621,19 +628,20 @@ class NextPoiCategoryPredictionDomain:
                                   output_dir):
 
         logdir = output_dir + "logs/fit/" + dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
-
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1)
         if model_name not in ['gargs']:
             model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
                           metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
             #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
             #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
+
+
             hi = model.fit(X_train,
                            y_train,
                            validation_data=(X_test, y_test),
                            batch_size=batch,
                            epochs=epochs,
-                           callbacks=EarlyStopping(patience=3, restore_best_weights=True))
+                           callbacks=[EarlyStopping(patience=3, restore_best_weights=True)])
         else:
             loss_fn = tf.keras.losses.CategoricalCrossentropy()
 
@@ -653,6 +661,8 @@ class NextPoiCategoryPredictionDomain:
 
         y_predict_location = model.predict(X_test, batch_size=batch)
 
+        entropies = self.entropy_of_predictions(y_predict_location)
+
         scores = model.evaluate(X_test, y_test, verbose=0)
         # location_acc = scores
         # print(scores)
@@ -661,17 +671,61 @@ class NextPoiCategoryPredictionDomain:
         print("------------- Location ------------")
         y_predict_location = one_hot_decoding(y_predict_location)
         y_test_location = one_hot_decoding(y_test[0])
+        right_indexes = self.indexes_of_right_predicted_samples(y_predict_location, y_test_location)
 
         report = skm.classification_report(y_test_location, y_predict_location, output_dict=True)
-        # wrong_indexes = self.indexes_of_wrong_predicted_samples(y_predict_location, y_test)
-        # y_wrong_predicted = y_predict_location[wrong_indexes]
-        # y_right_labels = y_test[wrong_indexes]
+        wrong_indexes, right_indexes = self.indexes_of_wrong_predicted_samples(y_predict_location, y_test_location)
+        y_wrong_predicted = y_predict_location[wrong_indexes]
+        y_wrong_labels = y_test_location[wrong_indexes]
+        y_righ_predicted = y_predict_location[right_indexes]
+        y_right_labels = y_test_location[right_indexes]
+        entropy_right = entropies[right_indexes]
+        entropy_wrong = entropies[wrong_indexes]
         print("Relatorio")
         print(report)
+        print("entropia certo: ", len(entropy_right), len(entropy_right[entropy_right>0]), entropy_right[entropy_right>0].mean(),
+              " entropia errado: ", len(entropy_wrong), len(entropy_wrong[entropy_wrong>0]),  entropy_wrong[entropy_wrong>0].mean())
         #return hi.history, report, wrong_indexes, y_wrong_predicted, y_right_labels
-        return hi.history, report, [], [], []
+        return hi.history, report, [y_wrong_predicted, y_wrong_labels, y_righ_predicted, y_right_labels, entropy_right, entropy_wrong]
+
+    def entropy_of_predictions(self, predictions):
+
+        entropies = []
+        for i in range(len(predictions)):
+            maximum = max(predictions[i])
+            minimum = min(predictions[i])
+            normalized = []
+            for j in range(len(predictions[i])):
+                value = ((predictions[i][j]-minimum)/(maximum - minimum))
+                normalized.append(value)
+            out = entropy(normalized)
+            # if out < 0:
+            #     print("menos: ", out, " lis: ", predictions[i])
+            #
+            #     exit()
+            entropies.append(out)
+
+        return np.array(entropies)
+
+
 
     def indexes_of_wrong_predicted_samples(self, y_predicted, y_label):
+
+        indexes = []
+        right_indexes = []
+
+        for i in range(len(y_predicted)):
+
+            predicted = y_predicted[i]
+            label = y_label[i]
+            if predicted != label:
+                indexes.append(i)
+            else:
+                right_indexes.append(i)
+
+        return indexes, right_indexes
+
+    def indexes_of_right_predicted_samples(self, y_predicted, y_label):
 
         indexes = []
 
@@ -679,7 +733,7 @@ class NextPoiCategoryPredictionDomain:
 
             predicted = y_predicted[i]
             label = y_label[i]
-            if predicted != label:
+            if predicted == label:
                 indexes.append(i)
 
         return indexes

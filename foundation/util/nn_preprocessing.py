@@ -6,7 +6,7 @@ def one_hot_decoding(data):
     for e in data:
         new.append(np.argmax(e))
 
-    return new
+    return np.array(new)
 
 def one_hot_decoding_predicted(data):
 
