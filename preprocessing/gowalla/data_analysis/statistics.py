@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import geopandas as gp
-import timezonefinder
 import pytz
 import datetime as dt
 import json

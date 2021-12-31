@@ -70,7 +70,6 @@ class NextPoiCategoryPredictionLoader:
         print("pasta: ", output_dir)
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         self.entropy_indexes(output_dir, list_indexes, dataset_name)
-        exit()
         for fold_histories in folds_histories:
             for i in range(len(fold_histories)):
                 h = fold_histories[i]

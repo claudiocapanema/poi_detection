@@ -15,28 +15,28 @@ class NextPoiCategoryPredictionConfiguration:
         self.N_SPLITS = ("n_splits", 5)
 
         self.EPOCHS = ("epochs", {'users_steps': {'mfa': 10, 'serm': 10, 'map': 10, 'stf': 10, 'next': 10, 'garg': 10},
-                                'gowalla': {'mfa': 25, 'serm': 25, 'map': 25, 'stf': 25, 'next': 11, 'garg': 25}})
+                                'gowalla': {'mfa': 25, 'poi_rgnne': 25, 'serm': 25, 'map': 25, 'stf': 25, 'next': 11, 'garg': 25}})
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
         self.BATCH = ("batch", {'users_steps': {'mfa': 350, 'serm': 400, 'map': 400, 'stf': 400, 'next': 300, 'garg': 400},
-                                'gowalla': {'mfa': 400, 'serm': 400, 'map': 400, 'stf': 400, 'next': 400, 'garg': 400}})
+                                'gowalla': {'mfa': 400, 'poi_rgnne': 400, 'serm': 400, 'map': 400, 'stf': 400, 'next': 400, 'garg': 400}})
 
         self.OPTIMIZER = ("learning_rate", {'users_steps': {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),
                                             'next': Adam(), 'garg': Adam()},
-                                            'gowalla': {'mfa': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'serm': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'map': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'stf': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9),
+                                            'gowalla': {'mfa': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'poi_rgnne': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'serm': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'map': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'stf': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9),
                                             'next': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'garg': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9)}})
 
-        self.LOSS = ("learning_rate", {'mfa': CategoricalCrossentropy(), 'serm': CategoricalCrossentropy(), 'map': CategoricalCrossentropy(),
+        self.LOSS = ("learning_rate", {'mfa': CategoricalCrossentropy(), 'poi_rgnne': CategoricalCrossentropy(), 'serm': CategoricalCrossentropy(), 'map': CategoricalCrossentropy(),
                                             'stf': CategoricalCrossentropy(),
                                             'next': CategoricalCrossentropy(), 'garg': CategoricalCrossentropy()})
 
-        self.FORMAT_MODEL_NAME = ("format_model_name", {'mfa': 'POI-RGNN', 'stf': 'STF-RNN', 'map': 'MAP', 'serm': 'SERM', 'next': 'MHA+PE', 'garg': 'GARG'})
+        self.FORMAT_MODEL_NAME = ("format_model_name", {'mfa': 'POI-RGNN', 'poi_rgnne': 'POI_RGNNE', 'stf': 'STF-RNN', 'map': 'MAP', 'serm': 'SERM', 'next': 'MHA+PE', 'garg': 'GARG'})
 
         self.OUTPUT_BASE_DIR = (
         "output_dir", "output/next_poi_category_prediction/", False, "output directory for the poi_categorization")
 
-        self.MODEL_NAME = ("model_name", {'mfa': "mfa/", 'serm': "serm/", 'map': "map/", 'stf': "stf/",
+        self.MODEL_NAME = ("model_name", {'mfa': "mfa/", 'poi_rgnne': 'poi_rgnne/', 'serm': "serm/", 'map': "map/", 'stf': "stf/",
                                           'next': "next/", 'garg': "garg/"})
 
         self.DATASET_TYPE = ("dataset_type", {'users_steps': "users_steps/", 'gowalla': 'gowalla/'})
@@ -63,6 +63,7 @@ class NextPoiCategoryPredictionConfiguration:
                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
+                                          'poi_rgnne': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1},
                                           'garg': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1}},
                          '3_categories': {'serm': {0: 1, 1: 1, 2: 1},

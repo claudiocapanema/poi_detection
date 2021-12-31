@@ -4,7 +4,7 @@ import geopandas as gp
 import timezonefinder
 import seaborn as sns
 
-import statistics as st
+import stat as st
 from pathlib import Path
 from matplotlib import pyplot as plt
 import numpy as np

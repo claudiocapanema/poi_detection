@@ -69,7 +69,7 @@ class NextPoiCategoryPredictionJob:
         print("numero classes: ", number_of_categories)
         base_report = self.preprocess_report(base_report, int_to_categories)
         self.next_poi_category_prediction_loader.plot_history_metrics(folds_histories, base_report, output_dir, n_splits, n_replications, list_indexes, dataset_name)
-        #self.next_poi_category_prediction_loader.save_report_to_csv(output_dir, base_report, n_splits, n_replications, num_users)
+        self.next_poi_category_prediction_loader.save_report_to_csv(output_dir, base_report, n_splits, n_replications, num_users)
 
 
 

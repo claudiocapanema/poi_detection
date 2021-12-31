@@ -86,7 +86,7 @@ SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
 NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
           "job": "next_poi_category_prediction_job",
           "users_sequences": "'$GOWALLA_US_SEQUENCES'",
-          "baseline": "mfa",
+          "baseline": "poi_rgnne",
           "dataset_name":"gowalla",
           "categories_type":"7_categories"
           }'
@@ -114,7 +114,7 @@ POI_TRANSACTIONS_ANALYSIS='{
           "max_interval":"72",
           "different_venues":"yes",
           "country":"US",
-          "state":"",
+          "state":"TEXAS",
           "county":"",
           }'
 

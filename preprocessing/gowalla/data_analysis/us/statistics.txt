@@ -49,4 +49,16 @@ Duração (horas) entre checkins por estado:
 6         ALASKA      95.253571             24.0   61.692857          10.0
 7  MASSACHUSETTS     128.314852             23.0   48.952333           9.0
 8         OREGON     109.729517             25.0   43.455605           9.0
-9       MISSOURI     154.402490             41.0   41.711618           8.0"
+9       MISSOURI     154.402490             41.0   41.711618           8.0
+    
+Mediana de eventos por usuário por estado:       state_name  level_1  median
+0          TEXAS        0    14.0
+1     CALIFORNIA        0    10.0
+2     WASHINGTON        0     8.0
+3       OKLAHOMA        0     7.0
+4         HAWAII        0     7.0
+5         ALASKA        0     6.0
+6  MASSACHUSETTS        0     6.0
+7         OREGON        0     6.0
+8        FLORIDA        0     6.0
+9         NEVADA        0     5.0"

@@ -58,18 +58,18 @@ class PoiTransactionsAnalysisJob:
         print("paises: ", df_transactions['country_name'].unique().tolist())
         # 'userid', 'state', 'county', 'placeid', 'local_datetime', 'latitude',
         #        'longitude', 'category', 'country_code', 'categoryid'
-
+        print("chaves: ", df_transactions.columns)
         if len(country) > 0:
             country_dir = country + "/"
             transactions_base_dir = transactions_base_dir + country_dir
-        if len(state) > 0:
-            print("Estados: ", df_transactions['state'].unique().tolist())
-            state_dir = state + "/"
-            transactions_base_dir = transactions_base_dir + state_dir
-        if len(county) > 0:
-            print("county: ", df_transactions['county'].unique().tolist())
-            county_dir = county + "/"
-            transactions_base_dir = transactions_base_dir + county_dir
+        # if len(state) > 0:
+        #     print("Estados: ", df_transactions['state_name'].unique().tolist())
+        #     state_dir = state + "/"
+        #     transactions_base_dir = transactions_base_dir + state_dir
+        # if len(county) > 0:
+        #     print("county: ", df_transactions['county_name'].unique().tolist())
+        #     county_dir = county + "/"
+        #     transactions_base_dir = transactions_base_dir + county_dir
 
         transactions_base_dir = transactions_base_dir + different_venues_dir + max_interval_dir
 

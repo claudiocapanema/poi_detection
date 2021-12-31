@@ -39,11 +39,12 @@ class PoiTransactionsDomain:
         country_column = dataset_columns['country']
         userid_column = dataset_columns['userid']
         category_column = dataset_columns['category']
+        state_column = dataset_columns['sate']
 
-        # if len(country) > 0:
-        #     df = df.query(country_column + " == '" + country + "'")
+        if len(country) > 0:
+            df = df.query(country_column + " == '" + country + "'")
         # if len(state) > 0:
-        #     df = df.query("state == '" + state + "'")
+        #     df = df.query(state_column + " == '" + state + "'")
         #     print("filt")
         #     print(df)
         # if len(county) > 0:
@@ -216,7 +217,11 @@ class PoiTransactionsDomain:
         week_day_end_list = []
         distance_list = []
         duration_hour_dict = {}
+        duration_week_hour_dict = {}
+        duration_weekend_hour_dict = {}
         distance_km_dict = {}
+        distance_week_km_dict = {}
+        distance_weekend_km_dict = {}
         duration_hour_list = []
         distance_km_list = []
         total_transactions = 0
@@ -236,7 +241,11 @@ class PoiTransactionsDomain:
         for i in range(len(from_categories)):
             from_category = from_categories[i]
             duration_hour_dict[from_category] = {}
+            duration_week_hour_dict[from_category] = {}
+            duration_weekend_hour_dict[from_category] = {}
             distance_km_dict[from_category] = {}
+            distance_week_km_dict[from_category] = {}
+            distance_weekend_km_dict[from_category] = {}
 
             for j in range(len(to_categories)):
                 to_category = to_categories[j]
@@ -245,7 +254,11 @@ class PoiTransactionsDomain:
                 end_week_day_dict[from_category+"_"+to_category] = {'Monday': 0, 'Tuesday': 0, 'Wednesday': 0,
                                                                     'Thursday': 0, 'Friday': 0, 'Saturday': 0, 'Sunday': 0}
                 duration_hour_dict[from_category][to_category] = []
+                duration_week_hour_dict[from_category][to_category] = []
+                duration_weekend_hour_dict[from_category][to_category] = []
                 distance_km_dict[from_category][to_category] = []
+                distance_week_km_dict[from_category][to_category] = []
+                distance_weekend_km_dict[from_category][to_category] = []
 
                 transaction_list = data[from_category][to_category]
 
@@ -272,9 +285,13 @@ class PoiTransactionsDomain:
                     if transaction['datetime']['week_day_end'] not in ['Saturday', 'Sunday']:
                         hour_week_day_frequency_dict[transaction['datetime']['end_hour']]+=1
                         category_hour_weekend_frequency_dict[to_category][transaction['datetime']['end_hour']]+=1
+                        distance_weekend_km_dict[from_category][to_category].append(transaction['location']['distance_km'])
+                        duration_weekend_hour_dict[from_category][to_category].append(transaction['datetime']['duration_hour'])
                     else:
                         hour_weekend_frequency_dict[transaction['datetime']['end_hour']]+=1
                         category_hour_weekday_frequency_dict[to_category][transaction['datetime']['end_hour']]+=1
+                        distance_week_km_dict[from_category][to_category].append(transaction['location']['distance_km'])
+                        duration_week_hour_dict[from_category][to_category].append(transaction['datetime']['duration_hour'])
                     category_month_frequency_dict[to_category][transaction['datetime']['end_month']]+=1
                     week_day_frequency_dict[transaction['datetime']['week_day_end']]+=1
                     duration_hour_dict[from_category][to_category].append(transaction['datetime']['duration_hour'])
@@ -294,7 +311,7 @@ class PoiTransactionsDomain:
         df = pd.DataFrame({'from': transactions_from_list, 'to': transactions_to_list, 'total': values})
         df = df.pivot('from', 'to', 'total')
 
-        filename = "categories_heatmap"
+        filename = "categories_heatmap_" + title
         self.generate_plots(dir, df, filename, "categories_" + title)
 
         ## preprocessing_8_categories
@@ -343,8 +360,8 @@ class PoiTransactionsDomain:
 
         df = df.pivot('from_to', 'hour', 'total')
         df_month = df_month.pivot('to', 'month', 'total')
-        filename = "categories_hour_heatmap"
-        filename_month = "categories_month_heatmap"
+        filename = "categories_hour_heatmap_" + title
+        filename_month = "categories_month_heatmap_" + title
         self.generate_plots(dir, df, filename, "categories_hour_" + title, size=(20, 20), annot=False)
         self.generate_plots(dir, df_month, filename_month, "categories_month_" + title, size=(10, 10), annot=False)
 
@@ -370,7 +387,11 @@ class PoiTransactionsDomain:
         self.generate_plots(dir, df, filename, "categories_week_day_" + title, size=(20, 20), annot=False)
 
         self.duration_plots(duration_hour_dict, title, dir)
+        self.duration_plots(duration_week_hour_dict, title + "week_", dir)
+        self.duration_plots(duration_weekend_hour_dict, title + "weekend_", dir)
         self.distance_km_plots(distance_km_dict, title, dir)
+        self.distance_km_plots(distance_week_km_dict, title + "week_", dir)
+        self.distance_km_plots(distance_weekend_km_dict, title + "weekend_", dir)
         self.week_day_frequency_plot(week_day_frequency_dict, title, dir)
         self.hour_frequency_plot(hour_week_day_frequency_dict, dir, title, "weekday")
         self.hour_frequency_plot(hour_weekend_frequency_dict, dir, title, "weekend")
