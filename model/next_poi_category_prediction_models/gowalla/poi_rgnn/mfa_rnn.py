@@ -354,10 +354,10 @@ class MFA_RNN(NNBase):
         g_max_entropy = tf.reduce_mean(
             tfp.distributions.Categorical(probs=[1 / location_input_dim] * location_input_dim).entropy())
 
-        y_up = tf.Variable(initial_value=1.) * y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(
-            initial_value=-0.2) * spatial_flatten
+        # y_up = tf.Variable(initial_value=1.) * y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+        #     initial_value=-0.2) * spatial_flatten
 
-        #y_up = Capanema([1.,0.5,-0.2,8.], [0.,1.,0.,0.], location_input_dim)([y_cup, y_sup, spatial_flatten, gnn])
+        y_up = Capanema([1.,0.5,-0.2,8.], [0.,1.,0.,0.], location_input_dim)([y_cup, y_sup, spatial_flatten, gnn])
 
         model = Model(inputs=[location_category_input, temporal_input, distance_input, duration_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, score, poi_category_probabilities, directed_adjancency_matrix, adjacency_week_matrix, adjacency_weekend_matrix, categories_distance_week_matrix, categories_distance_weekend_matrix, categories_durations_week_matrix, categories_durations_weekend_matrix], outputs=[y_up], name="MFA-RNN")
 

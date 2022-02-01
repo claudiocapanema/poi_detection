@@ -7,7 +7,7 @@ from configuration.weekday import Weekday
 
 class Poi:
 
-    def __init__(self, coordinates, times):
+    def __init__(self, coordinates, times, poi_id):
         self._centroid = self.find_centroid(coordinates)
         self._coordinates = coordinates
         self._n_events = len(coordinates)
@@ -23,6 +23,7 @@ class Poi:
         self._n_events_home_time = 0
         self._n_events_week = 0
         self._n_events_weekend = 0
+        self._poi_id = poi_id
         self._calculate_different_days()
         self._calculate_different_hours()
 
@@ -142,7 +143,7 @@ class Poi:
 
     def to_dict(self):
         return {'location_type': self._poi_class, 'latitude': str(self.centroid[0]), 'longitude': str(self.centroid[1]), \
-                 'home_time_events': str(self.n_events_home_time), 'work_time_events': str(self.n_events_work_time)}
+                 'home_time_events': str(self.n_events_home_time), 'work_time_events': str(self.n_events_work_time), 'poi_id': self._poi_id}
 
     def calculate_n_events(self):
         times = self._times

@@ -27,7 +27,7 @@ class UserStepDomain:
         return users_steps
 
     def user_pois_from_csv(self, filename):
-        """ id, poi_type, latitude, longitude, work_time_events, home_time_events, inactive_interval_start,
+        """ id, poi_id, poi_type, latitude, longitude, work_time_events, home_time_events, inactive_interval_start,
         inactive_interval_end, inactive_applied_flag, inverted_routine_flag
         """
         df = self.file_extractor.read_csv(filename)

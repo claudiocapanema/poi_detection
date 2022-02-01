@@ -1,5 +1,5 @@
 from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropout, SimpleRNN, Input, Lambda, \
-    Flatten, Reshape, Concatenate, Embedding, MultiHeadAttention, ActivityRegularization, LayerNormalization, Layer
+    Flatten, Reshape, Concatenate, Embedding, MultiHeadAttention, ActivityRegularization, LayerNormalization, Layer, Normalization
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras.callbacks import EarlyStopping
@@ -162,16 +162,67 @@ class Capanema(Model):
 
         #return out
 
+class Condicao(Model):
+
+    def __init__(self):
+        super(Condicao, self).__init__()
+
+    def build(self, input_shape):
+
+        self.v1 = tf.Variable(initial_value=1.)
+        self.classes_weights = tf.Variable(initial_value=[1., 1., 1., 1., 1., 1., 1.2])
+
+    @tf.function
+    def funcao(self, output_mean_entropy, i):
+
+        a = (i - i[tf.math.argmin(i)]) / (i[tf.math.argmax(i)] - i[tf.math.argmin(i)])
+        a = tf.cast(a, tf.float32)
+        # tf.print("antes", a)
+        out_sample_entropy = tfp.distributions.Categorical(probs=a).entropy()
+
+        if output_mean_entropy < output_mean_entropy * self.v1:
+
+                out = a*self.classes_weights
+
+        else:
+                out = a
+
+        return out
+
+
+    def call(self, inputs, *args, **kwargs):
+
+        output_mean_entropy, mean, y_up = inputs
+
+        classes_weights_less = tf.constant([-0.1, -0.1, -0.1, -0.1, -0.1, -0.1, 0.2])
+        classes_weights_up = tf.constant([0., 0., 0., 0., 0., 0., -0.1])
+
+        #out = tf.map_fn(fn=lambda e: self.funcao(output_mean_entropy, e), elems=y_up)
+
+        #tf.print("sai", out)
+
+        if output_mean_entropy < 1.3:
+            out = y_up + classes_weights_less
+        else:
+            #out = y_up + classes_weights_up
+            out = y_up
+
+        return out
+
 
 class POI_RGNNE(NNBase):
 
-    def __init__(self):
+    def __init__(self, batch):
         super().__init__("poi_rgnne")
+        self.entropy_mean = 0
+        self.entropy_amount = 0
+        self.batch = batch
 
     def build(self, step_size, location_input_dim, time_input_dim, num_users, seed=None):
         if seed is not None:
             tf.random.set_seed(seed)
         location_category_input = Input((step_size,), dtype='float32', name='spatial')
+        location_category_index_input = Input((step_size,), dtype='int32', name='spatial')
         temporal_input = Input((step_size,), dtype='float32', name='temporal')
         country_input = Input((step_size,), dtype='float32', name='country')
         distance_input = Input((step_size,), dtype='float32', name='distance')
@@ -261,7 +312,6 @@ class POI_RGNNE(NNBase):
         # distance_matrix = categories_distance_matrix
         # x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
 
-        adjancency_matrix_p = tf.matmul(poi_category_probabilities, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
@@ -320,9 +370,9 @@ class POI_RGNNE(NNBase):
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
-        spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
+        spatial_flatten = Dense(location_input_dim, activation='softmax')(-1*spatial_flatten)
 
-        gnn = Concatenate()([x_durations, distance_duration_matrix, x_durations_week, x_durations_weekend])
+        gnn = Concatenate()([x_durations, distance_duration_matrix])
         gnn = Dropout(0.3)(gnn)
         gnn = Dense(location_input_dim, activation='softmax')(gnn)
 
@@ -351,15 +401,32 @@ class POI_RGNNE(NNBase):
             tfp.distributions.Categorical(probs=[1 / location_input_dim] * location_input_dim).entropy())
 
         y_up = tf.Variable(initial_value=1.) * y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(
-            initial_value=-0.2) * spatial_flatten
+            initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
+
+        output_entropy = tfp.distributions.Categorical(probs=tf.keras.activations.softmax(y_up)).entropy()
+        output_mean_entropy = tf.reduce_mean(output_entropy)
+
+        self.entropy_mean += output_mean_entropy
+        self.entropy_amount += 1
+
+        # if output_mean_entropy < 1.3:
+        #     y_up = y_up + classes_weights
+        #out = Condicao()([output_mean_entropy, self.entropy_mean, y_up])
+        out = tf.Variable(initial_value=1.) * y_cup + (
+                    (1 / tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+            initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
+
+        out = Concatenate()([y_cup, y_sup, spatial_flatten, gnn])
+        out = Dense(location_input_dim, activation='softmax')(out)
 
 
         print("ponto", score)
-        #y_up = Capanema([1.,0.5,-0.2,8.], [0.,1.,0.,0.], location_input_dim)([y_cup, y_sup, spatial_flatten, gnn], score=score, categories=location_category_input)
+        #y_up = Capanema([1.,1.,-0.2,8.], [0.,1.,0.,0.], location_input_dim)([y_cup, y_sup, spatial_flatten, gnn], score=score, categories=location_category_input)
 
-        model = Model(inputs=[location_category_input, temporal_input, distance_input, duration_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, score, poi_category_probabilities, directed_adjancency_matrix, adjacency_week_matrix, adjacency_weekend_matrix, categories_distance_week_matrix, categories_distance_weekend_matrix, categories_durations_week_matrix, categories_durations_weekend_matrix], outputs=[y_up], name="MFA-RNN")
+        model = Model(inputs=[location_category_input, temporal_input, distance_input, duration_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, score, poi_category_probabilities, directed_adjancency_matrix], outputs=[out], name="POI-RGNNE")
 
         return model
+
 
 
     def mhsa(self, input):

@@ -22,6 +22,7 @@ class PointsOfInterestDomain:
     def __init__(self):
         self.location_type = LocationType()
         self.datetime_utils = DatetimesUtils()
+        self.poi_id_count = 0
 
     def inactive_interval(self, events_hours: list) ->tuple:
         """
@@ -338,11 +339,13 @@ class PointsOfInterestDomain:
             for i in range(size):
                 if len(pois_coordinates[i]) == 0:
                     continue
-                p = Poi(pois_coordinates[i], pois_times[i])
+                p = Poi(pois_coordinates[i], pois_times[i], self.poi_id_count)
                 if p.different_days < min_days:
                     continue
                 if p.different_schedules < 2:
                     continue
+                self.poi_id_count += 1
+
                 pois.append(p)
 
             user = User(user_id, pois, n_events, PointsOfInterestConfiguration.METERS.get_value(), min_samples, min_home_events, min_work_events)
@@ -407,7 +410,7 @@ class PointsOfInterestDomain:
         """
         Organazing the results into a single table
         """
-        concatenated_processed_users_pois = pd.DataFrame({"id": [], "poi_type": [],
+        concatenated_processed_users_pois = pd.DataFrame({"id": [], "poi_id": [], "poi_type": [],
                                                          "latitude": [], "longitude": [],
                                                          "work_time_events": [], "home_time_events": []})
 
@@ -416,7 +419,7 @@ class PointsOfInterestDomain:
                 append(processed_users_pois.iloc[i], ignore_index=True)
 
         concatenated_processed_users_pois['id'] = concatenated_processed_users_pois['id'].astype('int64')
-
+        concatenated_processed_users_pois['poi_id'] = concatenated_processed_users_pois['poi_id'].astype('int64')
         # media de pontos de interesse encontrados por usuário
         media = concatenated_processed_users_pois.groupby(by='id').apply(lambda e: pd.DataFrame({'total': [len(e)]}))
         print("Quantidade de usuários: ", len(concatenated_processed_users_pois['id'].tolist()))
@@ -449,6 +452,7 @@ class PointsOfInterestDomain:
         users_steps_with_pois['inactive_interval_start'] = users_steps_with_pois['inactive_interval_start'].astype("int")
         users_steps_with_pois['inactive_interval_end'] = users_steps_with_pois['inactive_interval_end'].astype("int")
         users_steps_with_pois['inverted_routine_flag'] = users_steps_with_pois['inverted_routine_flag'].astype("int")
+        users_steps_with_pois['poi_id'] = users_steps_with_pois['poi_id'].astype("int")
         users_steps_with_pois['row_index'] = np.array([i for i in range(len(users_steps_with_pois))])
         if len(users_steps_with_pois) > 0:
             users_steps_with_pois = users_steps_with_pois.groupby('row_index').apply(lambda e: self.resulting_poi_type(e))
@@ -456,7 +460,7 @@ class PointsOfInterestDomain:
         print("olaaaaa")
         print(users_steps_with_pois)
         users_steps_with_pois = users_steps_with_pois[
-            ['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+            ['id', 'poi_id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
              'work_time_events', 'home_time_events', 'inactive_applied_flag',
              'inactive_interval_end', 'inactive_interval_start',
              'inverted_routine_flag', 'poi_osm', 'distance_osm', 'poi_resulting', 'country_name', 'state_name']]
@@ -470,10 +474,10 @@ class PointsOfInterestDomain:
         userid = user_steps['id'].iloc[0]
         user_pois = pois.query("id == " + str(userid))
         if len(user_pois) == 0:
-            return pd.DataFrame({column: [] for column in ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+            return pd.DataFrame({column: [] for column in ['id_right', 'poi_id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
-        'distance_osm', 'poi_resulting']})
+        'distance_osm', 'poi_resulting', 'poi_resulting_id']})
 
         poi_latitudes = user_pois['latitude'].tolist()
         poi_longitudes = user_pois['longitude'].tolist()
@@ -482,11 +486,11 @@ class PointsOfInterestDomain:
         dp_longitudes = user_steps['longitude'].tolist()
         user_steps['index'] = np.array([i for i in range(len(user_steps))])
         user_steps_points = np.radians([(long, lat) for long, lat in zip(dp_latitudes, dp_longitudes)])
-        user_pois = user_pois[['id', 'poi_type', 'latitude', 'longitude', 'work_time_events',
+        user_pois = user_pois[['id', 'poi_id', 'poi_type', 'latitude', 'longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
        'distance_osm']]
-        user_pois.columns = ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+        user_pois.columns = ['id_right', 'poi_id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
         'distance_osm']
@@ -514,10 +518,10 @@ class PointsOfInterestDomain:
         # print(non_indexes)
         if len(flatten_indexes) == 0 and len(non_indexes) == 0:
             return pd.DataFrame(
-                {column: [] for column in ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+                {column: [] for column in ['id_right', 'poi_id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
                                            'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
                                            'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
-                                           'distance_osm', 'poi_resulting']})
+                                           'distance_osm', 'poi_resulting', 'poi_resulting_id']})
 
         # add displacement user steps to the new user steps
         pattern_row = {}
@@ -571,24 +575,24 @@ class PointsOfInterestDomain:
 
         userid = user_steps['id'].iloc[0]
         user_pois = pois.query("id == " + str(userid))
+        # se não tem PoIs, retorna um df varzio
         if len(user_pois) == 0:
-            return pd.DataFrame({column: [] for column in ['id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+            return pd.DataFrame({column: [] for column in ['id', 'poi_id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
         'distance_osm', 'state_name', 'country_name']})
 
         user_steps['index'] = np.array([i for i in range(len(user_steps))])
-        user_pois = user_pois[['id', 'poi_type', 'latitude', 'longitude', 'work_time_events',
+        user_pois = user_pois[['id', 'poi_id', 'poi_type', 'latitude', 'longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
        'distance_osm', 'geometry']]
-        user_pois.columns = ['id_right', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+        user_pois.columns = ['id_right', 'poi_id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
        'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
        'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
         'distance_osm', 'geometry']
         user_steps_join = gp.sjoin(user_pois, user_steps, op='contains')
         # if len(dp_points) < 1:
-
         columns = user_steps.columns.tolist() + ['index_assign'] + user_pois.columns.tolist()
         new_users_steps = {column: [] for column in columns}
         """
@@ -604,7 +608,7 @@ class PointsOfInterestDomain:
         # print(non_indexes)
         if len(flatten_indexes) == 0 and len(non_indexes) == 0:
             return pd.DataFrame(
-                {column: [] for column in ['id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
+                {column: [] for column in ['id', 'poi_id', 'poi_type', 'poi_latitude', 'poi_longitude', 'work_time_events',
                                            'home_time_events', 'inactive_applied_flag', 'inactive_interval_end',
                                            'inactive_interval_start', 'inverted_routine_flag', 'poi_osm',
                                            'distance_osm', 'state_name', 'country_name']})
@@ -619,7 +623,7 @@ class PointsOfInterestDomain:
             else:
                 pattern_row[column] = user_pois.iloc[0][column]
         pattern_row['poi_type'] = "Commuting"
-        for column in ['poi_latitude', 'poi_longitude', 'work_time_events',
+        for column in ['poi_id', 'poi_latitude', 'poi_longitude', 'work_time_events',
         'home_time_events']:
             pattern_row[column] = -1
         pattern_row['poi_osm'] = 'empty'
@@ -646,16 +650,16 @@ class PointsOfInterestDomain:
         # for key in new_users_steps:
         #     print("chave", key)
         #     print(len(new_users_steps[key]))
-        new_users_steps = pd.DataFrame(new_users_steps)[['id', 'datetime', 'latitude', 'longitude', 'index',
+        new_users_steps = pd.DataFrame(new_users_steps)[['id', 'poi_id', 'datetime', 'latitude', 'longitude', 'index',
        'index_assign', 'id_right', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
        'inverted_routine_flag', 'poi_osm', 'distance_osm', 'state_name', 'country_name']]
-        new_users_steps = new_users_steps[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+        new_users_steps = new_users_steps[['id', 'poi_id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
        'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index', 'state_name', 'country_name']]
-        user_steps_join = user_steps_join[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+        user_steps_join = user_steps_join[['id', 'poi_id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
        'inverted_routine_flag', 'poi_osm', 'distance_osm', 'index', 'state_name', 'country_name']]
@@ -668,7 +672,7 @@ class PointsOfInterestDomain:
 
         self.verify_users_steps_pois_assignment_geopandas(users_steps_with_pois)
 
-        return users_steps_with_pois[['id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
+        return users_steps_with_pois[['id', 'poi_id', 'datetime', 'latitude', 'longitude', 'poi_type', 'poi_latitude', 'poi_longitude',
        'work_time_events', 'home_time_events', 'inactive_applied_flag',
        'inactive_interval_end', 'inactive_interval_start',
        'inverted_routine_flag', 'poi_osm', 'distance_osm', 'state_name', 'country_name']]
@@ -769,7 +773,7 @@ class PointsOfInterestDomain:
             "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/countries/Countries_WGS84/Countries_WGS84.shp")
         select = copy.copy(columns)
         select.append("CNTRY_NAME")
-        users_steps = gp.sjoin(countries, users_steps, op='contains')
+        users_steps = gp.sjoin(countries, users_steps, predicate='contains')
 
         users_steps = users_steps[['id', 'datetime', 'latitude', 'longitude', 'state_name', 'CNTRY_NAME']]
         users_steps.columns = ['id', 'datetime', 'latitude', 'longitude', 'state_name', 'country_name']

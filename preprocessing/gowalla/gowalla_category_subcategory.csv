@@ -1,0 +1,295 @@
+category,subcategory
+Community,Historic Church
+Community,Coworking
+Community,Corporate Office
+Community,Library
+Community,Home
+Community,Victorian
+Community,Modern
+Community,Duplex
+Community,Craftsman
+Community,Condo
+Community,Government
+Community,Post Office
+Community,Police Station
+Community,Fire Station
+Community,Courthouse
+Community,City Hall
+Community,Campus Spot
+Community,Student Center
+Community,Non-Profit
+Community,Sorority House
+Community,Skyscraper
+Community,Warehouse & Industrial
+Community,School
+Community,University
+Community,Trade/Tech School
+Community,School - Other
+Community,Medical School
+Community,Law School
+Community,High School
+Community,College
+Community,Place of Worship
+Community,Temple
+Community,Synagogue
+Community,Other - Place of Worship
+Community,Mosque
+Community,Mission
+Community,Contemporary Church
+Community,Church
+Community,Office
+Community,Startup
+Community,Rec Center
+Community,Apartment
+Community,Hall
+Community,Administration
+Community,Campus Commons
+Community,Lab
+Community,Dormitory
+Community,Frat House
+Community,Campus - Other
+Entertainment,Primates
+Entertainment,Reptiles
+Entertainment,Tigers
+Entertainment,Zebras
+Entertainment,Zoo
+Entertainment,Aquarium
+Entertainment,Arcade
+Entertainment,Arena
+Entertainment,Baseball Stadium
+Entertainment,Soccer Stadium
+Entertainment,Stadium
+Entertainment,Asian Art Museum
+Entertainment,Gallery
+Entertainment,Other - Zoo
+Entertainment,Sculpture
+Entertainment,Traditional Art Museum
+Entertainment,Art
+Entertainment,Art & Culture
+Entertainment,Bowling
+Entertainment,Casino
+Entertainment,Convention Center
+Entertainment,Disc Golf Course
+Entertainment,Golf Course
+Entertainment,Arena or Stadium
+Entertainment,Modern Art Museum
+Entertainment,Hippos
+Entertainment,Giraffes
+Entertainment,Basketball Court
+Entertainment,Football Field
+Entertainment,Soccer Field
+Entertainment,Tennis Court
+Entertainment,Ice Skating
+Entertainment,Local Sports
+Entertainment,Cinemark Theatre
+Entertainment,Movie Theatre
+Entertainment,Other - Art & Culture
+Entertainment,History Museum
+Entertainment,AMC Theatre
+Entertainment,Planetarium
+Entertainment,Science Museum
+Entertainment,Museum
+Entertainment,Other - Entertainment
+Entertainment,Performing Arts
+Entertainment,Racetrack
+Entertainment,Skatepark
+Entertainment,Theatre
+Entertainment,Theme Park
+Entertainment,Aviary
+Entertainment,Baseball Field
+Entertainment,Bears
+Entertainment,Elephants
+Entertainment,Lions
+Entertainment,Live Music
+Food,Bakery
+Food,BBQ
+Food,Breakfast
+Food,Coffee Shop
+Food,Burgers
+Food,Wings
+Food,Vegetarian
+Food,Tea Room
+Food,Street Fare
+Food,Tacos
+Food,Other - Street Fare
+Food,Hot Dogs & Sausages
+Food,Steakhouse
+Food,South American/Latin
+Food,Soul Food
+Food,Seafood
+Food,Sandwich Shop
+Food,Pizza
+Food,Other - Food 
+Food,Asian
+Food,Middle Eastern
+Food,Mediterranean
+Food,Italian
+Food,Indian
+Food,French
+Food,Fish & Chips
+Food,Fine Dining
+Food,Doughnuts
+Food,Diner
+Food,Dessert
+Food,Snow Cones
+Food,Ice Cream
+Food,Frozen Yogurt
+Food,Chocolate
+Food,Candy Store
+Food,Mexican
+Food,Vietnamese
+Food,Thai
+Food,Sushi
+Food,Starbucks
+Food,McDonald's
+Food,Burger King
+Food,Chipotle
+Food,Five Guys Burgers and Fries
+Food,Food & Foodies
+Food,Dunkin' Donuts
+Food,Dukin' Donuts
+Food,American
+Food,Pan Pacific
+Food,Asian Food
+Food,African
+Food,In-N-Out Burger
+Food,Coffee Bean and Tea Leaf
+Nightlife,Other - Nightlife 
+Nightlife,Microbrewery
+Nightlife,Ultra-lounge
+Nightlife,Karaoke
+Nightlife,Dive Bar
+Nightlife,Dancefloor
+Nightlife,Wine Bar
+Nightlife,Bar
+Nightlife,Saloon
+Nightlife,Pub
+Nightlife,Sports Bar
+Nightlife,Nightlife
+Outdoors,Canal
+Outdoors,Cave
+Outdoors,Cemetery
+Outdoors,Dog Park
+Outdoors,Farm
+Outdoors,Ski & Snowboard Area
+Outdoors,Terrain Park
+Outdoors,Summit
+Outdoors,Lifthouse
+Outdoors,Halfpipe
+Outdoors,Gondola
+Outdoors,Glade
+Outdoors,Chalet
+Outdoors,Scenic Lookout
+Outdoors,Pool
+Outdoors,Plaza/Square
+Outdoors,Fountain
+Outdoors,Garden
+Outdoors,Playground
+Outdoors,Lake/River
+Outdoors,Campground
+Outdoors,City Park
+Outdoors,National Park
+Outdoors,Park - Other
+Outdoors,Trailhead
+Outdoors,Park
+Outdoors,Pavilion
+Outdoors,Beach
+Outdoors,Regional/State Park
+Outdoors,Tower
+Outdoors,Vineyard
+Outdoors,Architecture
+Outdoors,Castle
+Outdoors,Other - Parks 
+Outdoors,Lighthouse
+Outdoors,Monument
+Outdoors,Other - Architecture
+Outdoors,Historic Landmark
+Shopping,Other - Shopping
+Shopping,Other - Services
+Shopping,Music
+Shopping,Movie Rental
+Shopping,Medical
+Shopping,Other - Medical
+Shopping,Doctor's Office
+Shopping,Dentist
+Shopping,Mall
+Shopping,Paper Goods
+Shopping,Hardware Store
+Shopping,Gym
+Shopping,Grocery
+Shopping,Hospital
+Shopping,Health & Fitness
+Shopping,Bike Shop
+Shopping,Record Store
+Shopping,Wine & Spirits
+Shopping,Veterinarian
+Shopping,Toys & Games
+Shopping,Tobacco & Cigars
+Shopping,Thrift Store
+Shopping,Technology
+Shopping,Tattoo Parlor
+Shopping,Pet Store
+Shopping,Sports & Outdoors
+Shopping,Skate Shop
+Shopping,Running
+Shopping,Other Sports
+Shopping,Golf Shop
+Shopping,Camping & Outdoors
+Shopping,Gas & Automotive
+Shopping,Salon & Barbershop
+Shopping,Ski Shop
+Shopping,Furniture
+Shopping,Drugstore & Pharmacy
+Shopping,Farmers Market
+Shopping,T-Mobile
+Shopping,Best Buy
+Shopping,Apple Store
+Shopping,Gap
+Shopping,Walgreens
+Shopping,Nike
+Shopping,Flower Shop
+Shopping,Walmart
+Shopping,Banana Republic
+Shopping,Urban Outfitters
+Shopping,Target
+Shopping,Whole Foods
+Shopping,Accessories
+Shopping,Children's Apparel
+Shopping,Men's Apparel
+Shopping,Shoes
+Shopping,Women's Apparel
+Shopping,Apparel
+Shopping,Bank & Financial
+Shopping,Bookstore
+Shopping,Crafts & Creative
+Shopping,Department Store
+Shopping,Discount Store
+Shopping,Antiques
+Travel,Bed & Breakfast
+Travel,Antique Hotel
+Travel,Hotel
+Travel,Subway
+Travel,Resort
+Travel,Rental Car
+Travel,Light Rail
+Travel,Motel
+Travel,Modern Hotel
+Travel,Luxury Hotel
+Travel,Hostel
+Travel,Ferry
+Travel,Bus Station
+Travel,Other - Travel & Lodging
+Travel,Airport
+Travel,Tram
+Travel,Terminal
+Travel,Train Station
+Travel,Disneyland Resort
+Travel,Walt Disney World Resort
+Travel,Staybridge Suites
+Travel,Holiday Inn Club Vacations
+Travel,Walt Disne World Resort
+Travel,Holiday Inn Express
+Travel,Holiday Inn
+Travel,Four Seasons
+Travel,Bridge
+Travel,Travel-Other

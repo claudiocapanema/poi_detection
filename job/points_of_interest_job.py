@@ -45,9 +45,12 @@ class PointOfInterest(Job):
         #self.users_pois_classificaion(users_steps, utc_to_sp)
 
         if users_steps_join_detected_pois == "yes":
+            poi_resulting_to_int = {'Tourism': 0, 'Amenity': 1, 'Leisure': 2, 'Shop': 3, 'Commuting': 4, 'Home': 5, 'Work': 6, 'Other': 7}
             with suppress(OSError):
                 os.remove(users_steps_with_detected_pois_with_osm_pois_filename)
             users_detected_pois = self.user_step_domain.read_csv(users_detected_pois_with_osm_pois_filename)
+            print("llaa")
+            print(users_detected_pois)
             users_detected_pois['id'] = users_detected_pois['id'].astype('int')
             print("ca", users_detected_pois['poi_osm'].unique().tolist())
             users_steps['id'] = users_steps['id'].astype('int')
@@ -61,12 +64,16 @@ class PointOfInterest(Job):
 
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(users_steps.query("id in " + str(users_steps_ids[:first_half])),
                                                                                                    users_detected_pois.query("id in " + str(users_steps_ids[:first_half])))
+
+            print("primeiros pois: ", users_steps_with_pois)
+            #users_steps_with_pois = self.add_poi_resulting_id_column(users_steps_with_pois, poi_resulting_to_int)
             print("Salvar 1")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois, users_steps_with_detected_pois_with_osm_pois_filename, 'a')
 
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
                 users_steps.query("id in " + str(users_steps_ids[first_half:second_half])), users_detected_pois.query("id in " + str(users_steps_ids[first_half:second_half])))
+            #users_steps_with_pois = self.add_poi_resulting_id_column(users_steps_with_pois, poi_resulting_to_int)
             print("Salvar 2")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
@@ -75,6 +82,7 @@ class PointOfInterest(Job):
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
                 users_steps.query("id in " + str(users_steps_ids[second_half:third_half])),
                 users_detected_pois.query("id in " + str(users_steps_ids[second_half:third_half])))
+            #users_steps_with_pois = self.add_poi_resulting_id_column(users_steps_with_pois, poi_resulting_to_int)
             print("Salvar 3")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
@@ -83,6 +91,7 @@ class PointOfInterest(Job):
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
                 users_steps.query("id in " + str(users_steps_ids[third_half:fourth_half])),
                 users_detected_pois.query("id in " + str(users_steps_ids[third_half:fourth_half])))
+            #users_steps_with_pois = self.add_poi_resulting_id_column(users_steps_with_pois, poi_resulting_to_int)
             print("Salvar 4")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
@@ -91,6 +100,7 @@ class PointOfInterest(Job):
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
                 users_steps.query("id in " + str(users_steps_ids[fourth_half:fifth_half])),
                 users_detected_pois.query("id in " + str(users_steps_ids[fourth_half:fifth_half])))
+            #users_steps_with_pois = self.add_poi_resulting_id_column(users_steps_with_pois, poi_resulting_to_int)
             print("Salvar 5")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
@@ -99,6 +109,7 @@ class PointOfInterest(Job):
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
                 users_steps.query("id in " + str(users_steps_ids[fifth_half:sixth_half])),
                 users_detected_pois.query("id in " + str(users_steps_ids[first_half:sixth_half])))
+            #users_steps_with_pois = self.add_poi_resulting_id_column(users_steps_with_pois, poi_resulting_to_int)
             print("Salvar 6")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
@@ -107,13 +118,29 @@ class PointOfInterest(Job):
             users_steps_with_pois = self.points_of_interest_domain.associate_users_steps_with_pois(
                 users_steps.query("id in " + str(users_steps_ids[sixth_half:])),
                 users_detected_pois.query("id in " + str(users_steps_ids[sixth_half:])))
+            #users_steps_with_pois = self.add_poi_resulting_id_column(users_steps_with_pois, poi_resulting_to_int)
             print("Salvar 6")
             print(users_steps_with_pois)
             self.file_loader.save_df_to_csv(users_steps_with_pois,
                                             users_steps_with_detected_pois_with_osm_pois_filename, 'a', False)
 
+    def add_poi_resulting_id_column(self, users_steps_with_pois, poi_resulting_to_int):
+
+        poi_category_id = []
+        poi_resulting = users_steps_with_pois['poi_resulting'].tolist()
+        for i in range(len(poi_resulting)):
+            # print("indice", i)
+            # print("categoria: ", poi_resulting[i])
+            # print("inteiro: ", poi_resulting_to_int[poi_resulting[i]])
+            poi_category_id.append(poi_resulting_to_int[poi_resulting[i]])
+
+        users_steps_with_pois['poi_resulting_id'] = np.array(poi_category_id)
+
+        return users_steps_with_pois
+
     def users_pois_detection(self, users_steps, utc_to_sp, poi_detection_filename):
 
+        poi_id_count = 0
         users_pois_detected = users_steps.groupby(by='id'). \
             apply(lambda e: self.points_of_interest_domain.
                   identify_points_of_interest(e,
@@ -124,6 +151,7 @@ class PointOfInterest(Job):
         """
         users_pois_detected_concatenated = self.points_of_interest_domain. \
             concatenate_dataframes(users_pois_detected)
+
         self.file_loader.save_df_to_csv(users_pois_detected_concatenated, poi_detection_filename)
 
         return users_pois_detected_concatenated

@@ -2,7 +2,7 @@
 echo "Argument: "$1
 
 # common variables
-USERS_STEPS_BASE_DIR="/media/claudio/Data/backup_linux/Documentos/users_steps_datasets/"
+USERS_STEPS_BASE_DIR="/media/claudio/Data/backup_win_hd/Downloads/doutorado/users_steps/"
 USERS_STEPS_OUTPUT_BASE_DIR="/media/claudio/Data/backup_win_hd/Downloads/doutorado/users_steps_output/"
 USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR="${USERS_STEPS_OUTPUT_BASE_DIR}sequences/"
 USERS_STEPS_10_CATEGORIES_SEQUENCES_FILENAME="${USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR}users_steps_10_categories_sequences.csv"
@@ -91,17 +91,17 @@ NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
           "categories_type":"7_categories"
           }'
 
-#PERFORMANCE_PLOTS_CONFIG='{
-#          "job": "performance_plots_job",
-#          "categories_type":"7_categories",
-#          "dataset_name":"gowalla"
-#        }'
-
 PERFORMANCE_PLOTS_CONFIG='{
           "job": "performance_plots_job",
-          "categories_type":"8_categories",
-          "dataset_name":"users_steps"
+          "categories_type":"7_categories",
+          "dataset_name":"gowalla"
         }'
+
+#PERFORMANCE_PLOTS_CONFIG='{
+#          "job": "performance_plots_job",
+#          "categories_type":"8_categories",
+#          "dataset_name":"users_steps"
+#        }'
 
 POI_TRANSACTIONS_ANALYSIS='{
           "job": "poi_transactions_job",

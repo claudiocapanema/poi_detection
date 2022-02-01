@@ -46,15 +46,17 @@ class User:
         inactive_interval_end = [self.inactive_interval_end] * number_of_pois
         inactive_applied_flag = [self.inactive_applied_flag] * number_of_pois
         inverted_routine_flag = [self.inverted_routine_flag] * number_of_pois
+        pois_ids = []
         for poi in self.pois:
             poi = poi.to_dict()
+            pois_ids.append(poi['poi_id'])
             locations_types.append(poi['location_type'])
             latitudes.append(poi['latitude'])
             longitudes.append(poi['longitude'])
             homes_times_events.append(poi['home_time_events'])
             works_times_events.append(poi['work_time_events'])
 
-        df = pd.DataFrame({"id": ids, "poi_type": locations_types, "latitude": latitudes, "longitude": longitudes,
+        df = pd.DataFrame({"id": ids, "poi_id": pois_ids, "poi_type": locations_types, "latitude": latitudes, "longitude": longitudes,
                            "work_time_events": works_times_events, "home_time_events": homes_times_events,
                            "inactive_interval_start": inactive_interval_start,
                            "inactive_interval_end": inactive_interval_end, "inactive_applied_flag": inactive_applied_flag,
