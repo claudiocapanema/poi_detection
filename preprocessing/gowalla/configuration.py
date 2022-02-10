@@ -16,6 +16,8 @@ CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED = BASE_DIR + "gowalla_checkins_7_categor
 
 CHECKINS_5_CATEGORIES_OSM_LOCAL_DATETIME_COLUMNS_REDUCED = BASE_DIR + "gowalla_checkins_5_categories_osm_local_datetime_columns_reduced.csv"
 
+CHECKINS_5_CATEGORIES_OSM_LOCAL_DATETIME_COLUMNS_REDUCED_US = BASE_DIR + "gowalla_checkins_5_categories_osm_local_datetime_columns_reduced_us.csv"
+
 CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED_US = BASE_DIR + "gowalla_checkins_7_categories_local_datetime_columns_reduced_us.csv"
 
 SPOTS_1 = BASE_DIR + "gowalla_spots_subset1.csv"

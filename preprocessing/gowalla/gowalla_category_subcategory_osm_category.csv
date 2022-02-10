@@ -59,22 +59,22 @@ Entertainment,Arena,Leisure
 Entertainment,Baseball Stadium,Leisure
 Entertainment,Soccer Stadium,Leisure
 Entertainment,Stadium,Leisure
-Entertainment,Asian Art Museum
-Entertainment,Gallery
-Entertainment,Other - Zoo
-Entertainment,Sculpture
-Entertainment,Traditional Art Museum
-Entertainment,Art
-Entertainment,Art & Culture
-Entertainment,Bowling
-Entertainment,Casino
-Entertainment,Convention Center
+Entertainment,Asian Art Museum,Tourism
+Entertainment,Gallery,Tourism
+Entertainment,Other - Zoo,Tourism
+Entertainment,Sculpture,Tourism
+Entertainment,Traditional Art Museum,Tourism
+Entertainment,Art,Amenity
+Entertainment,Art & Culture,Amenity
+Entertainment,Bowling,Other
+Entertainment,Casino,Amenity
+Entertainment,Convention Center,Other
 Entertainment,Disc Golf Course,Leisure
 Entertainment,Golf Course,Leisure
 Entertainment,Arena or Stadium,Leisure
-Entertainment,Modern Art Museum
-Entertainment,Hippos
-Entertainment,Giraffes
+Entertainment,Modern Art Museum,Tourism
+Entertainment,Hippos,Other
+Entertainment,Giraffes,Other
 Entertainment,Basketball Court,Leisure
 Entertainment,Football Field,Leisure
 Entertainment,Soccer Field,Leisure
@@ -166,44 +166,44 @@ Nightlife,Saloon,Amenity
 Nightlife,Pub,Amenity
 Nightlife,Sports Bar,Amenity
 Nightlife,Nightlife,Amenity
-Outdoors,Canal
-Outdoors,Cave
-Outdoors,Cemetery
+Outdoors,Canal,Other
+Outdoors,Cave,Other
+Outdoors,Cemetery,Other
 Outdoors,Dog Park,Leisure
-Outdoors,Farm
-Outdoors,Ski & Snowboard Area
+Outdoors,Farm,Other
+Outdoors,Ski & Snowboard Area,Leisure
 Outdoors,Terrain Park,Leisure
-Outdoors,Summit
-Outdoors,Lifthouse
-Outdoors,Halfpipe
-Outdoors,Gondola
-Outdoors,Glade
-Outdoors,Chalet
+Outdoors,Summit,Other
+Outdoors,Lifthouse,Other
+Outdoors,Halfpipe,Other
+Outdoors,Gondola,Other
+Outdoors,Glade,Other
+Outdoors,Chalet,Tourism
 Outdoors,Scenic Lookout
-Outdoors,Pool
-Outdoors,Plaza/Square
-Outdoors,Fountain
-Outdoors,Garden
-Outdoors,Playground
-Outdoors,Lake/River
-Outdoors,Campground
+Outdoors,Pool,Leisure
+Outdoors,Plaza/Square,Other
+Outdoors,Fountain,Other
+Outdoors,Garden,Leisure
+Outdoors,Playground,Leisure
+Outdoors,Lake/River,Other
+Outdoors,Campground,Leisure
 Outdoors,City Park,Leisure
 Outdoors,National Park,Leisure
 Outdoors,Park - Other,Leisure
-Outdoors,Trailhead
+Outdoors,Trailhead,Leisure
 Outdoors,Park,Leisure
-Outdoors,Pavilion
-Outdoors,Beach
+Outdoors,Pavilion,Other
+Outdoors,Beach,Other
 Outdoors,Regional/State Park,Leisure
-Outdoors,Tower
-Outdoors,Vineyard
-Outdoors,Architecture
-Outdoors,Castle
+Outdoors,Tower,Other
+Outdoors,Vineyard,Other
+Outdoors,Architecture,Other
+Outdoors,Castle,Other
 Outdoors,Other - Parks,Leisure
-Outdoors,Lighthouse
-Outdoors,Monument
-Outdoors,Other - Architecture
-Outdoors,Historic Landmark
+Outdoors,Lighthouse,Other
+Outdoors,Monument,Other
+Outdoors,Other - Architecture,Other
+Outdoors,Historic Landmark,Other
 Shopping,Other - Shopping,Shop
 Shopping,Other - Services,Shop
 Shopping,Music,Shop
@@ -218,7 +218,7 @@ Shopping,Hardware Store,Shop
 Shopping,Gym,Shop
 Shopping,Grocery,Shop
 Shopping,Hospital,Shop
-Shopping,Health & Fitness
+Shopping,Health & Fitness,Leisure
 Shopping,Bike Shop,Shop
 Shopping,Record Store,Shop
 Shopping,Wine & Spirits,Shop

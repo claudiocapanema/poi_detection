@@ -52,6 +52,7 @@ class PointOfInterest(Job):
             print("llaa")
             print(users_detected_pois)
             users_detected_pois['id'] = users_detected_pois['id'].astype('int')
+            users_detected_pois['poi_osm'] = np.array(users_detected_pois['poi_gowalla'].tolist())
             print("ca", users_detected_pois['poi_osm'].unique().tolist())
             users_steps['id'] = users_steps['id'].astype('int')
             users_steps_ids = users_steps['id'].unique().tolist()
