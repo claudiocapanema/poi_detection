@@ -773,7 +773,7 @@ class PointsOfInterestDomain:
             "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/countries/Countries_WGS84/Countries_WGS84.shp")
         select = copy.copy(columns)
         select.append("CNTRY_NAME")
-        users_steps = gp.sjoin(countries, users_steps, predicate='contains')
+        users_steps = gp.sjoin(countries, users_steps, op='contains')
 
         users_steps = users_steps[['id', 'datetime', 'latitude', 'longitude', 'state_name', 'CNTRY_NAME']]
         users_steps.columns = ['id', 'datetime', 'latitude', 'longitude', 'state_name', 'country_name']

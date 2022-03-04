@@ -11,8 +11,8 @@ class PointsOfInterestConfiguration(Enum):
     # DBSCAN
 
     METERS = ("meters",30, False, "radius in meters")
-    EPSILON = ("epsilon", 0.02 / 6371.0088, "False", "epsilon")
-    MIN_SAMPLES = ("min_samples", 8, "False", "minimum number of samples of a cluster")
+    EPSILON = ("epsilon", 0.03 / 6371.0088, "False", "epsilon")
+    MIN_SAMPLES = ("min_samples", 5, "False", "minimum number of samples of a cluster")
 
     # PoI identification
 
@@ -29,12 +29,12 @@ class PointsOfInterestConfiguration(Enum):
     MIN_MAX_INVERTED_ROUTINE = ("min_max_inverted_routine", {'min': 8, 'max': 21}, False, "min max inverted routine")
     MIN_HOME_EVENTS = ("min_home_events", 3, False, "minimum number of poi's events to it be classified as Home")
     MIN_WORK_EVENTS = ("min_work_events", 10, False, "minimum number of poi's events to it be classified as Work")
-    MIN_DAYS = ("min_days", 4, False, "minimum number of different days of a cluster to become a PoI")
+    MIN_DAYS = ("min_days", 3, False, "minimum number of different days of a cluster to become a PoI")
     RADIUS_CLASSIFICATION = ("radius_classification", 0.02 / 6371.0088, "False", "epsilon")
 
     # run
     MIN_EVENTS = ("min_events", 10,  False, "minimum quantity of events necessary to a user be processed")
-    MAX_EVENTS = ("max_events", 500,  False, "maximum quantity of events processed of a user")
+    MAX_EVENTS = ("max_events", 1000,  False, "maximum quantity of events processed of a user")
 
 
     def __str__(self):
