@@ -85,14 +85,14 @@ class NextPoiCategoryPredictionDomain:
 
         if dataset_name == "gowalla":
             minimum = 40
-            n = 1000
-            #n = 100
+            #n = 1000
+            #n = 600
             #minimum = 40
-            #n = 1500
+            n = 1500
             #bom
             random = 1
         else:
-            n = 1650
+            #n = 1650
             minimum = 300
             #n = 1300
 
@@ -104,7 +104,7 @@ class NextPoiCategoryPredictionDomain:
             #n = 1050
             #minimum = 250
             # melhor ainda
-            # n = 1050
+            n = 1050
 #            minimum = 300
             #random = 2
             # melhor 2
@@ -118,7 +118,7 @@ class NextPoiCategoryPredictionDomain:
 
         df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))
-        df = df.sample(n=n, random_state=random)
+        df = df.sample(n=n, random_state=random, replace=True)
         print(df)
 
         # reindex ids
@@ -727,25 +727,30 @@ class NextPoiCategoryPredictionDomain:
                           metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
             #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
             #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
+            print(model.summary())
+            y_train = np.array(y_train)[0]
+            print("f", y_train.shape)
+            y_test = np.array(y_test)[0]
             hi = model.fit(X_train,
                            y_train,
                            validation_data=(X_test, y_test),
+                           class_weight=class_weight,
                            batch_size=batch,
                            epochs=epochs,
                            callbacks=EarlyStopping(patience=3, restore_best_weights=True))
         else:
             loss_fn = tf.keras.losses.CategoricalCrossentropy()
 
-            # Training step
-            @tf.function
-            def train():
-                with tf.GradientTape() as tape:
-                    predictions = model(X_train, training=True)
-                    loss = loss_fn(y_train, predictions)
-                    loss += sum(model.losses)
-                gradients = tape.gradient(loss, model.trainable_variables)
-                parameters['optimizer'].apply_gradients(zip(gradients, model.trainable_variables))
-                return loss
+            # # Training step
+            # @tf.function
+            # def train():
+            #     with tf.GradientTape() as tape:
+            #         predictions = model(X_train, training=True)
+            #         loss = loss_fn(y_train, predictions)
+            #         loss += sum(model.losses)
+            #     gradients = tape.gradient(loss, model.trainable_variables)
+            #     parameters['optimizer'].apply_gradients(zip(gradients, model.trainable_variables))
+            #     return loss
 
         #print("summary: ", model.summary())
         # print("history: ", h)
@@ -759,7 +764,7 @@ class NextPoiCategoryPredictionDomain:
         # To transform one_hot_encoding to list of integers, representing the locations
         print("------------- Location ------------")
         y_predict_location = one_hot_decoding(y_predict_location)
-        y_test_location = one_hot_decoding(y_test[0])
+        y_test_location = one_hot_decoding(y_test)
 
         report = skm.classification_report(y_test_location, y_predict_location, output_dict=True)
         print("Relatorio")

@@ -9,9 +9,10 @@ from model.next_poi_category_prediction_models.neural_network_base_model import 
 
 import numpy as np
 import tensorflow as tf
+import tensorflow_probability as tfp
 
 from spektral.layers.convolutional import ARMAConv, GCNConv, GATConv, DiffusionConv
-from spektral.layers.pooling import GlobalAvgPool, GlobalAttentionPool, GlobalAttnSumPool
+from spektral.layers.pooling import GlobalAvgPool, GlobalSumPool, GlobalMaxPool, GlobalAttentionPool, GlobalAttnSumPool, DiffPool, SAGPool, SortPool, TopKPool, MinCutPool
 
 l2_reg = 5e-5           # L2 regularization rate
 drop_out_rate = 0
@@ -157,6 +158,7 @@ class MFA_RNN(NNBase):
         x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = Flatten()(x_distances)
+        #x_distances = GlobalAvgPool()(x_distances)
 
         durations_matrix = categories_durations_matrix
         #durations_matrix = categories_durations_matrix
@@ -166,12 +168,14 @@ class MFA_RNN(NNBase):
         x_durations = GCNConv(10, activation='swish')([x_durations, adjancency_matrix])
         x_durations = Dropout(0.3)(x_durations)
         x_durations = Flatten()(x_durations)
+        #x_durations = GlobalAvgPool()(x_durations)
 
         distance_duration_matrix = GCNConv(22, activation='swish')([distance_duration_matrix, adjancency_matrix])
         # x_durations = Dropout(0.5)(x_durations)
         distance_duration_matrix = GCNConv(10, activation='swish')([distance_duration_matrix, adjancency_matrix])
         distance_duration_matrix = Dropout(0.3)(distance_duration_matrix)
         distance_duration_matrix = Flatten()(distance_duration_matrix)
+        #distance_duration_matrix = GlobalAvgPool()(distance_duration_matrix)
 
         print("at", att.shape)
         # att = Concatenate()([srnn, att])
@@ -181,20 +185,31 @@ class MFA_RNN(NNBase):
         print("gc", x_distances.shape)
         # y_up = tf.matmul(att, x)
         srnn = Flatten()(srnn)
-        y_sup = Concatenate()([srnn, att, x_distances, x_durations, distance_duration_matrix])
+
+        y_sup = Concatenate()([srnn, att])
         y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
 
-        flatten_poi_category_matrix = Flatten()(sequence_poi_category_matrix)
-        flatten_poi_category_matrix = Dropout(0.5)(flatten_poi_category_matrix)
-        y_poi_category = Dense(location_input_dim, activation='softmax')(flatten_poi_category_matrix)
 
-        y_up = tf.Variable(initial_value=1.)*y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(initial_value=-0.2) * spatial_flatten + tf.Variable(1.)*y_poi_category
+        gnn = Concatenate()([x_durations, x_distances, distance_duration_matrix])
+        gnn = Dropout(0.3)(gnn)
+        gnn = Dense(location_input_dim, activation='softmax')(gnn)
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=[y_up], name="MFA-RNN")
+        r_entropy = tfp.distributions.Categorical(probs=y_sup).entropy()
+        max_entropy = tf.reduce_mean(
+            tfp.distributions.Categorical(probs=[1 / location_input_dim] * location_input_dim).entropy())
+
+        g_entropy = tfp.distributions.Categorical(probs=gnn).entropy()
+        g_max_entropy = tf.reduce_mean(
+            tfp.distributions.Categorical(probs=[1 / location_input_dim] * location_input_dim).entropy())
+
+        y_up = tf.Variable(initial_value=1.) * y_cup + (
+                    (1 / tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+            initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=y_up, name="MFA-RNN")
 
         return model
 

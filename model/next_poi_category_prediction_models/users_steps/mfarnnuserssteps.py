@@ -32,10 +32,13 @@ class MFARNNUsersSteps(NNBase):
         duration_input = Input((step_size,), dtype='float32', name='duration')
         week_day_input = Input((step_size,), dtype='float32', name='week_day')
         user_id_input = Input((step_size,), dtype='float32', name='user')
+        pois_ids_input = Input((step_size,), dtype='float32', name='pois_ids')
         categories_distance_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='categories_distance_matrix')
         categories_temporal_matrix = Input((location_input_dim, 48), dtype='float32', name='categories_temporal_matrix')
         adjancency_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='adjacency_matrix')
         categories_durations_matrix = Input((location_input_dim, location_input_dim), dtype='float32', name='categories_durations_matrix')
+        sequence_poi_category_matrix = Input((step_size, location_input_dim), dtype='float32',
+                                             name='sequence_poi_category_matrix')
 
         # adjancency_matrix = tf.cast(adjancency_matrix, dtype='float32')
         # categories_temporal_matrix = tf.cast(categories_temporal_matrix, dtype='float32')
@@ -123,6 +126,6 @@ class MFARNNUsersSteps(NNBase):
 
         y = y_r + y_sup + y_cup
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix], outputs=[y], name="MFA-RNN")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=[y], name="MFA-RNN")
 
         return model

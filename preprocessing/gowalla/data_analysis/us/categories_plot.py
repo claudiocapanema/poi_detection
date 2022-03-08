@@ -9,7 +9,7 @@ sns.set_theme(style='whitegrid')
 
 def save_fig(dir, filename, fig):
     Path(dir).mkdir(parents=True, exist_ok=True)
-    fig.savefig(dir + filename + ".png",
+    fig.savefig(dir + filename,
                 bbox_inches='tight',
                 dpi=400)
 
@@ -18,10 +18,10 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     total_frequency = sum(hour_frequency_dict.values())
     #total_frequency = 1
     for day in hour_frequency_dict:
-        total.append(hour_frequency_dict[day] / total_frequency)
-    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Records': total})
+        total.append(hour_frequency_dict[day]*100 / total_frequency)
+    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage': total})
 
-    barplot(dir, 'Category', 'Records', df, "gowalla_barplot_category_total_" + week + title,
+    barplot(dir, 'Category', 'Percentage', df, "gowalla_barplot_category_total_" + week + title + ".png",
                  "Percentage of records per category" + title)
 
 def change_width(ax, new_value) :
@@ -68,6 +68,7 @@ def barplot(dir, x, y, df, filename, title, save=True):
     #plt.xticks(rotation=35)
 
     save_fig(dir, filename, fig)
+    save_fig(dir, filename.replace("png", "svg"), fig)
 
 if __name__ == "__main__":
 
