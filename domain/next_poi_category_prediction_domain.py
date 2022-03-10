@@ -23,7 +23,7 @@ from foundation.util.nn_preprocessing import one_hot_decoding
 
 from model.next_poi_category_prediction_models.users_steps.serm.model import SERMUsersSteps
 from model.next_poi_category_prediction_models.users_steps.map.model import MAPUsersSteps
-from model.next_poi_category_prediction_models.users_steps.stf.model import STFUsersSteps
+from model.next_poi_category_prediction_models.users_steps.stf.stf import STFUsersSteps
 from model.next_poi_category_prediction_models.users_steps.mfarnnuserssteps import MFARNNUsersSteps
 from model.next_poi_category_prediction_models.users_steps.next.model import NEXTUsersSteps
 from model.next_poi_category_prediction_models.gowalla.serm.serm import SERM
@@ -89,6 +89,7 @@ class NextPoiCategoryPredictionDomain:
             #n = 600
             #minimum = 40
             n = 1500
+            n = 500
             #bom
             random = 1
         else:
@@ -104,7 +105,8 @@ class NextPoiCategoryPredictionDomain:
             #n = 1050
             #minimum = 250
             # melhor ainda
-            n = 1050
+            #n = 1050
+            n = 200
 #            minimum = 300
             #random = 2
             # melhor 2
@@ -727,7 +729,6 @@ class NextPoiCategoryPredictionDomain:
                           metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
             #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
             #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
-            print(model.summary())
             y_train = np.array(y_train)[0]
             print("f", y_train.shape)
             y_test = np.array(y_test)[0]

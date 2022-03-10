@@ -87,10 +87,10 @@ class MFARNNUsersSteps(NNBase):
         srnn = SimpleRNN(70, return_sequences=True)(l_p)
         srnn = Dropout(0.5)(srnn)
 
-        att = MultiHeadAttention(key_dim=2,
-                                 num_heads=1,
-                                 name='Attention')(srnn, srnn)
-        att = Flatten()(att)
+        # att = MultiHeadAttention(key_dim=2,
+        #                          num_heads=1,
+        #                          name='Attention')(srnn, srnn)
+        # att = Flatten()(att)
 
         distance_matrix = categories_distance_matrix
         # distance_matrix = categories_distance_matrix
@@ -113,7 +113,7 @@ class MFARNNUsersSteps(NNBase):
         srnn = Dropout(0.3)(srnn)
         y_r = Dense(location_input_dim, activation='softmax')(srnn)
 
-        y_sup = Concatenate()([att, x_distances, x_durations])
+        y_sup = Concatenate()([x_distances, x_durations])
         y_sup = Dropout(0.5)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
@@ -122,7 +122,7 @@ class MFARNNUsersSteps(NNBase):
 
         y_r = tf.Variable(initial_value=1.) * y_r
         y_sup = tf.Variable(initial_value=0.)*y_sup
-        y_cup = tf.Variable(initial_value=1.) * y_cup
+        y_cup = tf.Variable(initial_value=.5) * y_cup
 
         y = y_r + y_sup + y_cup
 

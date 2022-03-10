@@ -10,7 +10,7 @@ class NextPoiCategoryPredictionConfiguration:
     # Radius for the nearestneighbors algorithm - 100m
     def __init__(self):
         # 7
-        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 4, 'gowalla': 3})
+        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 3, 'gowalla': 3})
 
         self.N_SPLITS = ("n_splits", 5)
 
@@ -48,11 +48,12 @@ class NextPoiCategoryPredictionConfiguration:
                           '3_categories': "3_categories/"})
 
         self.CLASS_WEIGHT = ("class_weight",
-                        {'10_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
-                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
-                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
+                        {'10_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
                                            'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
-                                           'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1}},
+                                           'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'garg': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3}},
                          '8_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},

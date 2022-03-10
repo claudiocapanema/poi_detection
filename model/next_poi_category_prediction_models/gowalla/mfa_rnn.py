@@ -151,34 +151,27 @@ class MFA_RNN(NNBase):
         distance_duration_matrix = tf.multiply(categories_distance_matrix, categories_durations_matrix)
 
         distance_matrix = categories_distance_matrix
-        #distance_matrix = categories_distance_matrix
-        #x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = Flatten()(x_distances)
-        #x_distances = GlobalAvgPool()(x_distances)
 
         durations_matrix = categories_durations_matrix
-        #durations_matrix = categories_durations_matrix
-        #x_durations = self.graph_temporal_arma(durations_matrix, adjancency_matrix)
         x_durations = GCNConv(22, activation='swish')([durations_matrix, adjancency_matrix])
         #x_durations = Dropout(0.5)(x_durations)
         x_durations = GCNConv(10, activation='swish')([x_durations, adjancency_matrix])
         x_durations = Dropout(0.3)(x_durations)
         x_durations = Flatten()(x_durations)
-        #x_durations = GlobalAvgPool()(x_durations)
 
         distance_duration_matrix = GCNConv(22, activation='swish')([distance_duration_matrix, adjancency_matrix])
         # x_durations = Dropout(0.5)(x_durations)
         distance_duration_matrix = GCNConv(10, activation='swish')([distance_duration_matrix, adjancency_matrix])
         distance_duration_matrix = Dropout(0.3)(distance_duration_matrix)
         distance_duration_matrix = Flatten()(distance_duration_matrix)
-        #distance_duration_matrix = GlobalAvgPool()(distance_duration_matrix)
 
         print("at", att.shape)
-        # att = Concatenate()([srnn, att])
+        att = Concatenate()([srnn, att])
         att = Flatten()(att)
         print("att", att.shape)
         print("transposto", tf.transpose(att).shape)
@@ -186,7 +179,7 @@ class MFA_RNN(NNBase):
         # y_up = tf.matmul(att, x)
         srnn = Flatten()(srnn)
 
-        y_sup = Concatenate()([srnn, att])
+        y_sup = srnn
         y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
         y_cup = Dropout(0.5)(y_cup)
@@ -206,9 +199,18 @@ class MFA_RNN(NNBase):
         g_max_entropy = tf.reduce_mean(
             tfp.distributions.Categorical(probs=[1 / location_input_dim] * location_input_dim).entropy())
 
-        y_up = tf.Variable(initial_value=1.) * y_cup + (
-                    (1 / tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(
-            initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
+        # y_up = tf.Variable(initial_value=1.) * y_cup + (
+        #             (1 / tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+        #     initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
+
+        # antiga
+        flatten_poi_category_matrix = Flatten()(sequence_poi_category_matrix)
+        flatten_poi_category_matrix = Dropout(0.5)(flatten_poi_category_matrix)
+        y_poi_category = Dense(location_input_dim, activation='softmax')(flatten_poi_category_matrix)
+
+        y_up = tf.Variable(initial_value=1.) * y_cup + tf.Variable(initial_value=1.) * y_sup + tf.Variable(
+            initial_value=-0.2) * spatial_flatten + tf.Variable(1.) * y_poi_category
+
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=y_up, name="MFA-RNN")
 
         return model
