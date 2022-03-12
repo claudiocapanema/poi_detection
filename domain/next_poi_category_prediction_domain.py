@@ -85,10 +85,10 @@ class NextPoiCategoryPredictionDomain:
 
         if dataset_name == "gowalla":
             minimum = 40
-            n = 1000
+            #n = 1000
             #n = 100
             #minimum = 40
-            #n = 1500
+            n = 1500
             #bom
             random = 1
         else:
@@ -722,6 +722,10 @@ class NextPoiCategoryPredictionDomain:
         logdir = output_dir + "logs/fit/" + dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
+        y_train = np.array(y_train)[0]
+        print("f", y_train.shape)
+        y_test = np.array(y_test)[0]
+
         if model_name not in ['gargs']:
             model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
                           metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
@@ -730,6 +734,7 @@ class NextPoiCategoryPredictionDomain:
             hi = model.fit(X_train,
                            y_train,
                            validation_data=(X_test, y_test),
+                           class_weight=class_weight,
                            batch_size=batch,
                            epochs=epochs,
                            callbacks=EarlyStopping(patience=3, restore_best_weights=True))
@@ -759,7 +764,7 @@ class NextPoiCategoryPredictionDomain:
         # To transform one_hot_encoding to list of integers, representing the locations
         print("------------- Location ------------")
         y_predict_location = one_hot_decoding(y_predict_location)
-        y_test_location = one_hot_decoding(y_test[0])
+        y_test_location = one_hot_decoding(y_test)
 
         report = skm.classification_report(y_test_location, y_predict_location, output_dict=True)
         print("Relatorio")

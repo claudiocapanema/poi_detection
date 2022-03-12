@@ -10,12 +10,12 @@ class NextPoiCategoryPredictionConfiguration:
     # Radius for the nearestneighbors algorithm - 100m
     def __init__(self):
         # 7
-        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 4, 'gowalla': 3})
+        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 3, 'gowalla': 3})
 
         self.N_SPLITS = ("n_splits", 5)
 
         self.EPOCHS = ("epochs", {'users_steps': {'mfa': 10, 'serm': 10, 'map': 10, 'stf': 10, 'next': 10, 'garg': 10},
-                                'gowalla': {'mfa': 25, 'serm': 25, 'map': 25, 'stf': 25, 'next': 11, 'garg': 25}})
+                                'gowalla': {'mfa': 35, 'serm': 25, 'map': 25, 'stf': 25, 'next': 11, 'garg': 25}})
 
         self.N_REPLICATIONS = ("n_replications", 1)
 
@@ -48,11 +48,12 @@ class NextPoiCategoryPredictionConfiguration:
                           '3_categories': "3_categories/"})
 
         self.CLASS_WEIGHT = ("class_weight",
-                        {'10_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
-                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
-                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
-                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1},
-                                           'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1}},
+                        {'10_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'garg': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3}},
                          '8_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
                                            'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},
@@ -73,7 +74,7 @@ class NextPoiCategoryPredictionConfiguration:
 
         self.DATASET_COLUMNS = ("dataset_columns", {"users_steps": {"datetime": "datetime",
                                                                   "userid": "id",
-                                                                  "locationid": "placeid",
+                                                                  "locationid": "poi_id",
                                                                   "category": "poi_resulting",
                                                                   "latitude": "latitude",
                                                                   "longitude": "longitude",
@@ -89,7 +90,7 @@ class NextPoiCategoryPredictionConfiguration:
                                                                     "state": "county_name"
                                                                     }})
 
-        self.CATEGORIES_10 = ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Office', 'Shop', 'Sport', 'Tourism']
+        self.CATEGORIES_10 = ['Home', 'Work', 'Other', 'Shopping', 'Community', 'Food', 'Entertainment', 'Travel', 'Outdoors', 'Nightlife']
 
         self.CATEGORIES_8 = ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Shop', 'Tourism']
 

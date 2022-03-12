@@ -1,5 +1,3 @@
-
-
 USERS_STEPS_BASE_DIR="/media/claudio/Data/backup_linux/Documentos/users_steps_datasets/"
 USERS_STEPS_OUTPUT_BASE_DIR="/media/claudio/Data/backup_win_hd/Downloads/doutorado/users_steps_output/"
 
@@ -13,3 +11,5 @@ USERS_STEPS_8_CATEGORIES_10_MIL_MAX_500_POINTS_WITH_DETECTED_POIS_WITH_OSM_POIS_
 USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME = USERS_STEPS_OUTPUT_BASE_DIR + "sequences/users_steps_8_categories_sequences.csv"
 
 COUNTRIES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/countries/Countries_WGS84/Countries_WGS84.shp"
+
+USER_TRACKING_HOME_WORK_OTHER_AND_GOWALLA_CATEGORIES="/media/claudio/Data/backup_win_hd/Downloads/doutorado/users_steps_output/user_tracking_home_work_other_and_gowalla_categories.csv"

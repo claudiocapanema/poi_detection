@@ -18,7 +18,7 @@ class PerformancePlotsLoader:
         self.next_poi_category_prediction_configuration = NextPoiCategoryPredictionConfiguration()
         self.next_poi_category_prediction_domain = NextPoiCategoryPredictionDomain(dataseet_name, 0, 0)
         self.file_extractor = FileExtractor()
-        self.columns = {'users_steps': ['Home', 'Work', 'Other', 'Commuting', 'Amenity', 'Leisure', 'Shop', 'Tourism'],
+        self.columns = {'users_steps': ['Home', 'Work', 'Other', 'Shopping', 'Community', 'Food', 'Entertainment', 'Travel', 'Outdoors', 'Nightlife'],
                         'gowalla': ['Shopping', 'Community', 'Food', 'Entertainment', 'Travel', 'Outdoors', 'Nightlife']}
         self.y_limits = {'users_steps': {'Accuracy': 0.68, 'Macro f1-score': 0.33, 'Weighted f1-score': 0.6},
                          'gowalla': {'Accuracy': 0.48, 'Macro f1-score': 0.4, 'Weighted f1-score': 0.46}}
@@ -93,9 +93,9 @@ class PerformancePlotsLoader:
         for model_name in report:
 
             fscore = report[model_name]['fscore']
-            accuracy = fscore['accuracy'].tolist()
-            weighted_fscore = fscore['weighted avg'].tolist()
-            macro_fscore = fscore['macro avg'].tolist()
+            accuracy = np.round(fscore['accuracy'].to_numpy() * 100, 1).tolist()
+            weighted_fscore = np.round(fscore['weighted avg'].to_numpy() * 100, 1).tolist()
+            macro_fscore = np.round(fscore['macro avg'].to_numpy() * 100, 1).tolist()
 
             # total_fscore = 0
             # for column in columns:
@@ -143,7 +143,8 @@ class PerformancePlotsLoader:
 
         #fig.tight_layout(pad=1)
         #plt.savefig(dataset + '_metrics_horizontal_latex.pgf')
-        fig.savefig(dataset + "_metrics_horizontal.png", bbox_inches='tight', dpi=400)
+        fig.savefig(base_dir + dataset + "_metrics_horizontal.png", bbox_inches='tight', dpi=400)
+        fig.savefig(base_dir + dataset + "_metrics_horizontal.svg", bbox_inches='tight', dpi=400)
         plt.figure()
 
         metrics_stacked = metrics[['Solution', 'Accuracy']]
@@ -212,8 +213,8 @@ class PerformancePlotsLoader:
         maximum = sorted_values[-1]
         if dataset == "users_steps":
             #ax[index].set_ylim(0, maximum * 1.14)
-            y_labels = {'macro': [28, 38, 30, 35, 35, 45], 'weighted': [22, 22, 22, 22, 22, 22],
-                        'accuracy': [22, 22, 22, 22, 22, 22]}
+            y_labels = {'macro': [40, 46, 40, 45, 45, 55], 'weighted': [32, 32, 32, 32, 32, 32],
+                        'accuracy': [32, 32, 32, 32, 32, 32]}
             #y_labels = {'macro': [22, 22, 22, 22, 22, 22], 'weighted': [22, 22, 22, 22, 22, 22], 'accuracy': [22, 22, 22, 22, 22, 22]}
         else:
             y_labels = {'macro': [30, 30, 30, 30, 30, 30], 'weighted': [30, 30, 30, 30, 30, 30],
@@ -239,7 +240,7 @@ class PerformancePlotsLoader:
         elif "weighted" in file_name:
             y_label = "weighted"
         for p in figure.patches:
-            figure.annotate(format(p.get_height(), '.2f'),
+            figure.annotate(format(p.get_height(), '.1f'),
                              (p.get_x() + p.get_width() / 2., p.get_height()),
                              ha='center', va='center',
                             size=size,
@@ -276,9 +277,9 @@ class PerformancePlotsLoader:
         for model_name in model_report:
 
             report = model_report[model_name]
-            precision = report['precision']
-            recall = report['recall']
-            fscore = report['fscore']
+            precision = report['precision']*100
+            recall = report['recall']*100
+            fscore = report['fscore']*100
             precision_means = {}
             recall_means = {}
             fscore_means = {}
@@ -305,7 +306,7 @@ class PerformancePlotsLoader:
         print(len(models_dict['garg']))
         print(len(models_dict['next']))
         print(len(models_dict['stf']))
-        df = pd.DataFrame(models_dict, index=index).round(2)
+        df = pd.DataFrame(models_dict, index=index).round(4)
 
         print(df)
 
@@ -332,6 +333,36 @@ class PerformancePlotsLoader:
             df[column] = np.array(column_values)
 
         df.columns = ['POI-RGNN', 'STF-RNN', 'MAP', 'SERM', 'MHA+PE', 'GARG']
+
+        # get improvements
+        poi_rgnn = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['POI-RGNN'].to_numpy()]
+        stf = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['STF-RNN'].to_numpy()]
+        map = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['MAP'].to_numpy()]
+        serm = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['SERM'].to_numpy()]
+        mha = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['MHA+PE'].to_numpy()]
+        garg = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['GARG'].to_numpy()]
+        difference = []
+        for i in range(14, len(poi_rgnn)):
+            min_ = max([stf[i], map[i], serm[i], mha[i], garg[i]])
+            max_ = min([stf[i], map[i], serm[i], mha[i], garg[i]])
+            value = poi_rgnn[i]
+            if min_ < value:
+                min_ = value - min_
+            else:
+                min_ = 0
+            if max_ < value:
+                max_ = value - max_
+            else:
+                max_ = 0
+
+            s = str(round(min_, 1)) + "\%--" + str(round(max_, 1)) + "\%"
+            difference.append(
+                [round(value, 1), round(stf[i], 1), round(map[i], 1), round(serm[i], 1), round(mha[i], 1), round(garg[i], 1), round(min_, 1), round(max_, 1), s])
+
+        difference_df = pd.DataFrame(difference, columns=['base', 'stf', 'map', 'serm', 'mha', 'garg', 'min', 'max', 'texto'])
+
+        difference_df.to_csv(output + "difference.csv", index=False)
+
 
         latex = df.to_latex().replace("\}", "}").replace("\{", "{").replace("\\\nRecall", "\\\n\hline\nRecall").replace("\\\nF-score", "\\\n\hline\nF1-score")
         pd.DataFrame({'latex': [latex]}).to_csv(output + "latex.txt", header=False, index=False)
