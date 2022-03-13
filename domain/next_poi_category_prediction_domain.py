@@ -111,14 +111,14 @@ class NextPoiCategoryPredictionDomain:
             #n = 1450
             #minimum = 300
             # melhor 3
-            #n = 1650
+            n = 1000
             #minimum = 300
             #random = 4
             random = 4
 
         df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))
-        df = df.sample(n=n, random_state=random)
+        df = df.sample(n=n, random_state=random, replace=True)
         print(df)
 
         # reindex ids

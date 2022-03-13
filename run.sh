@@ -7,6 +7,7 @@ USERS_STEPS_OUTPUT_BASE_DIR="/media/claudio/Data/backup_win_hd/Downloads/doutora
 USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR="${USERS_STEPS_OUTPUT_BASE_DIR}sequences/"
 USERS_STEPS_10_CATEGORIES_SEQUENCES_FILENAME="${USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR}users_steps_10_categories_sequences.csv"
 USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME="${USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR}users_steps_8_categories_sequences.csv"
+USERS_STEPS_10_CATEGORIES_SEQUENCES_FILENAME="${USERS_STEPS_SEQUENCES_OUTPUT_BASE_DIR}users_steps_10_categories_sequences.csv"
 USERS_194_STEPS_FILENAME="${USERS_STEPS_BASE_DIR}194_users_data.csv"
 USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_BASE_DIR}df_mais_de_10_mil_limite_500_pontos_local_datetime.csv"
 DETECTED_USERS_10_MIL_MAX_500_POINTS="${USERS_STEPS_OUTPUT_BASE_DIR}detected_df_mais_de_10_mil_limite_500_pontos_local_datetime.csv"
@@ -75,33 +76,33 @@ SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
           "dataset_name":"gowalla"
           }'
 
-#NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
-#          "job": "next_poi_category_prediction_job",
-#          "users_sequences": "'$USERS_STEPS_8_CATEGORIES_SEQUENCES_FILENAME'",
-#          "baseline": "mfa",
-#          "dataset_name":"users_steps",
-#          "categories_type":"8_categories"
-#          }'
-
 NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
           "job": "next_poi_category_prediction_job",
-          "users_sequences": "'$GOWALLA_US_SEQUENCES'",
-          "baseline": "mfa",
-          "dataset_name":"gowalla",
-          "categories_type":"7_categories"
+          "users_sequences": "'$USERS_STEPS_10_CATEGORIES_SEQUENCES_FILENAME'",
+          "baseline": "stf",
+          "dataset_name":"users_steps",
+          "categories_type":"10_categories"
           }'
 
-PERFORMANCE_PLOTS_CONFIG='{
-          "job": "performance_plots_job",
-          "categories_type":"7_categories",
-          "dataset_name":"gowalla"
-        }'
+#NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
+#          "job": "next_poi_category_prediction_job",
+#          "users_sequences": "'$GOWALLA_US_SEQUENCES'",
+#          "baseline": "mfa",
+#          "dataset_name":"gowalla",
+#          "categories_type":"7_categories"
+#          }'
 
 #PERFORMANCE_PLOTS_CONFIG='{
 #          "job": "performance_plots_job",
-#          "categories_type":"10_categories",
-#          "dataset_name":"users_steps"
+#          "categories_type":"7_categories",
+#          "dataset_name":"gowalla"
 #        }'
+
+PERFORMANCE_PLOTS_CONFIG='{
+          "job": "performance_plots_job",
+          "categories_type":"10_categories",
+          "dataset_name":"users_steps"
+        }'
 
 POI_TRANSACTIONS_ANALYSIS='{
           "job": "poi_transactions_job",
