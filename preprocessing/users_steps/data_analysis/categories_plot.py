@@ -18,9 +18,9 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     #total_frequency = 1
     for day in hour_frequency_dict:
         total.append(hour_frequency_dict[day]*100 / total_frequency)
-    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage': total})
+    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Records (%)': total})
 
-    barplot(dir, 'Category', 'Percentage', df, "users_steps_barplot_category_total_" + week + title + ".png",
+    barplot(dir, 'Category', 'Records (%)', df, "users_steps_barplot_category_total_" + week + title + ".png",
                  "Percentage of records per category" + title)
 
 def barplot(dir, x, y, df, filename, title, save=True):
@@ -30,7 +30,8 @@ def barplot(dir, x, y, df, filename, title, save=True):
     fig = plt.figure(figsize=(8, 4))
     fig = sns.barplot(x=y, y=x, data=df, color='cornflowerblue', order=['Home', 'Work', 'Shopping','Outdoors', 'Community', 'Other',  'Food', 'Travel', 'Entertainment', 'Nightlife'])
     fig.set_ylabel("")
-    fig = fig.set_title(title).get_figure()
+    #fig = fig.set_title(title).get_figure()
+    fig = fig.get_figure()
     #plt.xticks(rotation=35)
     save_fig(dir, filename, fig)
     save_fig(dir, filename.replace("png", "svg"), fig)

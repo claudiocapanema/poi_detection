@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     checkins = checkins.dropna()
 
-    checkins.to_csv(CHECKINS_7_CATEGORIES, index_label=False, index=False)
+    #checkins.to_csv(CHECKINS_7_CATEGORIES, index_label=False, index=False)
 
     # {'Nike': ,
     #  'Gap',

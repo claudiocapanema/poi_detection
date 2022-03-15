@@ -27,7 +27,7 @@ class STFUsersSteps:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        simple_rnn_units = 60
+        simple_rnn_units = 25
         n = 2
 
         emb1 = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
@@ -44,6 +44,6 @@ class STFUsersSteps:
         drop_1 = Dropout(0.7)(srnn)
         y_srnn = Dense(location_input_dim, activation='softmax')(drop_1)
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=[y_srnn], name="STF_RNN_baseline")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=y_srnn, name="STF_RNN_baseline")
 
         return model

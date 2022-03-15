@@ -10,11 +10,11 @@ class NextPoiCategoryPredictionConfiguration:
     # Radius for the nearestneighbors algorithm - 100m
     def __init__(self):
         # 7
-        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 3, 'gowalla': 3})
+        self.SEQUENCES_SIZE = ("sequences_size", {'users_steps': 8, 'gowalla': 3})
 
         self.N_SPLITS = ("n_splits", 5)
 
-        self.EPOCHS = ("epochs", {'users_steps': {'mfa': 10, 'serm': 10, 'map': 10, 'stf': 10, 'next': 10, 'garg': 10},
+        self.EPOCHS = ("epochs", {'users_steps': {'mfa': 25, 'serm': 1, 'map': 1, 'stf': 1, 'next': 1, 'garg': 1},
                                 'gowalla': {'mfa': 35, 'serm': 25, 'map': 25, 'stf': 25, 'next': 11, 'garg': 25}})
 
         self.N_REPLICATIONS = ("n_replications", 1)
@@ -22,8 +22,8 @@ class NextPoiCategoryPredictionConfiguration:
         self.BATCH = ("batch", {'users_steps': {'mfa': 350, 'serm': 400, 'map': 400, 'stf': 400, 'next': 300, 'garg': 400},
                                 'gowalla': {'mfa': 400, 'serm': 400, 'map': 400, 'stf': 400, 'next': 400, 'garg': 400}})
 
-        self.OPTIMIZER = ("learning_rate", {'users_steps': {'mfa': Adam(), 'serm': Adam(), 'map': Adam(), 'stf': Adam(),
-                                            'next': Adam(), 'garg': Adam()},
+        self.OPTIMIZER = ("learning_rate", {'users_steps': {'mfa': Adam(learning_rate=0.001), 'serm': Adam(learning_rate=0.001), 'map': Adam(learning_rate=0.001), 'stf': Adam(learning_rate=0.001),
+                                            'next': Adam(learning_rate=0.001), 'garg': Adam(learning_rate=0.001)},
                                             'gowalla': {'mfa': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'serm': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'map': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), 'stf': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9),
                                             'next': Adam(learning_rate=0.0007, beta_1=0.8, beta_2=0.9), 'garg': Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9)}})
 
@@ -50,8 +50,8 @@ class NextPoiCategoryPredictionConfiguration:
         self.CLASS_WEIGHT = ("class_weight",
                         {'10_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
                                            'map': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
-                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
-                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
+                                           'stf': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 3, 6: 3, 7: 3, 8: 1, 9: 3},
+                                           'mfa': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 3, 6: 3, 7: 3, 8: 1, 9: 3},
                                            'next': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3},
                                            'garg': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 3}},
                          '8_categories': {'serm': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1},

@@ -55,7 +55,7 @@ class NEXTUsersSteps:
 
         print("aaaa")
         print(concat_2.shape)
-        pos = self.positional_encoding(concat_2, 7)
+        pos = self.positional_encoding(concat_2, location_input_dim)
 
         att = Concatenate()([att, pos])
         att = Flatten()(att)
@@ -64,7 +64,7 @@ class NEXTUsersSteps:
 
 
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=[y_srnn], name="NEXT_baseline")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=y_srnn, name="NEXT_baseline")
 
         return model
 

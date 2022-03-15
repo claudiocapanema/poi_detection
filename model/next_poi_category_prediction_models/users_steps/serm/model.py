@@ -29,7 +29,7 @@ class SERMUsersSteps:
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        units = 60
+        units = 30
 
         emb3 = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
         emb1 = Embedding(input_dim=location_input_dim, output_dim=10, input_length=step_size)
@@ -51,6 +51,6 @@ class SERMUsersSteps:
         dense_1 = Dense(location_input_dim)(flatten_1)
         pred_location = Activation('softmax')(dense_1)
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=[pred_location], name="serm")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input], outputs=pred_location, name="serm")
 
         return model

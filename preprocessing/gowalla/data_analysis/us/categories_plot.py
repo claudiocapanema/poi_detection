@@ -19,9 +19,9 @@ def hour_frequency_plot(hour_frequency_dict, dir, title, week):
     #total_frequency = 1
     for day in hour_frequency_dict:
         total.append(hour_frequency_dict[day]*100 / total_frequency)
-    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Percentage': total})
+    df = pd.DataFrame({'Category': list(hour_frequency_dict.keys()), 'Records (%)': total})
 
-    barplot(dir, 'Category', 'Percentage', df, "gowalla_barplot_category_total_" + week + title + ".png",
+    barplot(dir, 'Category', 'Records (%)', df, "gowalla_barplot_category_total_" + week + title + ".png",
                  "Percentage of records per category" + title)
 
 def change_width(ax, new_value) :
@@ -63,7 +63,8 @@ def barplot(dir, x, y, df, filename, title, save=True):
     #
     fig.set_ylabel("")
     #change_width(ax, .15)
-    fig = fig.set_title(title).get_figure()
+    #fig = fig.set_title(title).get_figure()
+    fig = fig.get_figure()
 
     #plt.xticks(rotation=35)
 

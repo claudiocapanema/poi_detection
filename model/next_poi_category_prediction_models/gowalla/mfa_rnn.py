@@ -104,10 +104,10 @@ class MFA_RNN(NNBase):
         # ajusted during the training turning helpful to find correlations between words.
         # Moreover, when you are working with one-hot-encoding
         # and the vocabulary is huge, you got a sparse matrix which is not computationally efficient.
-        gru_units = 30
+        gru_units = 35
         emb_category = Embedding(input_dim=location_input_dim, output_dim=7, input_length=step_size)
         emb_time = Embedding(input_dim=time_input_dim, output_dim=3, input_length=step_size)
-        emb_id = Embedding(input_dim=num_users, output_dim=2, input_length=step_size)
+        emb_id = Embedding(input_dim=num_users, output_dim=1, input_length=step_size)
         emb_country = Embedding(input_dim=30, output_dim=2, input_length=step_size)
         emb_distance = Embedding(input_dim=51, output_dim=3, input_length=step_size)
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
@@ -192,7 +192,7 @@ class MFA_RNN(NNBase):
         gnn_puro = Dense(location_input_dim, activation='softmax')(gnn_puro)
         y_sup = Dropout(0.3)(y_sup)
         y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
-        y_cup = Dropout(0.4)(y_cup)
+        y_cup = Dropout(0.5)(y_cup)
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
 

@@ -3,6 +3,7 @@ from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropo
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras.callbacks import EarlyStopping
+import tensorflow_probability as tfp
 
 from configuration.next_poi_category_prediciton_configuration import NextPoiCategoryPredictionConfiguration
 from model.next_poi_category_prediction_models.neural_network_base_model import NNBase
@@ -86,7 +87,7 @@ class MFARNNUsersSteps(NNBase):
 
         # Unlike LSTM, the GRU can find correlations between location/events
         # separated by longer times (bigger sentences)
-        srnn = SimpleRNN(70, return_sequences=True)(l_p)
+        srnn = GRU(80, return_sequences=True)(l_p)
         srnn = Dropout(0.5)(srnn)
 
         att = MultiHeadAttention(key_dim=2,
@@ -122,11 +123,34 @@ class MFARNNUsersSteps(NNBase):
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         #spatial_flatten = Dense(location_input_dim, activation='relu')(spatial_flatten)
 
-        y_r = tf.Variable(initial_value=1.) * y_r
-        y_sup = tf.Variable(initial_value=0.)*y_sup
-        y_cup = tf.Variable(initial_value=1.) * y_cup
+        # y_r = tf.Variable(initial_value=1.) * y_r
+        # y_sup = tf.Variable(initial_value=0.)*y_sup
+        # y_cup = tf.Variable(initial_value=1.) * y_cup
+        #
+        # y = y_r + y_sup + y_cup
 
-        y = y_r + y_sup + y_cup
+        y_sup = Concatenate()([srnn, att])
+        # y_sup = srnn
+        gnn = Concatenate()([srnn, att, x_distances, x_durations])
+        gnn = Dense(location_input_dim, activation='softmax')(gnn)
+        gnn_puro = Concatenate()([x_distances, x_durations])
+        gnn_puro = Dense(location_input_dim, activation='softmax')(gnn_puro)
+        y_sup = Dropout(0.3)(y_sup)
+        y_sup = Dense(location_input_dim, activation='softmax')(y_sup)
+        y_cup = Dropout(0.5)(y_cup)
+        y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
+        spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
+
+        r_entropy = tfp.distributions.Categorical(probs=y_sup).entropy()
+        g_entropy = tfp.distributions.Categorical(probs=gnn).entropy()
+        g_pure_entropy = tfp.distributions.Categorical(probs=gnn_puro).entropy()
+        y_cup_entropy = tfp.distributions.Categorical(probs=y_cup).entropy()
+        y_spatial_entropy = tfp.distributions.Categorical(probs=y_cup).entropy()
+
+        y = ((1 / tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(
+            initial_value=0.) * y_sup + tf.Variable(initial_value=-0.2) * spatial_flatten + tf.Variable(8.) * gnn * (
+                           (1 / tf.math.reduce_mean(g_entropy)) + tf.Variable(0.5)) + tf.Variable(8.) * gnn_puro * (
+                           (1 / tf.math.reduce_mean(g_pure_entropy)) + tf.Variable(0.5))
 
         model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input,
                               week_day_input, user_id_input, pois_ids_input, adjancency_matrix,

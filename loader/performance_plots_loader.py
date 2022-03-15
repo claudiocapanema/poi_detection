@@ -342,7 +342,9 @@ class PerformancePlotsLoader:
         mha = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['MHA+PE'].to_numpy()]
         garg = [float(i.replace("textbf{", "").replace("}", "")[:4]) for i in df['GARG'].to_numpy()]
         difference = []
-        for i in range(14, len(poi_rgnn)):
+
+        init = {'gowalla': 14, 'users_steps': 20}
+        for i in range(init[dataset_name], len(poi_rgnn)):
             min_ = max([stf[i], map[i], serm[i], mha[i], garg[i]])
             max_ = min([stf[i], map[i], serm[i], mha[i], garg[i]])
             value = poi_rgnn[i]

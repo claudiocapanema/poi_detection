@@ -43,7 +43,7 @@ class MAPUsersSteps:
         # separated by longer times (bigger sentences)
         # spatial_embedding = Dropout(0.5)(spatial_embedding)
         # temporal_embedding = Dropout(0.5)(temporal_embedding)
-        srnn = SimpleRNN(60, return_sequences=True)(spatial_embedding)
+        srnn = SimpleRNN(30, return_sequences=True)(spatial_embedding)
         srnn = Dropout(0.3)(srnn)
         concat_1 = Concatenate()([srnn, temporal_embedding])
 

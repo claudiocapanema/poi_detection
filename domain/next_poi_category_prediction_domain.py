@@ -80,7 +80,12 @@ class NextPoiCategoryPredictionDomain:
         df = self.file_extractor.read_csv(filename)
         df['sequence'] = df['sequence'].apply(lambda e: self._sequence_to_list(e))
         df['total'] = self._add_total(df['sequence'])
-        df = df.sort_values(by='total', ascending=False)
+        np.random.seed(1)
+        df['rand'] = np.random.rand(len(df))
+        if dataset_name == "gowalla":
+            df = df.sort_values(by='total', ascending=False)
+        else:
+            df = df.sort_values(by='rand', ascending=False)
         print(df['total'].describe())
 
         if dataset_name == "gowalla":
@@ -93,7 +98,7 @@ class NextPoiCategoryPredictionDomain:
             random = 1
         else:
             n = 1650
-            minimum = 300
+            minimum = 50
             #n = 1300
 
             #razoavel
@@ -111,14 +116,17 @@ class NextPoiCategoryPredictionDomain:
             #n = 1450
             #minimum = 300
             # melhor 3
-            n = 1000
+            n = 2000
             #minimum = 300
             #random = 4
             random = 4
 
         df = df.query("total >= " + str(minimum))
         print("usuarios com mais de " + str(minimum), len(df))
-        df = df.sample(n=n, random_state=random, replace=True)
+        if dataset_name == "gowalla":
+            df = df.sample(n=n, random_state=random)
+        else:
+            df = df.head(n)
         print(df)
 
         # reindex ids
@@ -726,31 +734,17 @@ class NextPoiCategoryPredictionDomain:
         print("f", y_train.shape)
         y_test = np.array(y_test)[0]
 
-        if model_name not in ['gargs']:
-            model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
-                          metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
-            #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
-            #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
-            hi = model.fit(X_train,
-                           y_train,
-                           validation_data=(X_test, y_test),
-                           class_weight=class_weight,
-                           batch_size=batch,
-                           epochs=epochs,
-                           callbacks=EarlyStopping(patience=3, restore_best_weights=True))
-        else:
-            loss_fn = tf.keras.losses.CategoricalCrossentropy()
-
-            # Training step
-            @tf.function
-            def train():
-                with tf.GradientTape() as tape:
-                    predictions = model(X_train, training=True)
-                    loss = loss_fn(y_train, predictions)
-                    loss += sum(model.losses)
-                gradients = tape.gradient(loss, model.trainable_variables)
-                parameters['optimizer'].apply_gradients(zip(gradients, model.trainable_variables))
-                return loss
+        model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
+                      metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
+        #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
+        #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
+        hi = model.fit(X_train,
+                       y_train,
+                       validation_data=(X_test, y_test),
+                       class_weight=class_weight,
+                       batch_size=batch,
+                       epochs=epochs,
+                       callbacks=EarlyStopping(patience=3, restore_best_weights=True))
 
         #print("summary: ", model.summary())
         # print("history: ", h)
